@@ -30,3 +30,17 @@ Backend API, scanner Python, schema kontrak, migrasi Supabase, dan dokumentasi a
 https://github.com/Daddy-JJ/BackendSahamTeknikal
 
 Dashboard fixture di `src/generated/demo.json` adalah snapshot turunan scanner Python. Jika snapshot/schema berubah, sinkronkan perubahan dari backend secara terkontrol. Jangan membuat kalkulasi sinyal atau metrik resmi terpisah di frontend.
+
+## Login GitHub untuk aplikasi (development)
+
+Login GitHub ke Dashboard Supabase tidak otomatis menjadi login aplikasi. Alur aplikasi di /login memakai Supabase Auth PKCE; /auth/callback menyimpan sesi pada cookie; /auth/check memverifikasi pengguna dan tabel app_members lewat RLS. Halaman terakhir hanya membaca jumlah run/sinyal namespace fixture development. Dashboard fixture di / tetap demo, dan dashboard live belum terhubung ke data scan.
+
+Siapkan provider di proyek DEVELOPMENT vgmkpsestahkfahzdtae:
+
+1. Buat GitHub OAuth App di GitHub Developer Settings → OAuth Apps. Untuk pengujian lokal, isi Homepage URL http://localhost:3050 dan Authorization callback URL https://vgmkpsestahkfahzdtae.supabase.co/auth/v1/callback. Callback GitHub menuju Supabase, bukan langsung ke Next.js.
+2. Di Supabase development → Authentication → Sign In / Providers → GitHub, aktifkan provider lalu isi Client ID dan Client Secret langsung di Dashboard. Jangan tempel secret di chat atau repository.
+3. Di Authentication → URL Configuration, set Site URL http://localhost:3050 dan tambahkan Redirect URLs http://localhost:3050/auth/callback serta http://127.0.0.1:3050/auth/callback.
+4. Pastikan file lokal yang diabaikan Git, .env.development.local, berisi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY untuk development. Jalankan npm.cmd run dev, lalu buka http://localhost:3050/login.
+5. Setelah GitHub login, halaman /auth/check menampilkan UID Auth aplikasi. Jika UID itu berbeda dari owner development yang ada di app_members, akses tetap ditolak sampai keanggotaan diperbarui secara terkontrol. Jangan menganggap email yang sama selalu menautkan identitas otomatis.
+
+Production Supabase tidak digunakan untuk pengujian OAuth/fixture ini. Jangan menggunakan Dashboard Personal Access Token atau secret key sebagai token login aplikasi. Bukti owner RLS remote baru sah setelah login nyata berhasil dan halaman /auth/check menunjukkan owner aktif beserta pembacaan data melalui JWT.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, Command, Database, Filter, Layers3, LayoutDashboard, Moon, Search, ShieldCheck, SlidersHorizontal, Sparkles, Telescope, X } from "lucide-react";
 import { Modal } from "@/components/modal";
 import { PriceChart, Sparkline } from "@/components/price-chart";
@@ -70,7 +71,7 @@ export function Workspace({ snapshot: s }: { snapshot: Snapshot }) {
       <button className="brand" onClick={() => move("overview")} aria-label="Ruang Sinyal, ringkasan"><span className="brand-mark"><Layers3 size={21} /></span><span>ruang<span className="brand-light">sinyal</span><small>IDX NIGHT SCANNER</small></span></button>
       <nav aria-label="Navigasi utama">{navigation.map(n => <button key={n.id} className={view===n.id ? "nav-link active" : "nav-link"} aria-current={view===n.id ? "page" : undefined} onClick={() => move(n.id)}><n.icon size={15} /><span>{n.label}</span></button>)}</nav>
       <button className="command-button" onClick={() => setCommand(true)} aria-label="Buka command menu"><Search size={15} /><span>Cari & navigasi</span><kbd>⌘ K</kbd></button>
-      <span className="avatar" title="Preview lokal tanpa akun live">D</span>
+      <Link className="auth-link" href="/login">Login owner</Link>
     </div></header>
 
     <main id="main" className="workspace">
