@@ -47,11 +47,22 @@ Production Supabase tidak digunakan untuk pengujian OAuth/fixture ini. Jangan me
 
 ## Vercel production status
 
-Frontend is deployed at https://sahamteknikal.vercel.app/ from the frontend
-repository. A read-only HTTP check on 2026-09-29 returned 200 for both / and
-/login. The public home page intentionally says the live connection is not
-configured; /login says the app's Supabase URL/publishable key are missing
-from Vercel environment. This deployment is a shell, not a live scanner.
-Do not enable fixture mode on Vercel production. Supabase production Auth,
-redirect URLs, and live dashboard data need separate verification before
-calling this release ready.
+Frontend is deployed at https://sahamteknikal.vercel.app/ from this
+repository. A read-only HTTP check on 2026-09-29 returned 200 for both /
+and /login. At that check, the Vercel environment lacked the app's
+Supabase URL/publishable key, and no live scanner data was connected.
+The production shell now uses a neutral unavailable state and hides
+the login button until the public Auth configuration is present.
+
+For future production setup, configure these Vercel Environment Variables
+for Production, using values from the production Supabase project only:
+
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+- DATA_MODE=live
+
+Do not set ALLOW_FIXTURE_PREVIEW in Production. Do not place Supabase secret
+key, EODHD token, or GitHub OAuth Client Secret in this frontend project.
+Production GitHub provider and redirect URLs require separate verification,
+followed by a fresh Vercel deployment and owner-login check. This shell is
+not a live scanner release.
