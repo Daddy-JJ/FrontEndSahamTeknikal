@@ -43,4 +43,15 @@ Siapkan provider di proyek DEVELOPMENT vgmkpsestahkfahzdtae:
 4. Pastikan file lokal yang diabaikan Git, .env.development.local, berisi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY untuk development. Jalankan npm.cmd run dev, lalu buka http://localhost:3050/login.
 5. Setelah GitHub login, halaman /auth/check menampilkan UID Auth aplikasi. Jika UID itu berbeda dari owner development yang ada di app_members, akses tetap ditolak sampai keanggotaan diperbarui secara terkontrol. Jangan menganggap email yang sama selalu menautkan identitas otomatis.
 
-Production Supabase tidak digunakan untuk pengujian OAuth/fixture ini. Jangan menggunakan Dashboard Personal Access Token atau secret key sebagai token login aplikasi. Bukti owner RLS baca telah diperoleh lewat login nyata dan halaman /auth/check. Gate berikutnya: pada proyek development saat data_mode=fixture, klik Uji aksi owner pada fixture. Tombol ini memakai JWT owner untuk menyimpan satu anotasi watchlist, mengulang request idempotent yang sama, dan memeriksa revisi 1; tidak membuat transaksi. Tombol tidak muncul pada production atau akun non-owner. Setelah diuji, kirim hanya status layar, bukan token.
+Production Supabase tidak digunakan untuk pengujian OAuth/fixture ini. Jangan menggunakan Dashboard Personal Access Token atau secret key sebagai token login aplikasi. Bukti owner RLS baca telah diperoleh lewat login nyata dan halaman /auth/check. Uji owner action pada fixture development juga berhasil: satu watchlist revisi 1, satu request idempotensi, satu audit event, dan dua sinyal fixture tetap. Tombol tidak muncul pada production atau akun non-owner, dan tidak membuat trade/fill. Pengujian ini tidak membuktikan scanner live maupun jurnal transaksi.
+
+## Vercel production status
+
+Frontend is deployed at https://sahamteknikal.vercel.app/ from the frontend
+repository. A read-only HTTP check on 2026-09-29 returned 200 for both / and
+/login. The public home page intentionally says the live connection is not
+configured; /login says the app's Supabase URL/publishable key are missing
+from Vercel environment. This deployment is a shell, not a live scanner.
+Do not enable fixture mode on Vercel production. Supabase production Auth,
+redirect URLs, and live dashboard data need separate verification before
+calling this release ready.
