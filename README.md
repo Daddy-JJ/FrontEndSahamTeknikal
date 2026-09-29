@@ -66,3 +66,13 @@ key, EODHD token, or GitHub OAuth Client Secret in this frontend project.
 Production GitHub provider and redirect URLs require separate verification,
 followed by a fresh Vercel deployment and owner-login check. This shell is
 not a live scanner release.
+
+
+## Development market revision access check
+
+On localhost:3050/auth/check, an authenticated owner on the allowlisted dev
+project in fixture mode gets a read-only revision probe. It reads two receipts
+under dev_market_revision_m2 and calls read_market_series with the user's JWT.
+Success shows "2 revisi fixture terbaca melalui RPC owner". The owner confirmed
+this result on 2026-09-29. Missing/error states remain explicit; production does
+not invoke the dev probe. No privileged key or copied JWT is needed.

@@ -6,6 +6,7 @@ import {
   DEV_OWNER_ACTION_REQUEST_ID,
   DEV_PROJECT_URL,
 } from "@/lib/supabase/dev-probe";
+import { readDevRevisionProbe, type RevisionProbe } from "@/lib/supabase/dev-revision-probe";
 import { signOut, verifyDevOwnerAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export default async function AuthCheckPage({
   let devFixtureMode = false;
   let actionExists = false;
   let actionVerified = false;
+  let revisionProbe: RevisionProbe | null = null;
   if (owner && isDevProject) {
     const [runs, signals, settings, firstSignal] = await Promise.all([
       supabase.from("scan_runs").select("id", { count: "exact", head: true }).eq("namespace", DEV_FIXTURE_NAMESPACE),
@@ -45,6 +47,7 @@ export default async function AuthCheckPage({
     runCount = runs.count;
     signalCount = signals.count;
     devFixtureMode = settings.data?.data_mode === "fixture";
+    if (devFixtureMode) revisionProbe = await readDevRevisionProbe(supabase);
 
     if (firstSignal.data?.id) {
       const [action, request, audit] = await Promise.all([
@@ -72,6 +75,10 @@ export default async function AuthCheckPage({
       <div><span>Keanggotaan</span><strong>{owner ? "Owner aktif" : "Belum terverifikasi"}</strong></div>
       {owner && isDevProject && <div><span>Data uji development</span><strong>{readError ? "Belum bisa dibaca" : String(runCount ?? 0) + " run · " + String(signalCount ?? 0) + " sinyal"}</strong></div>}
       {owner && isDevProject && actionVerified && <div><span>Uji RPC owner</span><strong>Watchlist revisi 1 · 1 request · 1 audit</strong></div>}
+      {revisionProbe && <div><span>Uji baca revisi market</span><strong>
+        {revisionProbe === "verified" ? "2 revisi fixture terbaca melalui RPC owner"
+          : revisionProbe === "missing" ? "Fixture revisi belum tersedia" : "Pembacaan revisi belum berhasil"}
+      </strong></div>}
     </div>
     {owner && isDevProject && <p className="auth-note">Angka run/sinyal di atas hanya berasal dari namespace fixture development. Dashboard live belum mengonsumsi data ini.</p>}
     {probe === "failed" && <p role="alert" className="auth-error">Uji aksi belum lulus. Tidak ada klaim idempotensi; periksa status data development.</p>}
