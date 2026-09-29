@@ -5,6 +5,7 @@ test("unauthenticated user reaches login without private data", async ({ page })
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("button", { name: "Lanjutkan dengan GitHub" })).toBeVisible();
   await expect(page.getByText("Sesi owner terverifikasi")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Uji aksi owner pada fixture" })).toHaveCount(0);
 });
 
 test("OAuth callback rejects a request without an authorization code", async ({ page }) => {

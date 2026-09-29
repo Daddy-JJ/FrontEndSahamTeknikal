@@ -30,3 +30,7 @@
 .auth-link{white-space:nowrap;text-decoration:none;font-size:12px;color:var(--green);padding:8px 10px;border:1px solid #cedecd;border-radius:8px;background:#f5faf2}
 .auth-link:hover{background:#e7f1e4}
 @media(max-width:600px){.auth-page{margin:24px 16px;padding:24px}.auth-link{font-size:10px;padding:6px}}
+
+.auth-page .auth-error{margin-top:18px;color:var(--red)}
+.auth-page .auth-success{margin-top:18px;color:var(--green)}
+.auth-page form+.auth-note{margin-top:12px}
