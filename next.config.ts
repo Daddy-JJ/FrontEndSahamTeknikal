@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  distDir: process.env.NEXT_TEST_DIST_DIR || ".next",
+  logging: { incomingRequests: { ignore: [/\/auth\/callback/] } },
   async headers() {
     return [{ source: "/(.*)", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },

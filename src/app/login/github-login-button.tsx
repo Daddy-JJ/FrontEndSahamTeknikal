@@ -22,7 +22,7 @@ export function GithubLoginButton() {
       if (error || !data.url) throw new Error("oauth_start_failed");
       window.location.assign(data.url);
     } catch {
-      setMessage("Login GitHub belum dapat dimulai. Periksa pengaturan provider pada proyek development.");
+      setMessage("Login GitHub belum dapat dimulai. Periksa pengaturan provider untuk environment ini.");
       setBusy(false);
     }
   }

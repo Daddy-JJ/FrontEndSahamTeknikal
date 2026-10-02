@@ -12,7 +12,10 @@
     "start": "next start --hostname 127.0.0.1 --port 3050",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "test:journal": "playwright test --config playwright.journal.config.ts",
+    "test:scanner": "playwright test --config playwright.scanner.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

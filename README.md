@@ -21,6 +21,9 @@ Variabel development dicontohkan di `.env.example`. Jangan commit `.env.local`. 
 npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd test
+npm.cmd run test:unit
+npm.cmd run test:journal
+npm.cmd run test:scanner
 npm.cmd run build
 ```
 
@@ -33,7 +36,7 @@ Dashboard fixture di `src/generated/demo.json` adalah snapshot turunan scanner P
 
 ## Login GitHub untuk aplikasi (development)
 
-Login GitHub ke Dashboard Supabase tidak otomatis menjadi login aplikasi. Alur aplikasi di /login memakai Supabase Auth PKCE; /auth/callback menyimpan sesi pada cookie; /auth/check memverifikasi pengguna dan tabel app_members lewat RLS. Halaman terakhir hanya membaca jumlah run/sinyal namespace fixture development. Dashboard fixture di / tetap demo, dan dashboard live belum terhubung ke data scan.
+Login GitHub ke Dashboard Supabase tidak otomatis menjadi login aplikasi. Alur aplikasi di /login memakai Supabase Auth PKCE; /auth/callback menyimpan sesi pada cookie; /auth/check memverifikasi pengguna dan tabel app_members lewat RLS. Halaman terakhir hanya membaca jumlah run/sinyal namespace fixture development. Dashboard fixture di / tetap demo; /scanner membaca run forward lewat owner/RLS, dan / live memakai adapter yang sama tanpa fallback demo.
 
 Siapkan provider di proyek DEVELOPMENT vgmkpsestahkfahzdtae:
 
@@ -47,9 +50,10 @@ Production Supabase tidak digunakan untuk pengujian OAuth/fixture ini. Jangan me
 
 ## Vercel production status
 
-Frontend is deployed at https://sahamteknikal.vercel.app/ from this
-repository. A read-only HTTP check on 2026-09-29 returned 200 for both /
-and /login. At that check, the Vercel environment lacked the app's
+Frontend shell is deployed at https://sahamteknikal.vercel.app/ from this
+repository. A read-only HTTP check on 2026-10-01 returned 200 for both `/`
+and `/login`. This proves shell availability only. At the earlier configuration
+check, the Vercel environment lacked the app's
 Supabase URL/publishable key, and no live scanner data was connected.
 The production shell now uses a neutral unavailable state and hides
 the login button until the public Auth configuration is present.
@@ -67,6 +71,10 @@ Production GitHub provider and redirect URLs require separate verification,
 followed by a fresh Vercel deployment and owner-login check. This shell is
 not a live scanner release.
 
+The concrete preparation sequence, environment matrix, Auth URLs, smoke checks,
+and rollback evidence are in
+[docs/VERCEL_DEPLOYMENT_CHECKLIST.md](docs/VERCEL_DEPLOYMENT_CHECKLIST.md).
+
 
 ## Development market revision access check
 
@@ -76,3 +84,59 @@ under dev_market_revision_m2 and calls read_market_series with the user's JWT.
 Success shows "2 revisi fixture terbaca melalui RPC owner". The owner confirmed
 this result on 2026-09-29. Missing/error states remain explicit; production does
 not invoke the dev probe. No privileged key or copied JWT is needed.
+
+## Actual journal dan analytics M4
+
+`npm.cmd test` menjalankan smoke workspace/auth fixture terisolasi di loopback
+3054 dengan output `.next-workspace-smoke`. Environment proses tes menimpa
+konfigurasi lokal menggunakan URL loopback dummy dan key sintetis; suite ini
+tidak memakai ulang server production lokal3050 atau membuktikan RLS hosted.
+Suite jurnal tetap memakai server/test double terpisah3052/3053. Jangan memasukkan
+JWT atau secret ke konfigurasi tes. `.env.local` development dan
+`.env.production.local` pengguna tetap dipertahankan.
+
+Route `/journal`, `/journal/[id]`, `/analytics`, dan `/journal/export` memakai
+sesi owner; mode data Supabase harus cocok dengan `DATA_MODE` aplikasi. Mode
+fixture hanya dapat dibuka saat preview fixture diizinkan. Ketidakcocokan mode
+menutup pembacaan ledger dan ekspor sebelum RPC jurnal dipanggil.
+`/api/export/journal` menggunakan RPC ekspor
+migration 005, CSV canonical backend, dan cursor maksimal 200 trade per bagian.
+Tidak ada perhitungan ledger atau metrik resmi kedua di browser.
+
+Analytics dan CSV memakai filter snapshot exit yang sama persis untuk tiga
+konfigurasi yang dibuat form frontend (fixed 2R, SMA10, manual). Daftar trade
+menampilkan 100 per halaman; halaman lanjutan tidak menghitung ulang ringkasan
+analytics. Fill, koreksi, stop, catatan, dan tag masing-masing
+50 per halaman. Hanya jenis riwayat yang dipilih yang diminta pada setiap
+navigasi. Halaman fill meminta satu koreksi terbaru per fill yang ditampilkan,
+tanpa mengunduh seluruh riwayat. Urutan halaman fill mengikuti nomor
+pencatatan; waktu di baris fill tetap waktu efektif setelah koreksi.
+
+Backend menerapkan migration 005 dan migration 006 pada Supabase development
+ber-mode fixture. Smoke frontend dengan login GitHub owner nyata pada 2026-09-30
+dan retest konflik pada 2026-10-01 berhasil membuat
+trade TEST, empat fill, finalisasi, partial exit, perubahan stop, dan koreksi fee.
+CSV closed cocok dengan ledger: risk 1200, total fee 100, net 1000, R
+0.833333333333. Replay request identik via sesi owner menghasilkan satu note dan
+satu receipt. Setelah migration 006 memetakan konflik ke `PT412`/HTTP 412, smoke
+dua tab owner menunjukkan request stale ditolak segera dengan pesan konflik,
+tanpa note atau revision tambahan. Ekspor frontend fixture hanya satu closed
+trade; backend telah membuktikan cursor 200+1 dalam transaksi development yang
+di-rollback, tetapi alur unduh frontend multi-bagian belum teruji dengan dataset
+persistent. Lihat status dan audit untuk batas bukti. Tidak ada data production
+yang dipakai sebagai fixture atau bukti live.
+
+Lihat [audit dan kontrak M4](docs/JOURNAL_AUDIT.md) serta
+[hasil verifikasi frontend](IMPLEMENTATION_STATUS.md) untuk rincian perubahan,
+perintah test, batas pengujian, dan langkah sesudah migrasi development.
+
+Persiapan deployment terbaru tetap **NO-GO**. Lima probe Yahoo dan smoke Auth/HTTP
+backend disposable lokal sudah lulus sesuai evidence backend, tetapi bukan
+bukti scanner full-universe atau lifecycle production hosted. Homepage live
+menampilkan persiapan bila belum ada run; adapter membaca hasil terbit melalui owner/RLS. Lihat
+[checklist deployment](docs/VERCEL_DEPLOYMENT_CHECKLIST.md) untuk kontrak quality
+skip/coverage/RS hold dan gates yang harus ditutup sebelum otorisasi terpisah.
+
+Lihat [audit adapter scanner](docs/SCANNER_ADAPTER_AUDIT.md) untuk query terbatas,
+Windows teardown, hasil tes dan batas freshness/hosted evidence. Server custom
+hanya untuk tes; command development/production dan deployment Vercel tetap Next.js standar.
