@@ -1,5 +1,14 @@
 # Vercel production deployment checklist
 
+## Live production smoke verified on Vercel domain - 2026-10-03 (Asia/Jakarta)
+
+End-to-end production verification completed and PASSED on https://sahamteknikal.vercel.app:
+- Auth: GitHub OAuth callback and owner verification at /auth/check PASS (UID 3e877216-b881-41c0-8e16-f7bd7a3f596d, Owner aktif).
+- Scanner: Live forward run 3c700de4-8389-400e-b862-31f2c8998a64, digest 653f9f9168b20dabfc14dc9fa18090e6ed48f5d63546c897107cc44258dd4110, stored 2026-10-03 19:44:34 WIB, partial coverage 45/100, RS rank held, and hold reasons displayed per ticker PASS.
+- Journal & Analytics: Trade NCKL closed at revision 5 (PULLBACK RECLAIM V1, Net Rp1.244, 0.19R, 100% win rate) PASS.
+- CSV Export: Downloaded and parsed in Excel with exact decimals, neutral formulas, and contract version actual-journal-export-v1 PASS.
+- Status: PRODUCTION APPLICATION LIVE AND VERIFIED. Evidence: docs/evidence/vercel-production-smoke-final-20261003.json.
+
 ## Nonempty real-trade owner read / analytics / CSV - 2026-10-03
 
 Read-only existing owner session now verified the user-supplied NCKL closed

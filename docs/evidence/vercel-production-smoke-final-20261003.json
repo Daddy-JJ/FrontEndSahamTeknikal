@@ -1,0 +1,59 @@
+{
+  "observed_at_utc": "2026-10-03T14:34:00.000Z",
+  "timezone": "Asia/Jakarta",
+  "domain": "https://sahamteknikal.vercel.app",
+  "project": "hcjfxbynqzsaidlwvdfx",
+  "method": "Direct user live smoke verification on production Vercel domain; verified Auth, Scanner, Journal, Analytics, and CSV Export",
+  "authentication": {
+    "route": "/auth/check",
+    "verified": true,
+    "user_id": "3e877216-b881-41c0-8e16-f7bd7a3f596d",
+    "membership": "Owner aktif",
+    "rls_enforced": true
+  },
+  "scanner": {
+    "route": "/scanner",
+    "run_id": "3c700de4-8389-400e-b862-31f2c8998a64",
+    "run_digest": "653f9f9168b20dabfc14dc9fa18090e6ed48f5d63546c897107cc44258dd4110",
+    "session_date": "2026-10-02",
+    "stored_at": "2026-10-03T12:44:34.492091+00:00",
+    "stored_at_wib": "3 Okt 2026, 19.44.34 WIB",
+    "status": "partial",
+    "coverage": {
+      "evaluated": 45,
+      "total": 100
+    },
+    "ranking_status": "cross_section_incomplete",
+    "window_entry": "Belum berakhir",
+    "immutable_continuation_verified": true
+  },
+  "journal": {
+    "route": "/journal",
+    "closed_trades": 1,
+    "open_trades": 0,
+    "net_pnl_closed": "Rp1.244",
+    "win_rate": "100%",
+    "trade": {
+      "ticker": "NCKL",
+      "status": "closed",
+      "strategy": "PULLBACK RECLAIM V1",
+      "realized": "Net Rp1.244 · 0,19R"
+    }
+  },
+  "csv_export": {
+    "filename": "actual-journal-live-start (1).csv",
+    "contract_version": "actual-journal-export-v1",
+    "data_mode": "live",
+    "trade_id": "e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4",
+    "revision": 5,
+    "ticker": "NCKL",
+    "exit_policy_snapshot": {
+      "mode": "ma_close",
+      "period": 10,
+      "ma_type": "SMA",
+      "version": "actual-ma10-v1"
+    },
+    "opened_in_excel": true
+  },
+  "overall_status": "PASS - LIVE PRODUCTION APPLICATION OPERATIONAL"
+}
