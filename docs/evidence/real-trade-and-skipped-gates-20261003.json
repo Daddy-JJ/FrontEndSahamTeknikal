@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-03",
+  "timezone": "Asia/Jakarta",
+  "source": "Latest direct user instruction and read-only existing browser page",
+  "trade": {
+    "id": "e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4",
+    "url": "http://localhost:3050/journal/e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4?saved=1",
+    "genuine_production_transaction": "confirmed by user",
+    "observed_heading": "NCKL closed",
+    "observed_revision": 5,
+    "observed_exit_version": "actual-ma10-v1",
+    "observed_mode": "live",
+    "buy_and_sell_visible": true,
+    "correction_visible": true,
+    "estimated_fee_visible": true,
+    "scope": "Rendered ledger inspection only; no independent RPC HTTP status or broker validation captured"
+  },
+  "requested_skips": {
+    "point3": "outsider session",
+    "point4": "two independent sessions/concurrency",
+    "user_requested_assumed_pass": true,
+    "recorded_result": "SKIPPED AT USER REQUEST / NOT VERIFIED",
+    "actual_pass_claim": false
+  },
+  "disabled_owner_denial": "NOT VERIFIED; no Auth/membership changes",
+  "publisher_preparation_authorized": true,
+  "publisher_execution": "not performed; concrete plan still required",
+  "runtime_changed": false,
+  "production_writes": false,
+  "backend_edited": false,
+  "jwt_copied": false,
+  "commit_push_deploy": false
+}

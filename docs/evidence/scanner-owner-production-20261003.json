@@ -1,0 +1,168 @@
+{
+  "observed_at_utc": "2026-10-02T22:50:09.953Z",
+  "timezone": "Asia/Jakarta",
+  "origin": "http://localhost:3050",
+  "project": "hcjfxbynqzsaidlwvdfx",
+  "method": "Local production build, existing owner browser Auth session and RLS-backed server client; read-only navigation. Opt-in diagnostics record only scanner table, project and GET status.",
+  "authentication": {
+    "enabled_owner": true,
+    "expected_existing_owner_matched": true,
+    "jwt_copied_or_printed": false
+  },
+  "scanner": {
+    "run_id": "8f634f6c-efae-4837-b1eb-1db04de6ffd2",
+    "namespace": "forward",
+    "data_mode": "live",
+    "latest_order": "session_date.desc,stored_at.desc,id.desc",
+    "session_date": "2026-10-02",
+    "stored_at": "2026-10-02T17:50:07.347251+00:00",
+    "stored_at_wib": "2026-10-03 00:50:07 WIB",
+    "run_digest": "0aefe872fe3aa9ead45f1f98f9980ff96cd819142ddcc0f9f64a0a83c1c4c121",
+    "status": "partial",
+    "coverage": {
+      "evaluated": 45,
+      "total": 100
+    },
+    "ranking_status": "cross_section_incomplete",
+    "observed_postgrest_get_http": {
+      "scan_runs": 200,
+      "scan_run_items": 200,
+      "scan_run_signals": 200
+    },
+    "quality_pages": [
+      25,
+      25,
+      25,
+      25
+    ],
+    "unique_tickers_observed": 100,
+    "item_counts": {
+      "evaluated": 45,
+      "corporate_action_hold": 25,
+      "data_quality_hold": 30
+    },
+    "continuation_after_page4": false,
+    "published_signal_rows_observed": 0,
+    "rs_ranking_shown": false,
+    "hold_detail_scope": "Saved per-item status only; additional provider diagnostics are not present in the selected run metadata.",
+    "freshness": "Target/publication/storage time is not provider freshness. Backend report says newer quality-failed Yahoo fetch was not published; UI does not invent per-run input timestamps."
+  },
+  "journal": {
+    "actual_empty": true,
+    "draft": 0,
+    "open": 0,
+    "closed": 0
+  },
+  "analytics": {
+    "default_read_succeeded": true,
+    "exact_exit_snapshot": "fixed2r",
+    "filtered_read_succeeded": true,
+    "closed": 0,
+    "win_rate": null,
+    "expectancy": null,
+    "net_pnl_idr": 0,
+    "postgrest_rpc_http_status": "not independently captured; rendered RPC success/contract checked"
+  },
+  "export": {
+    "filter": "exit_snapshot=fixed2r",
+    "closed_rows": 0,
+    "final_page": true,
+    "csv_download_exercised": false,
+    "production_cursor_over_200_exercised": false,
+    "contract_review": {
+      "p_status": "closed",
+      "p_limit": 200,
+      "p_exit_snapshot": "preserved",
+      "p_after": "next_after until has_more=false"
+    },
+    "postgrest_rpc_http_status": "not independently captured; rendered RPC success/contract checked"
+  },
+  "responsive": {
+    "widths": [
+      1440,
+      1024,
+      390
+    ],
+    "pages": [
+      "scanner",
+      "journal",
+      "analytics",
+      "journal/export"
+    ],
+    "horizontal_overflow": false,
+    "scope": "Real owner production data through localhost; not deployed Vercel."
+  },
+  "anonymous_application": {
+    "scanner": 200,
+    "journal": 200,
+    "analytics": 200,
+    "journal_export": 200,
+    "csv_api": 401,
+    "private_data_visible": false,
+    "scope": "Unauthenticated local application guards; not a fresh hosted outsider/disabled-owner RLS proof."
+  },
+  "local_tests": {
+    "scanner": {
+      "passed": 27,
+      "projects": [
+        "desktop",
+        "mobile",
+        "tablet"
+      ],
+      "source": "HTTP test double",
+      "final_empty_continuation_rerun": {
+        "passed": 3,
+        "projects": [
+          "desktop",
+          "mobile",
+          "tablet"
+        ],
+        "reason": "complete empty continuation must not be mislabeled partial"
+      }
+    },
+    "journal_contracts": {
+      "passed": 15,
+      "selected": [
+        "retry UUID/payload",
+        "CSV formula injection",
+        "large export continuation",
+        "exact exit snapshot",
+        "PT412 revision conflict"
+      ],
+      "source": "HTTP test double; two selected invocations, 12 plus 3"
+    },
+    "unit": {
+      "passed": 12
+    },
+    "lint": "PASS full lint plus final changed UI/test lint",
+    "production_build": "PASS Next.js16.3.6; final canonical .next build after empty-continuation fix",
+    "typecheck": "PASS",
+    "browser_bundle_pattern_check": {
+      "js_chunks": 12,
+      "private_credential_pattern_files": 0,
+      "artifact": ".next final production build",
+      "scope": "Pattern scan only; not proof of deployed bundle or all possible secret formats"
+    },
+    "windows_teardown": {
+      "normal_exit": true,
+      "test_ports_still_listening": 0,
+      "ports": [
+        3052,
+        3053,
+        3056
+      ]
+    }
+  },
+  "production_writes": false,
+  "backend_edited": false,
+  "commit_push_deploy": false,
+  "decision": "NO-GO for Vercel/full-stack; frontend partial-run adapter and hosted owner reads PASS within scope",
+  "limitations": [
+    "No hosted production journal lifecycle/mutation/independent-session proof from this frontend smoke",
+    "No hosted outsider or disabled-owner proof from this smoke",
+    "No nonempty published-signal embedding or RS-complete rendering proof on production",
+    "No production closed CSV content or cursor >200 proof on empty ledger",
+    "No Vercel login/callback/logout/bundle smoke",
+    "Backend provider freshness, anomaly/action reconciliation and full GitHub runner gates remain open per recovery report"
+  ]
+}

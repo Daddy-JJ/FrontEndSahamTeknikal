@@ -1,7 +1,79 @@
-# Scanner read adapter — 2026-10-02
+# Scanner read adapter — recovery handoff2026-10-03
 
-Frontend implementation/local verification only; this is not a full-stack GO
+## Latest backend gate alignment - 2026-10-03 (Asia/Jakarta)
+
+Documentation-only alignment from backend BACKEND_FINALIZATION_REPORT_20261003.md,
+FRONTEND_DEPLOYMENT_HANDOFF.md and github-full-universe-smoke-20261003.json.
+No unchanged owner smoke, migration001-007 check, runner dispatch or artifact
+redownload was performed by frontend. Backend evidence is accepted as reported;
+this update does not claim independent frontend verification of its artifact hash.
+
+- Owner production snapshot read remains PASS; existing evidence is preserved.
+- Full100 hosted GitHub fetch/evaluation PASS within partial-quality scope:
+  run37114744856, commit b4762fd063f45df6a9b29fb3d0a75b1fbdc8d371,
+  finished2026-10-03T09:57:22.242630Z (16:57:22 WIB). Backend downloaded artifact
+  11270993302 (1875 bytes), SHA256
+  8f51cb6c35a0b6ce7d3312bb9bb7e679ce2a6e052822bd432c08c3778b781726,
+  and reports the independent hash match. Prior failed run37114212953 stays FAIL.
+- Calendar/universe100mapping PASS within configured dates; fresh LOCAL target
+  recheck100/100 recovered, while the earlier failed fetch remains FAIL. Five
+  short histories remain ineligible for600-bar strategies. Quality remains
+  partial45/100:25 action holds,30 quality holds,zero signals,RS incomplete.
+- Hosted anonymous read denial14/14 PASS according to backend; this does not
+  prove authenticated outsider/disabled-owner or mutation authorization.
+- Production publisher still BLOCKED: no database publication attempted, receipt
+  null. Production snapshot is still8f634f6c-efae-4837-b1eb-1db04de6ffd2,
+  target2026-10-02, stored2026-10-02T17:50:07.347251Z, digest
+  0aefe872fe3aa9ead45f1f98f9980ff96cd819142ddcc0f9f64a0a83c1c4c121.
+  Runner digest2ed30d1968c2aa8b6491541d712fc37aca8a475d8d7de9f8e84d247aab512241
+  belongs to the runner artifact only; its timestamp/digest is not this snapshot.
+- Current run items lack an explicit per-item revision-ID/fetch-time binding for
+  all held/no-signal items. Do not substitute latest market revision provenance
+  for this run's input, or equate stored_at with provider freshness.
+- Hosted outsider/disabled-owner/mutation/lifecycle/concurrency remain BLOCKED
+  without genuine approved activity/identities or an authorized isolation method.
+  Scheduler OFF; full-stack/Vercel NO-GO; no frontend commit/push/deploy permission.
+
+Adapter/UI and PT412/idempotency, p_exit_snapshot, closed export limit200/cursor
+p_after and explicit correction FK remain unchanged. Older pending-runner notes
+below are historical and superseded by this section. Next backend gates are
+controlled hosted publisher and mandatory authenticated/mutation proofs; do not
+reopen unchanged migration, owner-read or successful runner fetch/evaluation.
+
+
+Frontend implementation plus local and hosted read verification; this is not a full-stack GO
 or authorization to publish GitHub workflows, create production QA trades, or deploy.
+
+### Partial scanner recovery verification — PASS within read-only scope
+
+Observation UTC 2026-10-02T22:50:09.953Z; Asia/Jakarta handoff version2026-10-03.
+Production owner UUID matches the existing enabled owner; no JWT was copied.
+Latest forward/live run8f634f6c-efae-4837-b1eb-1db04de6ffd2, target2026-10-02,
+stored2026-10-02T17:50:07.347251Z (3October00:50:07WIB), is partial45/100.
+Four25-row quality pages showed100 unique tickers:45 evaluated,25 corporate
+action holds and30 data quality holds. Scanner GETs all returned200. RS remains
+incomplete and no ranking is rendered. Published signals were empty; UI explains
+this is not a complete-universe result. Partial/failed runs default to quality.
+Storage/publication time is explicitly not provider freshness. No provider input
+time or unpublished fetch details are fabricated from missing metadata.
+
+Real owner journal/analytics/export reads succeeded with an empty ledger. Exact
+Fixed2R snapshot remained selected through analytics/export; export had0 closed
+rows and ended without continuation. Empty data cannot prove CSV contents or
+production cursor>200; no QA trades were created. RPC HTTP status for journal/
+analytics/export was not separately captured. Anonymous local application reads
+showed access-required pages, with CSV API401; this is not new hosted outsider
+RLS evidence. Desktop1440, tablet1024 and mobile390 showed no horizontal
+overflow on scanner, journal, analytics and export. This is localhost against
+production Supabase, not a Vercel smoke.
+
+Executed local checks: scanner27/27 plus final empty-continuation3/3; selected journal contracts12/12 plus
+PT412 fill checks3/3; unit12/12; lint, production build and standalone typecheck
+PASS. Tests use HTTP doubles and exited normally; generated Next type paths
+were restored without touching application edits. No backend edit, production
+write, commit, push or deploy. Full-stack/Vercel remains NO-GO pending backend
+gates and separate frontend authorization. Evidence:
+`docs/evidence/scanner-owner-production-20261003.json`.
 
 ## Read contract
 
@@ -25,8 +97,9 @@ No invented overview RPC or additional API version is needed.
 
 Aliases, JSON projection and inner embedding follow the official
 [Supabase select contract](https://supabase.com/docs/reference/javascript/select).
-Schema/envelope producers were read locally. Nonempty real hosted PostgREST
-projection/embedding remains a smoke gate; an HTTP double does not certify it.
+Schema/envelope producers were read locally. Hosted nonempty run/item projections passed in the recovery smoke above.
+Nonempty published-signal embedding remains unverified on production because
+this run has zero signals; an HTTP double does not certify that remaining case.
 
 ## Display behavior and limits
 
@@ -85,7 +158,17 @@ Final build and production read checks are in IMPLEMENTATION_STATUS.md.
 `next-env.d.ts` was generated during checks and restored to its original paths.
 All earlier local work is preserved; this list is not the entire repository diff.
 
-## Remaining backend gates
+## Historical backend gates — superseded by recovery report20261003
+
+Update2026-10-02: hosted owner-session read smoke now passed against production
+run08fb1080-5889-45e6-903d-3d2400bbf375. Observed GET scan_runs/items/signals
+HTTP200, failed0/100,100 unique data_quality_hold items over four25-row pages,
+zero published signals and incompleteRS. Failed runs default to quality pages.
+Evidence: docs/evidence/scanner-owner-production-20261002.json. Item snapshots
+provide status only; no deeper provider reason is invented. Backend now reports
+full100 mappings/fetch, assembled2024–2026 calendar and manual GitHub provider
+smoke PASS; full GitHub scanner publication, evaluated quality and deployment
+remain distinct gates. Earlier pending-input list below is historical.
 
 Backend files are untouched. Scope clarification is pending because prior
 instructions reserve backend edits for another chat.

@@ -22,7 +22,7 @@
 .auth-page .auth-action{margin-top:22px}
 .auth-page .auth-action p{color:var(--red)}
 .auth-page .auth-note{margin:24px 0;border-left:2px solid #a8c49d;padding-left:13px;color:var(--muted)}
-.auth-page>a,.auth-page>p>a{color:var(--green);font-size:13px}
+.auth-page>a:not(.primary-button),.auth-page>p>a{color:var(--green);font-size:13px}
 .auth-facts{display:grid;gap:12px;margin-top:24px}
 .auth-facts>div{display:grid;gap:5px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .auth-facts span{font-size:11px;color:var(--muted)}

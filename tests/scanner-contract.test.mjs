@@ -39,7 +39,7 @@ test("skip snapshots cannot masquerade as evaluated candidates", () => {
   assert.equal(parseScanItem({ ...skip, snapshot: { ...skip.snapshot, ticker: "OTHER" } }), null);
 });
 test("bounded pages reject repeated query values and retain explicit deadline state", () => {
-  assert.deepEqual(scannerQuery({}), { run: undefined, section: "signals", page: 1 });
+  assert.deepEqual(scannerQuery({}), { run: undefined, section: "auto", page: 1 });
   for (const query of [{ page: "0" }, { page: "41" }, { page: ["1", "2"] }, { run: "guessed" }, { section: "all" }]) {
     assert.equal(scannerQuery(query), null);
   }

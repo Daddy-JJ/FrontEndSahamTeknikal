@@ -1,8 +1,180 @@
 # Frontend implementation status
 
-Updated: 2026-10-02 (Asia/Jakarta).
+## Nonempty real-trade owner read / analytics / CSV - 2026-10-03
+
+Read-only existing owner session now verified the user-supplied NCKL closed
+trade e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4 at revision5. Analytics exact MA10
+snapshot and closed export both show1 trade, with selected snapshot retained
+through /api/export/journal?exit_snapshot=ma10&after=start. CSV downloaded and
+parsed: the provided trade/revision, actual-journal-export-v1, live/closed,
+actual-ma10-v1, risk6500.0000, P&L1244.0000, R0.191384615385 and fees256.0000
+match the rendered ledger/analytics values. These are backend-supplied figures,
+not recomputed finance metrics. Fee quality remains includes_estimates.
+Final export page has no continuation; >200 production cursor is NOT VERIFIED.
+Earlier empty-ledger and no-CSV-download observations remain historical.
+
+User's outsider and independent-session/concurrency skips remain SKIPPED /
+NOT VERIFIED, never assumed PASS; disabled-owner remains untested. No lifecycle,
+replay, conflict or fee-status mutation was sent. No new scanner/migration probe,
+backend edit, production write, commit/push or Vercel deployment. RPC HTTP status
+was not separately captured. No broker document or deployed Vercel proof.
+Evidence: docs/evidence/real-trade-owner-read-export-20261003.json.
+Current backend continuation prompt: docs/BACKEND_CONTINUATION_REAL_TRADE_20261003.md.
+
+
+## User-provided real trade and skipped gates - 2026-10-03
+
+Latest user supplies actual production trade e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4 and requests skipping
+point3 (outsider session checks) and point4 (independent sessions/concurrency),
+asking to assume PASS. Record these as SKIPPED at user request / NOT VERIFIED;
+never convert unexecuted checks to PASS. Backend release decision must disclose
+these skipped proofs. Existing permissions, RLS policies and app_members are
+unchanged; no disabled-owner or two-session denial/concurrency proof was added.
+
+Read-only inspection of the user-provided localhost journal page observed:
+NCKL closed, revision5, actual-ma10-v1, data live, buy/sell fills, a corrected buy
+and estimated fee status. User confirms it is a genuine production transaction.
+This is available input for backend ledger/receipt inspection, not certification
+of broker values, complete lifecycle execution, replay or stale conflict.
+No journal mutation, request replay, correction or Auth/member change was sent.
+Older empty-ledger observations remain historical; do not rerun unchanged scanner
+owner smoke or migration001-007 because this trade now exists.
+
+Point1 approves publisher preparation; controlled production publication still
+needs the concrete reviewed plan/execution authorization. Scheduler remains off.
+No frontend commit/push/deploy authorization follows. Current full-stack NO-GO
+remains pending publisher, remaining evidence/release disposition and Vercel
+smoke. Do not claim full-stack PASS from the skipped tests or this trade URL.
+Evidence: docs/evidence/real-trade-and-skipped-gates-20261003.json.
+
+
+## Latest backend gate alignment - 2026-10-03 (Asia/Jakarta)
+
+Documentation-only alignment from backend BACKEND_FINALIZATION_REPORT_20261003.md,
+FRONTEND_DEPLOYMENT_HANDOFF.md and github-full-universe-smoke-20261003.json.
+No unchanged owner smoke, migration001-007 check, runner dispatch or artifact
+redownload was performed by frontend. Backend evidence is accepted as reported;
+this update does not claim independent frontend verification of its artifact hash.
+
+- Owner production snapshot read remains PASS; existing evidence is preserved.
+- Full100 hosted GitHub fetch/evaluation PASS within partial-quality scope:
+  run37114744856, commit b4762fd063f45df6a9b29fb3d0a75b1fbdc8d371,
+  finished2026-10-03T09:57:22.242630Z (16:57:22 WIB). Backend downloaded artifact
+  11270993302 (1875 bytes), SHA256
+  8f51cb6c35a0b6ce7d3312bb9bb7e679ce2a6e052822bd432c08c3778b781726,
+  and reports the independent hash match. Prior failed run37114212953 stays FAIL.
+- Calendar/universe100mapping PASS within configured dates; fresh LOCAL target
+  recheck100/100 recovered, while the earlier failed fetch remains FAIL. Five
+  short histories remain ineligible for600-bar strategies. Quality remains
+  partial45/100:25 action holds,30 quality holds,zero signals,RS incomplete.
+- Hosted anonymous read denial14/14 PASS according to backend; this does not
+  prove authenticated outsider/disabled-owner or mutation authorization.
+- Production publisher still BLOCKED: no database publication attempted, receipt
+  null. Production snapshot is still8f634f6c-efae-4837-b1eb-1db04de6ffd2,
+  target2026-10-02, stored2026-10-02T17:50:07.347251Z, digest
+  0aefe872fe3aa9ead45f1f98f9980ff96cd819142ddcc0f9f64a0a83c1c4c121.
+  Runner digest2ed30d1968c2aa8b6491541d712fc37aca8a475d8d7de9f8e84d247aab512241
+  belongs to the runner artifact only; its timestamp/digest is not this snapshot.
+- Current run items lack an explicit per-item revision-ID/fetch-time binding for
+  all held/no-signal items. Do not substitute latest market revision provenance
+  for this run's input, or equate stored_at with provider freshness.
+- Hosted outsider/disabled-owner/mutation/lifecycle/concurrency remain BLOCKED
+  without genuine approved activity/identities or an authorized isolation method.
+  Scheduler OFF; full-stack/Vercel NO-GO; no frontend commit/push/deploy permission.
+
+Adapter/UI and PT412/idempotency, p_exit_snapshot, closed export limit200/cursor
+p_after and explicit correction FK remain unchanged. Older pending-runner notes
+below are historical and superseded by this section. Next backend gates are
+controlled hosted publisher and mandatory authenticated/mutation proofs; do not
+reopen unchanged migration, owner-read or successful runner fetch/evaluation.
+
+
+Updated: 2026-10-03 (Asia/Jakarta); owner smoke evidence timestamp unchanged.
 
 ## Production deployment preparation handoff
+
+### Partial scanner recovery verification — PASS within read-only scope
+
+Observation UTC 2026-10-02T22:50:09.953Z; Asia/Jakarta handoff version2026-10-03.
+Production owner UUID matches the existing enabled owner; no JWT was copied.
+Latest forward/live run8f634f6c-efae-4837-b1eb-1db04de6ffd2, target2026-10-02,
+stored2026-10-02T17:50:07.347251Z (3October00:50:07WIB), is partial45/100.
+Four25-row quality pages showed100 unique tickers:45 evaluated,25 corporate
+action holds and30 data quality holds. Scanner GETs all returned200. RS remains
+incomplete and no ranking is rendered. Published signals were empty; UI explains
+this is not a complete-universe result. Partial/failed runs default to quality.
+Storage/publication time is explicitly not provider freshness. No provider input
+time or unpublished fetch details are fabricated from missing metadata.
+
+Real owner journal/analytics/export reads succeeded with an empty ledger. Exact
+Fixed2R snapshot remained selected through analytics/export; export had0 closed
+rows and ended without continuation. Empty data cannot prove CSV contents or
+production cursor>200; no QA trades were created. RPC HTTP status for journal/
+analytics/export was not separately captured. Anonymous local application reads
+showed access-required pages, with CSV API401; this is not new hosted outsider
+RLS evidence. Desktop1440, tablet1024 and mobile390 showed no horizontal
+overflow on scanner, journal, analytics and export. This is localhost against
+production Supabase, not a Vercel smoke.
+
+Executed local checks: scanner27/27 plus final empty-continuation3/3; selected journal contracts12/12 plus
+PT412 fill checks3/3; unit12/12; lint, production build and standalone typecheck
+PASS. Tests use HTTP doubles and exited normally; generated Next type paths
+were restored without touching application edits. No backend edit, production
+write, commit, push or deploy. Full-stack/Vercel remains NO-GO pending backend
+gates and separate frontend authorization. Evidence:
+`docs/evidence/scanner-owner-production-20261003.json`.
+
+### Hosted scanner hold-run adapter verification — PASS2026-10-02
+
+User authorized read-only owner-session verification of the published production
+forward/live run08fb1080-5889-45e6-903d-3d2400bbf375. Existing adapter already
+read failed/0of100/incompleteRS; failed runs now default to bounded quality
+pages and a clear quality-failure alert. Added opt-in server-only sanitized
+SCANNER_READ_HTTP_AUDIT diagnostics (table/project/status only; no credentials,
+queries or bodies). Backend, production trades and Vercel are unchanged.
+
+Observed real owner-session production GETs for scan_runs, scan_run_items and
+scan_run_signals all HTTP200. The2026-10-02 run is failed0/100 with incompleteRS;
+four completed pages show100 unique tickers, all data_quality_hold, and no
+continuation; signals section is empty. Failed default is quality, not preparing.
+Snapshot holds expose status only; deeper causes are not fabricated. Sanitized
+evidence: docs/evidence/scanner-owner-production-20261002.json. Local scanner
+regression21/21 plus new failed-run/pagination3/3, unit12/12, lint and final
+production build passed. An initial standalone typecheck overlapped generated
+smoke types and failed; after restoring next-env.d.ts the standalone rerun passed. HTTP
+audit is disabled on the final local server. No commit/push/deploy was performed.
+
+### Login troubleshooting — 2026-10-02
+
+User reported a local production-configured login callback failure. Its original
+generic error does not establish a provider, redirect, or PKCE root cause.
+Fixed invisible retry-link text and added allowlisted callback failure reasons
+(missing code/configuration/verifier or exchange failure), without logging or
+forwarding OAuth codes, tokens or provider descriptions. Auth Playwright smoke
+passed12/12 across desktop/mobile/tablet; typecheck, lint, isolated production
+build and diff check passed. Public-key-only GET of production Auth settings
+returned HTTP200 and GitHub enabled. This does not verify the redirect allowlist
+or successful OAuth exchange. Local production-configured server restarted on
+3050; a fresh owner login is still required. Production Auth settings and
+frontend deployment remain unchanged. No new commit/push was performed.
+
+Follow-up `reason=exchange`: a Node Auth-settings probe in the restricted server
+execution context failed at the network layer; the same Node/public-key GET with
+approved network access returned HTTP200 and GitHub enabled. Restarted the owned
+local3050 production-configured server with approved network access. A fresh
+owner OAuth exchange remains pending; do not reuse the prior callback code or
+treat connectivity as successful login/RLS evidence.
+
+Fresh owner login then succeeded (user screenshot and browser observation).
+Local origin localhost3050 with production configuration verified enabled owner
+membership against the existing configured account. Read-only browser smoke:
+scanner shows no published forward run / preparing, journal has zero actual
+trades, analytics has zero samples, exact Fixed2R exit-snapshot filter succeeds,
+and closed export retains that filter and reports zero rows / final page.
+No QA trades or mutation requests were created. This establishes hosted owner
+read/empty-state behavior through the local frontend, not scanner runtime,
+nonempty ledger/CSV accuracy,201-row cursor traversal, outsider/disabled denial,
+logout or Vercel production smoke. Production deployment remains NO-GO.
 
 ### Git publication authorization — 2026-10-02
 

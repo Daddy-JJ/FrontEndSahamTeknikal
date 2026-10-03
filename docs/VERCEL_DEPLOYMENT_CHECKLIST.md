@@ -1,6 +1,103 @@
 # Vercel production deployment checklist
 
-Updated 2026-10-02, Asia/Jakarta. Production migrations001–007 and privileged
+## Nonempty real-trade owner read / analytics / CSV - 2026-10-03
+
+Read-only existing owner session now verified the user-supplied NCKL closed
+trade e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4 at revision5. Analytics exact MA10
+snapshot and closed export both show1 trade, with selected snapshot retained
+through /api/export/journal?exit_snapshot=ma10&after=start. CSV downloaded and
+parsed: the provided trade/revision, actual-journal-export-v1, live/closed,
+actual-ma10-v1, risk6500.0000, P&L1244.0000, R0.191384615385 and fees256.0000
+match the rendered ledger/analytics values. These are backend-supplied figures,
+not recomputed finance metrics. Fee quality remains includes_estimates.
+Final export page has no continuation; >200 production cursor is NOT VERIFIED.
+Earlier empty-ledger and no-CSV-download observations remain historical.
+
+User's outsider and independent-session/concurrency skips remain SKIPPED /
+NOT VERIFIED, never assumed PASS; disabled-owner remains untested. No lifecycle,
+replay, conflict or fee-status mutation was sent. No new scanner/migration probe,
+backend edit, production write, commit/push or Vercel deployment. RPC HTTP status
+was not separately captured. No broker document or deployed Vercel proof.
+Evidence: docs/evidence/real-trade-owner-read-export-20261003.json.
+Current backend continuation prompt: docs/BACKEND_CONTINUATION_REAL_TRADE_20261003.md.
+
+
+## User-provided real trade and skipped gates - 2026-10-03
+
+Latest user supplies actual production trade e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4 and requests skipping
+point3 (outsider session checks) and point4 (independent sessions/concurrency),
+asking to assume PASS. Record these as SKIPPED at user request / NOT VERIFIED;
+never convert unexecuted checks to PASS. Backend release decision must disclose
+these skipped proofs. Existing permissions, RLS policies and app_members are
+unchanged; no disabled-owner or two-session denial/concurrency proof was added.
+
+Read-only inspection of the user-provided localhost journal page observed:
+NCKL closed, revision5, actual-ma10-v1, data live, buy/sell fills, a corrected buy
+and estimated fee status. User confirms it is a genuine production transaction.
+This is available input for backend ledger/receipt inspection, not certification
+of broker values, complete lifecycle execution, replay or stale conflict.
+No journal mutation, request replay, correction or Auth/member change was sent.
+Older empty-ledger observations remain historical; do not rerun unchanged scanner
+owner smoke or migration001-007 because this trade now exists.
+
+Point1 approves publisher preparation; controlled production publication still
+needs the concrete reviewed plan/execution authorization. Scheduler remains off.
+No frontend commit/push/deploy authorization follows. Current full-stack NO-GO
+remains pending publisher, remaining evidence/release disposition and Vercel
+smoke. Do not claim full-stack PASS from the skipped tests or this trade URL.
+Evidence: docs/evidence/real-trade-and-skipped-gates-20261003.json.
+
+
+Recovery handoff2026-10-03, Asia/Jakarta; owner read observation recorded in UTC.
+
+Latest frontend owner read smoke PASS within scope: partial45/100,25 action
+holds,30 quality holds,zero signals,RS incomplete; scanner GET HTTP200.
+Partial quality pagination, storage-time/freshness warning and responsive layout
+passed on localhost with production Supabase. Journal/analytics/export are empty;
+production CSV content/cursor>200 and lifecycle are unproven. Details:
+`docs/evidence/scanner-owner-production-20261003.json`.
+
+## Latest backend gate alignment - 2026-10-03 (Asia/Jakarta)
+
+Documentation-only alignment from backend BACKEND_FINALIZATION_REPORT_20261003.md,
+FRONTEND_DEPLOYMENT_HANDOFF.md and github-full-universe-smoke-20261003.json.
+No unchanged owner smoke, migration001-007 check, runner dispatch or artifact
+redownload was performed by frontend. Backend evidence is accepted as reported;
+this update does not claim independent frontend verification of its artifact hash.
+
+- Owner production snapshot read remains PASS; existing evidence is preserved.
+- Full100 hosted GitHub fetch/evaluation PASS within partial-quality scope:
+  run37114744856, commit b4762fd063f45df6a9b29fb3d0a75b1fbdc8d371,
+  finished2026-10-03T09:57:22.242630Z (16:57:22 WIB). Backend downloaded artifact
+  11270993302 (1875 bytes), SHA256
+  8f51cb6c35a0b6ce7d3312bb9bb7e679ce2a6e052822bd432c08c3778b781726,
+  and reports the independent hash match. Prior failed run37114212953 stays FAIL.
+- Calendar/universe100mapping PASS within configured dates; fresh LOCAL target
+  recheck100/100 recovered, while the earlier failed fetch remains FAIL. Five
+  short histories remain ineligible for600-bar strategies. Quality remains
+  partial45/100:25 action holds,30 quality holds,zero signals,RS incomplete.
+- Hosted anonymous read denial14/14 PASS according to backend; this does not
+  prove authenticated outsider/disabled-owner or mutation authorization.
+- Production publisher still BLOCKED: no database publication attempted, receipt
+  null. Production snapshot is still8f634f6c-efae-4837-b1eb-1db04de6ffd2,
+  target2026-10-02, stored2026-10-02T17:50:07.347251Z, digest
+  0aefe872fe3aa9ead45f1f98f9980ff96cd819142ddcc0f9f64a0a83c1c4c121.
+  Runner digest2ed30d1968c2aa8b6491541d712fc37aca8a475d8d7de9f8e84d247aab512241
+  belongs to the runner artifact only; its timestamp/digest is not this snapshot.
+- Current run items lack an explicit per-item revision-ID/fetch-time binding for
+  all held/no-signal items. Do not substitute latest market revision provenance
+  for this run's input, or equate stored_at with provider freshness.
+- Hosted outsider/disabled-owner/mutation/lifecycle/concurrency remain BLOCKED
+  without genuine approved activity/identities or an authorized isolation method.
+  Scheduler OFF; full-stack/Vercel NO-GO; no frontend commit/push/deploy permission.
+
+Adapter/UI and PT412/idempotency, p_exit_snapshot, closed export limit200/cursor
+p_after and explicit correction FK remain unchanged. Older pending-runner notes
+below are historical and superseded by this section. Next backend gates are
+controlled hosted publisher and mandatory authenticated/mutation proofs; do not
+reopen unchanged migration, owner-read or successful runner fetch/evaluation.
+
+Historical update2026-10-02, Asia/Jakarta. Production migrations001–007 and privileged
 schema/FK GETs are now reported passed by backend. This frontend independently
 completed a local production-configured owner read smoke and anonymous denial
 checks. Production mutation, outsider/disabled-owner, scanner-live, and Vercel
@@ -127,15 +224,13 @@ terminal output or chat.
    mutation/idempotency/concurrency has not been tested; do not add permanent
    test trades. Use a safe authorized isolation method or leave those gates
    explicitly open.
-3. Complete scanner live readiness and smoke for provider/input freshness,
-   coverage, runner and output. Five Yahoo ticker probes passed connectivity and
-   identity only. The verified100-member workbook is available; no replacement
-   workbook is needed. Runtime calendar/historical session rules, remaining95
-   ticker mappings/full universe and actual GitHub runner execution are blocked.
-   The homepage currently states scanning is being prepared. Keep scheduling
-   disabled until that gate passes. The frontend read adapter is now implemented
-   against immutable run/item/signal tables; verify it on real published output
-   before claiming hosted scanner UI ready. See SCANNER_ADAPTER_AUDIT.md.
+3. Retain runner fetch/evaluation PASS from37114744856/b4762fd and accepted
+   owner-read PASS for the unchanged production partial45/25/30 snapshot.
+   Runner publication was not attempted; controlled hosted publisher remains
+   BLOCKED. Hosted anonymous14denials PASS is distinct from authenticated RLS.
+   Keep incompleteRS held, scheduler off and full-stack NO-GO until mandatory
+   publisher/authenticated mutation gates close. Do not reopen001-007, rerun
+   unchanged owner smoke or attach runner timestamps/digest to production.
 4. Approve the final HTTPS origin, then configure production Auth URLs/provider.
    Candidate values are Site URL `https://sahamteknikal.vercel.app`, app redirect
    `https://sahamteknikal.vercel.app/auth/callback`, and GitHub provider callback

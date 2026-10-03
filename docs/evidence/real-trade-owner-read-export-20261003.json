@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-03",
+  "timezone": "Asia/Jakarta",
+  "observed_at_utc": "2026-10-03T12:05:22.521Z",
+  "method": "Existing owner browser session, read-only journal/analytics/export navigation and downloaded CSV inspection; no direct-token extraction or mutation",
+  "trade_id": "e6dcfcc6-fd57-4e1d-9148-ecd5a738edc4",
+  "trade": {
+    "ticker": "NCKL",
+    "revision": 5,
+    "status": "closed",
+    "data_mode": "live",
+    "exit_version": "actual-ma10-v1",
+    "risk_idr": "6500.0000",
+    "net_pnl_idr": "1244.0000",
+    "realized_r": "0.191384615385",
+    "fee_total_idr": "256.0000",
+    "fee_quality": "includes_estimates"
+  },
+  "analytics": {
+    "exit_snapshot": "ma10",
+    "closed_sample": 1,
+    "displayed_expectancy": "0,191R",
+    "displayed_net_pnl": "Rp1.244",
+    "read_error": false,
+    "export_link_preserved_snapshot": true
+  },
+  "export": {
+    "cohort_query": "exit_snapshot=ma10",
+    "download_query": "exit_snapshot=ma10&after=start",
+    "closed_rows": 1,
+    "final_page": true,
+    "download_succeeded": true,
+    "provided_trade_present": true,
+    "revision_matches": 5,
+    "contract_version": "actual-journal-export-v1",
+    "raw_backend_decimals_preserved": true,
+    "csv_path": "C:/Users/DaddyJJ/Downloads/actual-journal-live-start.csv",
+    "csv_sha256": "9124a062e091d500313de7058150ffd7f55941848b1e4da0a589f9d4073244e7",
+    "production_over_200_cursor_tested": false
+  },
+  "skipped_tests": {
+    "outsider_session": "SKIPPED AT USER REQUEST / NOT VERIFIED",
+    "independent_session_concurrency": "SKIPPED AT USER REQUEST / NOT VERIFIED",
+    "disabled_owner": "NOT VERIFIED; no membership mutation"
+  },
+  "limitations": [
+    "No independently captured RPC HTTP status",
+    "No broker-document validation",
+    "No new lifecycle/replay/stale/concurrency mutation was sent by frontend",
+    "Only one-row production export; no >200 production cursor proof",
+    "Not Vercel smoke"
+  ],
+  "backend_edited": false,
+  "production_writes": false,
+  "jwt_copied_or_printed": false,
+  "commit_push_deploy": false
+}

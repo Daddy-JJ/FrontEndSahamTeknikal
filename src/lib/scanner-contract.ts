@@ -2,7 +2,7 @@
 // No calendar, indicator, ranking, or financial calculations belong here.
 export const scannerPageSize = 25;
 export const scannerStrategies = ["MACD_EMA200_V1", "FRACTAL_BREAKOUT_V1", "RS_BREAKOUT_V1", "PULLBACK_RECLAIM_V1"] as const;
-export type ScannerQuery = { run?: string; section: "signals" | "quality"; page: number };
+export type ScannerQuery = { run?: string; section: "signals" | "quality" | "auto"; page: number };
 export type ScanRun = {
   id: string; namespace: "forward"; data_mode: "live" | "fixture";
   session_date: string; status: "complete" | "partial" | "failed";
@@ -35,9 +35,9 @@ const uuid = (value: unknown): value is string => typeof value === "string"
 const positive = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value > 0;
 
 export function scannerQuery(query: Record<string, string | string[] | undefined>): ScannerQuery | null {
-  const page = query.page ?? "1", section = query.section ?? "signals";
+  const page = query.page ?? "1", section = query.section ?? "auto";
   if (typeof page !== "string" || !/^[1-9]\d?$/.test(page) || Number(page) > 40
-    || (section !== "signals" && section !== "quality")
+    || (section !== "signals" && section !== "quality" && !(section === "auto" && query.section === undefined))
     || (query.run !== undefined && !uuid(query.run))) return null;
   return { run: query.run as string | undefined, section, page: Number(page) };
 }

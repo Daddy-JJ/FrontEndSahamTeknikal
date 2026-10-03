@@ -28,8 +28,10 @@ export async function ScannerDashboard({ searchParams }: {
         <Link href="/scanner">Coba baca kembali</Link>
       </section></JournalShell>;
   }
-  const { run } = state, window = scanWindow(run, state.checkedAt);
+  const { run, section } = state, window = scanWindow(run, state.checkedAt);
   const rsHeld = run.ranking_status !== "complete";
+  const storedWib = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta",
+    dateStyle: "medium", timeStyle: "medium", hourCycle: "h23" }).format(new Date(run.stored_at));
   return <JournalShell mode={state.mode}>
     <section className="journal-hero"><div><span className="eyebrow">SCANNER / FORWARD / READ-ONLY</span>
       <h1>{run.status === "complete" ? "Hasil scan diterbitkan" : run.status === "partial" ? "Scan parsial" : "Scan gagal"}</h1>
@@ -40,20 +42,23 @@ export async function ScannerDashboard({ searchParams }: {
         <div><dt>Sesi target run</dt><dd>{run.session_date}</dd></div>
         <div><dt>Coverage dievaluasi / universe</dt><dd>{run.coverage_valid} / {run.coverage_total}</dd></div>
         <div><dt>Run terakhir complete/partial</dt><dd>{state.lastSuccessful?.session_date ?? "Belum ada"}</dd></div>
-        <div><dt>Run tersimpan (UTC)</dt><dd>{run.stored_at}</dd></div>
+        <div><dt>Snapshot tersimpan (WIB)</dt><dd><time dateTime={run.stored_at}>{storedWib} WIB</time></dd></div>
+        <div><dt>Timestamp backend (UTC)</dt><dd>{run.stored_at}</dd></div>
         <div><dt>RS cross-section</dt><dd>{rsHeld ? "RS ditahan: cross-section belum lengkap" : "Lengkap menurut backend"}</dd></div>
         <div><dt>Window entry kalender backend</dt><dd>{window === "elapsed" ? "Berakhir · hasil historis" : window === "open" ? "Belum berakhir" : "Belum tersedia"}</dd></div>
       </dl>
-      <p className="journal-help">Tanggal run bukan bukti freshness sesi bursa terkini. Halaman ini tidak menebak kalender bursa dari hari kerja atau gap harga. Window entry bukan harga fill; next-open belum diketahui.</p>
+      <p className="journal-help">Tanggal target dan waktu penyimpanan/publikasi snapshot bukan bukti freshness provider. Fetch provider yang gagal kualitas tidak otomatis menjadi snapshot terbaru. Freshness input belum dapat diverifikasi dari metadata run yang tersedia. Halaman ini tidak menebak kalender bursa dari hari kerja atau gap harga. Window entry bukan harga fill; next-open belum diketahui.</p>
       {window === "elapsed" && <p role="status" className="scanner-notice">Window entry sudah berakhir. Hasil ini tidak dinyatakan sebagai sinyal terkini.</p>}
       {rsHeld && <p role="status" className="scanner-notice">Ranking RS ditahan untuk seluruh cross-section. Strategi lain hanya ditampilkan sesuai evaluasi backend.</p>}
+      {run.status === "partial" && <p role="status" className="scanner-notice">Evaluasi parsial: {run.coverage_valid} dari {run.coverage_total} ticker dievaluasi; {run.coverage_total - run.coverage_valid} ticker belum lolos evaluasi. Nol sinyal yang diterbitkan bukan kesimpulan lengkap seluruh universe. Alasan hold tersimpan ditampilkan per ticker pada halaman quality.</p>}
+      {run.status === "failed" && <p role="alert" className="scanner-notice">Run gagal: tidak ada ticker yang lolos evaluasi kualitas. Entry ditahan; ini bukan hasil tidak ada sinyal. Baca status hold setiap ticker di bagian quality.</p>}
     </section>
     <section className="journal-panel scanner-results">
       <nav className="journal-history-tabs" aria-label="Bagian scanner">
-        <Link prefetch={false} aria-current={query.section === "signals" ? "page" : undefined} href={scannerHref(run.id, "signals")}>Sinyal diterbitkan</Link>
-        <Link prefetch={false} aria-current={query.section === "quality" ? "page" : undefined} href={scannerHref(run.id, "quality")}>Quality dan alasan skip</Link>
+        <Link prefetch={false} aria-current={section === "signals" ? "page" : undefined} href={scannerHref(run.id, "signals")}>Sinyal diterbitkan</Link>
+        <Link prefetch={false} aria-current={section === "quality" ? "page" : undefined} href={scannerHref(run.id, "quality")}>Quality dan alasan skip</Link>
       </nav>
-      {query.section === "quality" ? <>
+      {section === "quality" ? <>
         <h2>Quality dan evaluasi ticker</h2>
         {state.items.map(item => <article className="scanner-row" key={item.ticker}>
           <h3>{item.ticker}</h3><p>{scanReasonLabels[item.status] ?? item.status} <code>{item.status}</code></p>
@@ -74,14 +79,15 @@ export async function ScannerDashboard({ searchParams }: {
             <div><dt>Provider / universe / kalender</dt><dd>{signal.provider} / {signal.universe_version} / {signal.calendar_version}</dd></div>
           </dl><p>Harga next-open dan biaya transaksi belum diketahui. Tidak membuat trade actual atau paper.</p>
         </article>)}
-        {state.signals.length === 0 && <p role="status">{run.status === "complete" && query.page === 1
-          ? "Tidak ada sinyal yang diterbitkan untuk run ini."
-          : "Tidak ada sinyal pada halaman ini; status parsial/gagal dan quality hold tetap berlaku."}</p>}
+        {state.signals.length === 0 && <p role="status">{run.status === "complete"
+          ? query.page === 1 ? "Tidak ada sinyal yang diterbitkan untuk run ini." : "Tidak ada sinyal pada halaman lanjutan ini."
+          : run.status === "failed" ? "Publikasi sinyal ditahan: run gagal dan quality hold tetap berlaku."
+          : "Tidak ada sinyal pada halaman ini. Evaluasi parsial dan quality hold tetap berlaku; ini bukan hasil lengkap seluruh universe."}</p>}
       </>}
       <nav className="journal-pagination" aria-label="Halaman scanner">
-        {query.page > 1 && <Link prefetch={false} href={scannerHref(run.id, query.section, query.page - 1)}>← Sebelumnya</Link>}
+        {query.page > 1 && <Link prefetch={false} href={scannerHref(run.id, section, query.page - 1)}>← Sebelumnya</Link>}
         <span>Halaman {query.page} · maksimal 25 baris</span>
-        {state.hasMore && query.page < 40 && <Link prefetch={false} href={scannerHref(run.id, query.section, query.page + 1)}>Berikutnya →</Link>}
+        {state.hasMore && query.page < 40 && <Link prefetch={false} href={scannerHref(run.id, section, query.page + 1)}>Berikutnya →</Link>}
       </nav>
     </section>
     <p className="journal-footnote">Run {run.id} · digest {run.run_digest}. Halaman lanjutan memakai run immutable yang sama.</p>

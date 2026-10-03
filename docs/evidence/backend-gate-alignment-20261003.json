@@ -1,0 +1,73 @@
+{
+  "alignment_date": "2026-10-03",
+  "timezone": "Asia/Jakarta",
+  "verification_scope": "Read-only local backend document/evidence reconciliation; no remote probe, artifact download or repeated owner smoke",
+  "sources": [
+    {
+      "file": "../backend/docs/BACKEND_FINALIZATION_REPORT_20261003.md",
+      "sha256": "cf5057ccf54a42991f00cceee3a79879b5ed4a2012c05830083c1c8dfbb89c94"
+    },
+    {
+      "file": "../backend/docs/FRONTEND_DEPLOYMENT_HANDOFF.md",
+      "sha256": "434cbd15dcd33bf31ac92c333f33c8491bd8b6b7256dde5b3331dd6b922db70c"
+    },
+    {
+      "file": "../backend/docs/evidence/github-full-universe-smoke-20261003.json",
+      "sha256": "af3ebce983d9780e7ad1a5b96b57fbf05506a6395bd6e8c08b86944483db71f3"
+    }
+  ],
+  "backend_reported_runner": {
+    "run_url": "https://github.com/Daddy-JJ/BackendSahamTeknikal/actions/runs/37114744856",
+    "run_id": 37114744856,
+    "job_id": 111179265085,
+    "commit_sha": "b4762fd063f45df6a9b29fb3d0a75b1fbdc8d371",
+    "status": "completed",
+    "conclusion": "success",
+    "finished_at_utc": "2026-10-03T09:57:22.242630Z",
+    "public_archived_sources_verified": 129,
+    "fetched": 100,
+    "coverage_valid": 45,
+    "counts": {
+      "evaluated": 45,
+      "corporate_action_hold": 25,
+      "data_quality_hold": 30
+    },
+    "signals": 0,
+    "rs": "cross_section_incomplete",
+    "run_digest": "2ed30d1968c2aa8b6491541d712fc37aca8a475d8d7de9f8e84d247aab512241",
+    "artifact_id": 11270993302,
+    "artifact_bytes": 1875,
+    "artifact_sha256": "8f51cb6c35a0b6ce7d3312bb9bb7e679ce2a6e052822bd432c08c3778b781726",
+    "artifact_downloaded_hash_verified": true,
+    "artifact_report_sha256": "e52f05793e73a593905c7c4b859aa6919204cb54fb5e1856cddf84227693fcd2",
+    "production_publication_attempted": false,
+    "publication_receipt": null,
+    "scanner_quality_go": false,
+    "scheduler_enabled": false
+  },
+  "published_production_snapshot": {
+    "run_id": "8f634f6c-efae-4837-b1eb-1db04de6ffd2",
+    "target": "2026-10-02",
+    "stored_at": "2026-10-02T17:50:07.347251+00:00",
+    "run_digest": "0aefe872fe3aa9ead45f1f98f9980ff96cd819142ddcc0f9f64a0a83c1c4c121",
+    "coverage": {
+      "evaluated": 45,
+      "total": 100
+    },
+    "item_counts": {
+      "evaluated": 45,
+      "corporate_action_hold": 25,
+      "data_quality_hold": 30
+    },
+    "ranking_status": "cross_section_incomplete"
+  },
+  "owner_read": "prior PASS retained; not repeated",
+  "anonymous_hosted_reads": "backend-reported14/14 denials PASS",
+  "publisher": "BLOCKED; no publication attempt or receipt",
+  "hosted_authenticated_mutation_rls": "BLOCKED",
+  "scheduler_enabled": false,
+  "full_stack": "NO-GO",
+  "frontend_runtime_changed": false,
+  "backend_edited": false,
+  "commit_push_deploy": false
+}

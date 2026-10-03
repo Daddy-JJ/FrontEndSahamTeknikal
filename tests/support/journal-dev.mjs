@@ -55,17 +55,18 @@ const server=createServer(async(req,res)=>{
   if(url.pathname==="/rest/v1/scan_runs") {
     if(scenario==="scanner-read-error") return send({code:"08006"},503);
     if(scenario==="scanner-empty") return send(null);
-    const partial=scenario==="scanner-partial";
+    const partial=["scanner-partial","scanner-recovery"].includes(scenario);
+    const failed=scenario==="scanner-failed";
     const run={id:tradeId,namespace:"forward",data_mode:scenario==="scanner-mode-mismatch"?"fixture":"live",
-      session_date:"2026-09-28",status:partial?"partial":"complete",coverage_valid:partial?99:100,
+      session_date:"2026-09-28",status:failed?"failed":partial?"partial":"complete",coverage_valid:failed?0:scenario==="scanner-recovery"?45:partial?99:100,
       coverage_total:100,stored_at:"2026-09-28T14:00:00Z",run_digest:"a".repeat(64),
-      ranking_status:partial?"cross_section_incomplete":"complete",publication_deadline:"2026-09-29T02:00:00Z"};
+      ranking_status:partial||failed?"cross_section_incomplete":"complete",publication_deadline:"2026-09-29T02:00:00Z"};
     return send(run);
   }
   if(url.pathname==="/rest/v1/scan_run_items") {
     const rows=Array.from({length:100},(_,i)=>{
       const ticker=`TEST${String(i+1).padStart(3,"0")}`;
-      const status=scenario==="scanner-partial" && i===0?"corporate_action_hold":"evaluated";
+      const status=scenario==="scanner-recovery" ? (i<45?"evaluated":i<70?"corporate_action_hold":"data_quality_hold") : scenario==="scanner-failed"?"data_quality_hold":scenario==="scanner-partial" && i===0?"corporate_action_hold":"evaluated";
       return {ticker,status,snapshot:{ticker,status,candidates:status==="evaluated"?[
         {strategy:"MACD_EMA200_V1",triggered:false,reason:"insufficient_history",reference_close:100,stop:null},
         {strategy:"RS_BREAKOUT_V1",triggered:false,reason:"cross_section_incomplete",reference_close:100,stop:null},
@@ -81,7 +82,7 @@ const server=createServer(async(req,res)=>{
       provider:"yfinance",universe_version:"synthetic-test-only",calendar_version:"synthetic-test-only",
       candidate:{strategy:"FRACTAL_BREAKOUT_V1",triggered:true,reason:"eligible",reference_close:100,stop:95}}}));
     if(scenario==="scanner-invalid-signal") rows[0].signals.data_mode="fixture";
-    return send(scenario==="scanner-no-signals" || scenario==="scanner-partial"?[]:pageOf(url,rows));
+    return send(scenario==="scanner-no-signals" || scenario==="scanner-partial" || scenario==="scanner-recovery"?[]:pageOf(url,rows));
   }
   if(scenario==="schema-error") return send({code:"PGRST205",message:"synthetic missing migration"},404);
   if(url.pathname==="/rest/v1/rpc/export_actual_journal") {
