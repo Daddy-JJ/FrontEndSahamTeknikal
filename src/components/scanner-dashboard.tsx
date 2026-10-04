@@ -59,30 +59,168 @@ export async function ScannerDashboard({ searchParams }: {
         <Link prefetch={false} aria-current={section === "quality" ? "page" : undefined} href={scannerHref(run.id, "quality")}>Quality dan alasan skip</Link>
       </nav>
       {section === "quality" ? <>
-        <h2>Quality dan evaluasi ticker</h2>
-        {state.items.map(item => <article className="scanner-row" key={item.ticker}>
-          <h3>{item.ticker}</h3><p>{scanReasonLabels[item.status] ?? item.status} <code>{item.status}</code></p>
-          {item.candidates.map(c => <p key={c.strategy}><strong>{c.strategy}</strong> · {c.strategy === "RS_BREAKOUT_V1" && rsHeld ? "RS ditahan: cross-section belum lengkap" : scanReasonLabels[c.reason] ?? c.reason}</p>)}
-          {item.status !== "evaluated" && <p>Entry baru ditahan. Alasan tersimpan: {item.status}. Rincian tambahan tidak tersedia dalam snapshot run.</p>}
-        </article>)}
+        <div className="journal-toolbar">
+          <div>
+            <span className="eyebrow">MATRIKS KUALITAS &amp; STRATEGI</span>
+            <h2>Evaluasi Konstituen Universe</h2>
+          </div>
+          <span className="muted small">Coverage {run.coverage_valid} / {run.coverage_total}</span>
+        </div>
+        <div className="table-scroll">
+          <table className="dense-table">
+            <thead>
+              <tr>
+                <th className="text-left">Ticker</th>
+                <th className="text-left">Status Data</th>
+                <th className="text-right">Ref Close</th>
+                <th className="text-center">MACD+EMA200</th>
+                <th className="text-center">Fractal BO</th>
+                <th className="text-center">RS Breakout</th>
+                <th className="text-center">Pullback Rec</th>
+                <th className="text-left">Diagnosa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {state.items.map(item => {
+                const macd = item.candidates.find(c => c.strategy === "MACD_EMA200_V1");
+                const fractal = item.candidates.find(c => c.strategy === "FRACTAL_BREAKOUT_V1");
+                const rs = item.candidates.find(c => c.strategy === "RS_BREAKOUT_V1");
+                const pullback = item.candidates.find(c => c.strategy === "PULLBACK_RECLAIM_V1");
+                const refClose = item.candidates[0]?.reference_close;
+                const isEval = item.status === "evaluated";
+
+                const renderCell = (c: typeof macd, isRs = false) => {
+                  if (!isEval) return <span style={{ color: "var(--muted)" }}>—</span>;
+                  if (isRs && rsHeld) return <span className="subtle-badge amber">RS Hold</span>;
+                  if (!c) return <span style={{ color: "var(--muted)" }}>—</span>;
+                  if (c.triggered) return <span className="subtle-badge emerald font-bold">✓ Triggered</span>;
+                  return <span style={{ color: "var(--muted)" }}>—</span>;
+                };
+
+                return (
+                  <tr key={item.ticker}>
+                    <td className="text-left font-bold">{item.ticker}</td>
+                    <td className="text-left">
+                      <span className={"subtle-badge " + (isEval ? "emerald" : "amber")}>
+                        {scanReasonLabels[item.status] ?? item.status}
+                      </span>
+                    </td>
+                    <td className="text-right mono">
+                      {refClose ? `Rp${new Intl.NumberFormat("id-ID").format(refClose)}` : "—"}
+                    </td>
+                    <td className="text-center">{renderCell(macd)}</td>
+                    <td className="text-center">{renderCell(fractal)}</td>
+                    <td className="text-center">{renderCell(rs, true)}</td>
+                    <td className="text-center">{renderCell(pullback)}</td>
+                    <td className="text-left" style={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {isEval
+                        ? (rs && rs.reason === "cross_section_incomplete" ? "RS ditahan: cross-section incomplete" : "Evaluasi lengkap; kriteria teknikal aktif")
+                        : `Ditahan: ${scanReasonLabels[item.status] ?? item.status}`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
         {state.items.length === 0 && <p role="status">Tidak ada item pada halaman ini. Coverage run tetap {run.coverage_valid} / {run.coverage_total}.</p>}
       </> : <>
-        <h2>Sinyal diterbitkan untuk run ini</h2>
-        {state.signals.map(signal => <article className="scanner-row" key={signal.id}>
-          <h3>{signal.ticker} · {signal.strategy}</h3>
-          <p>{signal.cohort === "late_model_only" ? "LATE / MODEL ONLY · bukan forward entry" : "FORWARD · snapshot backend"}</p>
-          <p>Keputusan backend: {scanReasonLabels[signal.candidate.reason] ?? signal.candidate.reason}</p>
-          <dl className="journal-facts">
-            <div><dt>Reference close · bukan fill</dt><dd>{signal.candidate.reference_close}</dd></div>
-            <div><dt>Stop rencana backend</dt><dd>{signal.candidate.stop ?? "Belum tersedia"}</dd></div>
-            <div><dt>Sesi entry yang direncanakan</dt><dd>{signal.planned_entry_session}</dd></div>
-            <div><dt>Provider / universe / kalender</dt><dd>{signal.provider} / {signal.universe_version} / {signal.calendar_version}</dd></div>
-          </dl><p>Harga next-open dan biaya transaksi belum diketahui. Tidak membuat trade actual atau paper.</p>
-        </article>)}
-        {state.signals.length === 0 && <p role="status">{run.status === "complete"
-          ? query.page === 1 ? "Tidak ada sinyal yang diterbitkan untuk run ini." : "Tidak ada sinyal pada halaman lanjutan ini."
-          : run.status === "failed" ? "Publikasi sinyal ditahan: run gagal dan quality hold tetap berlaku."
-          : "Tidak ada sinyal pada halaman ini. Evaluasi parsial dan quality hold tetap berlaku; ini bukan hasil lengkap seluruh universe."}</p>}
+        <div className="journal-toolbar">
+          <div>
+            <span className="eyebrow">FORWARD SIGNALS</span>
+            <h2>Sinyal Diterbitkan</h2>
+          </div>
+          <span className="muted small">{state.signals.length} sinyal pada halaman ini</span>
+        </div>
+        {state.signals.length > 0 ? (
+          <div className="table-scroll">
+            <table className="dense-table">
+              <thead>
+                <tr>
+                  <th className="text-left">Ticker</th>
+                  <th className="text-left">Strategi</th>
+                  <th className="text-right">Ref Close</th>
+                  <th className="text-right">Plan Stop</th>
+                  <th className="text-right">Risk Buffer (ΔR)</th>
+                  <th className="text-left">Target Entry</th>
+                  <th className="text-center">Cohort</th>
+                  <th className="text-left">Keputusan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.signals.map(signal => {
+                  const refClose = signal.candidate.reference_close;
+                  const stop = signal.candidate.stop;
+                  const riskIdr = stop ? refClose - stop : null;
+                  const riskPct = stop && refClose > 0 ? ((refClose - stop) / refClose) * 100 : null;
+                  return (
+                    <tr key={signal.id}>
+                      <td className="text-left font-bold" style={{ fontSize: "14px" }}>{signal.ticker}</td>
+                      <td className="text-left">
+                        <span className="subtle-badge purple">{signal.strategy}</span>
+                      </td>
+                      <td className="text-right mono font-bold">
+                        Rp{new Intl.NumberFormat("id-ID").format(refClose)}
+                      </td>
+                      <td className="text-right mono" style={{ color: "var(--red)" }}>
+                        {stop ? `Rp${new Intl.NumberFormat("id-ID").format(stop)}` : "—"}
+                      </td>
+                      <td className="text-right mono">
+                        {riskIdr !== null && riskPct !== null ? (
+                          <span style={{ color: "var(--red)" }}>
+                            -Rp{new Intl.NumberFormat("id-ID").format(riskIdr)} (-{riskPct.toFixed(1)}%)
+                          </span>
+                        ) : "—"}
+                      </td>
+                      <td className="text-left">
+                        <span className="mono" style={{ fontSize: "11px" }}>{signal.planned_entry_session}</span>
+                        <small style={{ display: "block", color: "var(--muted)" }}>Next-Open</small>
+                      </td>
+                      <td className="text-center">
+                        <span className={"subtle-badge " + (signal.cohort === "forward" ? "emerald" : "gray")}>
+                          {signal.cohort === "forward" ? "FORWARD" : "LATE"}
+                        </span>
+                      </td>
+                      <td className="text-left" style={{ fontSize: "11px", color: "var(--muted)" }}>
+                        {scanReasonLabels[signal.candidate.reason] ?? signal.candidate.reason}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="journal-empty" style={{ padding: "40px 20px" }}>
+            <h3 style={{ fontSize: "16px", marginBottom: "8px" }}>
+              {run.status === "complete"
+                ? `Tidak Ada Sinyal Baru untuk Sesi ${run.session_date}`
+                : run.status === "failed"
+                ? "Publikasi sinyal ditahan: run gagal dan quality hold tetap berlaku."
+                : "Evaluasi parsial: beberapa saham belum lolos evaluasi kualitas."}
+            </h3>
+            <p style={{ maxWidth: "560px", margin: "0 auto 16px" }}>
+              {run.status === "complete"
+                ? `Seluruh ${run.coverage_valid} saham universe telah dievaluasi lengkap oleh engine deterministik. Tidak ada emiten yang memenuhi seluruh kriteria entry setup malam ini. Disiplin trading: nol sinyal adalah hasil valid yang melindungi modal.`
+                : "Periksa status hold setiap ticker pada tab 'Quality dan alasan skip'."}
+            </p>
+            <Link
+              href={scannerHref(run.id, "quality")}
+              style={{
+                display: "inline-block",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                background: "var(--green)",
+                color: "#fff",
+                fontSize: "12px",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Lihat Matriks Evaluasi Konstituen →
+            </Link>
+          </div>
+        )}
       </>}
       <nav className="journal-pagination" aria-label="Halaman scanner">
         {query.page > 1 && <Link prefetch={false} href={scannerHref(run.id, section, query.page - 1)}>← Sebelumnya</Link>}

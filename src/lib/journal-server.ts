@@ -66,4 +66,5 @@ export type ActualAnalytics = {
   profit_factor_status: "defined" | "no_losses" | "no_closed";
   payoff_ratio: number | null;
   payoff_status: "defined" | "no_wins" | "no_losses" | "no_closed";
+  fee_quality?: "actual" | "includes_estimates" | "no_closed";
 };
