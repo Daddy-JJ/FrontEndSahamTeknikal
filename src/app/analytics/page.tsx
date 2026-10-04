@@ -121,17 +121,23 @@ export default async function AnalyticsPage({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const context = await journalOwner();
-  if (context.kind !== "ready") return <JournalShell mode={null}>
-    <section className="journal-hero">
-      <span className="eyebrow">ANALYTICS / PERFORMA</span>
-      <h1>Analitik belum dapat dibuka</h1>
-      <p>{context.kind === "unconfigured" ? "Konfigurasi Supabase aplikasi belum tersedia."
-        : context.kind === "unauthenticated" ? "Masuk dengan akun owner untuk melihat analisis performa."
-        : context.kind === "forbidden" ? "Akun ini tidak memiliki keanggotaan owner aktif."
-        : "Mode data proyek belum dapat diverifikasi."}</p>
-      <Link className="primary-button" href="/login">Masuk sebagai owner</Link>
-    </section>
-  </JournalShell>;
+  if (context.kind !== "ready") return (
+    <JournalShell mode={null}>
+      <section className="journal-hero">
+        <div>
+          <span className="eyebrow">ANALYTICS / PERFORMA</span>
+          <h1>Analitik belum dapat dibuka</h1>
+          <p>{context.kind === "unconfigured" ? "Konfigurasi Supabase aplikasi belum tersedia."
+            : context.kind === "unauthenticated" ? "Masuk dengan akun owner untuk melihat analisis performa."
+            : context.kind === "forbidden" ? "Akun ini tidak memiliki keanggotaan owner aktif."
+            : "Mode data proyek belum dapat diverifikasi."}</p>
+        </div>
+        <div className="journal-hero-actions">
+          <Link className="primary-button" href="/login">Masuk sebagai owner</Link>
+        </div>
+      </section>
+    </JournalShell>
+  );
 
   const query = await searchParams;
   if (query.tab === "paper") return <JournalShell mode={context.mode}>
@@ -140,14 +146,19 @@ export default async function AnalyticsPage({ searchParams }: {
   </JournalShell>;
 
   const filters = journalFilters(query);
-  if (!filters) return <JournalShell mode={context.mode}>
-    <Tabs tab="actual" />
-    <section className="journal-panel">
-      <h1>Filter cohort tidak valid</h1>
-      <p>Tanggal, strategi, atau konfigurasi exit tidak valid. Statistik tidak dimuat agar cohort tidak berubah tanpa persetujuan.</p>
-      <Link href="/analytics">Hapus filter</Link>
-    </section>
-  </JournalShell>;
+  if (!filters) return (
+    <JournalShell mode={context.mode}>
+      <Tabs tab="actual" />
+      <section className="journal-panel">
+        <span className="eyebrow">FILTER COHORT</span>
+        <h1>Filter cohort tidak valid</h1>
+        <p style={{ marginTop: "8px" }}>Tanggal, strategi, atau konfigurasi exit tidak valid. Statistik tidak dimuat agar cohort tidak berubah tanpa persetujuan.</p>
+        <div className="journal-actions">
+          <Link className="secondary-link" href="/analytics">Hapus filter</Link>
+        </div>
+      </section>
+    </JournalShell>
+  );
 
   const [result, rCurveRes, attributionRes] = await Promise.all([
     context.supabase.rpc("actual_journal_analytics", {

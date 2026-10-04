@@ -10,9 +10,12 @@ export default async function OperationsPage() {
     return (
       <JournalShell mode={null}>
         <section className="journal-panel">
+          <span className="eyebrow">OPERASI SCANNER</span>
           <h1>Operasi belum dapat dibuka</h1>
-          <p>Akses operasi memerlukan sesi owner aktif dan mode proyek yang terverifikasi.</p>
-          <Link href="/login">Masuk sebagai owner</Link>
+          <p style={{ marginTop: "8px" }}>Akses operasi memerlukan sesi owner aktif dan mode proyek yang terverifikasi.</p>
+          <div className="journal-actions">
+            <Link className="primary-button" href="/login">Masuk sebagai owner</Link>
+          </div>
         </section>
       </JournalShell>
     );

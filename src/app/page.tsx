@@ -10,10 +10,20 @@ export default function Home({ searchParams }: { searchParams: Promise<Record<st
   if (appDataMode() === "live") return <ScannerDashboard searchParams={searchParams} />;
   if (appDataMode() !== "fixture" || !fixturePreviewAllowed()) {
     const loginReady = Boolean(publicSupabaseConfig());
-    return <main className="configuration-page"><span className="eyebrow">IDX NIGHT SCANNER</span><h1>Pemindaian live sedang disiapkan.</h1>
-      <p>Data pasar belum tersedia di dashboard. Status ini bukan hasil scan dan tidak memakai angka demo.</p>
-      {loginReady ? <Link className="primary-button" href="/login">Masuk sebagai pemilik</Link> : <p role="status">Akses pemilik belum tersedia.</p>}
-    </main>;
+    return (
+      <main className="configuration-page">
+        <span className="eyebrow">IDX NIGHT SCANNER</span>
+        <h1>Pemindaian live sedang disiapkan.</h1>
+        <p style={{ marginTop: "12px" }}>Data pasar belum tersedia di dashboard. Status ini bukan hasil scan dan tidak memakai angka demo.</p>
+        {loginReady ? (
+          <div className="journal-actions">
+            <Link className="primary-button" href="/login">Masuk sebagai pemilik</Link>
+          </div>
+        ) : (
+          <p role="status" style={{ marginTop: "14px" }}>Akses pemilik belum tersedia.</p>
+        )}
+      </main>
+    );
   }
   if (data.data_mode !== "fixture" || data.schema_version !== "1.0.0") throw new Error("Invalid fixture contract");
   return <Workspace snapshot={data as unknown as Snapshot} />;

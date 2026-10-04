@@ -40,15 +40,19 @@ export default async function JournalPage({ searchParams }: {
     return (
       <JournalShell mode={null}>
         <section className="journal-hero">
-          <span className="eyebrow">JURNAL TRANSAKSI</span>
-          <h1>Jurnal belum dapat dibuka</h1>
-          <p>
-            {context.kind === "unconfigured" ? "Konfigurasi Supabase aplikasi belum tersedia."
-              : context.kind === "unauthenticated" ? "Masuk dengan akun owner untuk melihat transaksi."
-              : context.kind === "forbidden" ? "Akun ini tidak memiliki keanggotaan owner aktif."
-              : "Mode data proyek belum dapat diverifikasi."}
-          </p>
-          <Link className="primary-button" href="/login">Masuk sebagai owner</Link>
+          <div>
+            <span className="eyebrow">JURNAL TRANSAKSI</span>
+            <h1>Jurnal belum dapat dibuka</h1>
+            <p>
+              {context.kind === "unconfigured" ? "Konfigurasi Supabase aplikasi belum tersedia."
+                : context.kind === "unauthenticated" ? "Masuk dengan akun owner untuk melihat transaksi."
+                : context.kind === "forbidden" ? "Akun ini tidak memiliki keanggotaan owner aktif."
+                : "Mode data proyek belum dapat diverifikasi."}
+            </p>
+          </div>
+          <div className="journal-hero-actions">
+            <Link className="primary-button" href="/login">Masuk sebagai owner</Link>
+          </div>
         </section>
       </JournalShell>
     );
@@ -67,9 +71,14 @@ export default async function JournalPage({ searchParams }: {
     return (
       <JournalShell mode={context.mode}>
         <section className="journal-hero">
-          <h1>Halaman riwayat tidak valid</h1>
-          <p>Nomor halaman harus berupa bilangan bulat positif.</p>
-          <Link href="/journal">Kembali ke trade terbaru</Link>
+          <div>
+            <span className="eyebrow">NAVIGASI RIWAYAT</span>
+            <h1>Halaman riwayat tidak valid</h1>
+            <p>Nomor halaman harus berupa bilangan bulat positif.</p>
+          </div>
+          <div className="journal-hero-actions">
+            <Link className="secondary-link" href="/journal">Kembali ke trade terbaru</Link>
+          </div>
         </section>
       </JournalShell>
     );
@@ -85,10 +94,16 @@ export default async function JournalPage({ searchParams }: {
     if (!signal || result?.error || signal.id !== query.signal_id || signal.data_mode !== context.mode
       || signal.namespace !== "forward" || !journalStrategies.includes(signal.strategy)
       || !/^[A-Z0-9]{2,12}$/.test(signal.ticker)) return (
-      <JournalShell mode={context.mode}><section className="journal-panel">
-        <h1>Sinyal draft belum dapat diverifikasi</h1><p>Tidak ada draft atau fill yang dibuat. Pilih ulang sinyal dari scanner.</p>
-        <Link href="/scanner">Kembali ke scanner</Link>
-      </section></JournalShell>
+      <JournalShell mode={context.mode}>
+        <section className="journal-panel">
+          <span className="eyebrow">DRAFT TRADE</span>
+          <h1>Sinyal draft belum dapat diverifikasi</h1>
+          <p style={{ marginTop: "8px" }}>Tidak ada draft atau fill yang dibuat. Pilih ulang sinyal dari scanner.</p>
+          <div className="journal-actions">
+            <Link className="secondary-link" href="/scanner">Kembali ke scanner</Link>
+          </div>
+        </section>
+      </JournalShell>
     );
     linkedSignal=signal;
   }
