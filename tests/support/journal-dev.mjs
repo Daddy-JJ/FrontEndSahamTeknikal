@@ -54,7 +54,7 @@ const server=createServer(async(req,res)=>{
   if(url.pathname==="/rest/v1/deployment_settings") return send({data_mode:scenario.startsWith("scanner-") || scenario==="settings-live"?"live":"fixture"});
   if(url.pathname==="/rest/v1/scan_runs") {
     if(scenario==="scanner-read-error") return send({code:"08006"},503);
-    if(scenario==="scanner-empty") return send(null);
+    if(scenario==="scanner-empty" || url.searchParams.getAll("session_date").some(value=>value.startsWith("eq.") && value!=="eq.2026-09-28")) return send(null);
     const partial=["scanner-partial","scanner-recovery"].includes(scenario);
     const failed=scenario==="scanner-failed";
     const run={id:tradeId,namespace:"forward",data_mode:scenario==="scanner-mode-mismatch"?"fixture":"live",
@@ -74,14 +74,19 @@ const server=createServer(async(req,res)=>{
     });
     return send(pageOf(url,rows));
   }
+  if(url.pathname==="/rest/v1/signals") return send(scenario==="scanner-draft-missing" ? null : {id:"1".padStart(64,"0"),ticker:"TEST001",strategy:"FRACTAL_BREAKOUT_V1",namespace:"forward",data_mode:"live"});
   if(url.pathname==="/rest/v1/scan_run_signals") {
     const rows=Array.from({length:26},(_,i)=>({signals:{id:(i+1).toString(16).padStart(64,"0"),
       namespace:"forward",data_mode:"live",ticker:`TEST${String(i+1).padStart(3,"0")}`,
       strategy:"FRACTAL_BREAKOUT_V1",session_date:"2026-09-28",planned_entry_session:"2026-09-29",
       cohort:scenario==="scanner-late"?"late_model_only":"forward",published_at:"2026-09-28T14:00:00Z",
+      config_hash:"c".repeat(64),input_digest:"d".repeat(64),price_basis:"unadjusted",provider_version:"synthetic-test-only",engine_version:"synthetic-test-only",source_revision:"synthetic-test-only",
       provider:"yfinance",universe_version:"synthetic-test-only",calendar_version:"synthetic-test-only",
-      candidate:{strategy:"FRACTAL_BREAKOUT_V1",triggered:true,reason:"eligible",reference_close:100,stop:95}}}));
+      candidate:{strategy:"FRACTAL_BREAKOUT_V1",triggered:true,reason:"eligible",reference_close:100,stop:95,rules:[{name:"close_above_fractal",passed:true}],level:98,pivot_date:"2026-09-23",available_session:"2026-09-25"}}}));
+    if(scenario==="scanner-invalid-stop") {rows[0].signals.candidate.stop=110;rows[0].signals.candidate.reason="stop_invalid";}
+    if(scenario==="scanner-missing-stop") {rows[0].signals.candidate.stop=null;rows[0].signals.candidate.reason="missing_stop";}
     if(scenario==="scanner-invalid-signal") rows[0].signals.data_mode="fixture";
+    if(url.searchParams.has("signals.strategy") && url.searchParams.get("signals.strategy")!=="eq.FRACTAL_BREAKOUT_V1") return send([]);
     return send(scenario==="scanner-no-signals" || scenario==="scanner-partial" || scenario==="scanner-recovery"?[]:pageOf(url,rows));
   }
   if(scenario==="schema-error") return send({code:"PGRST205",message:"synthetic missing migration"},404);
@@ -100,13 +105,17 @@ const server=createServer(async(req,res)=>{
   if(url.pathname==="/rest/v1/rpc/apply_actual_journal") {
     mutations.push(body);
     await new Promise(resolve=>setTimeout(resolve,250));
-    if(scenario==="retry" && mutations.length===1) return send({code:"08006",message:"synthetic lost reply"},503);
+    if(["retry","scanner-draft-retry"].includes(scenario) && mutations.length===1) return send({code:"08006",message:"synthetic lost reply"},503);
     if(scenario==="revision-conflict") return send({code:"PT412",message:"revision_conflict"},412);
     return send({trade_id:tradeId,revision:7,action:body.p_action});
   }
   if(url.pathname==="/rest/v1/rpc/actual_journal_analytics") {
+    if(scenario==="analytics-error") return send({code:"08006"},503);
     const empty=scenario==="empty";
-    return send({mode:"actual",data_mode:scenario==="mode-mismatch"?"live":"fixture",basis:"IDR",
+    return send({mode:"actual",data_mode:scenario.startsWith("scanner-") || scenario==="mode-mismatch"?"live":"fixture",basis:scenario==="analytics-wrong-basis"?"R":"IDR",
+      cohort_date:"exit_session_Asia_Jakarta",from:body?.p_from??null,to:body?.p_to??null,
+      primary_strategy:body?.p_strategy??null,exit_version:body?.p_exit_version??null,exit_snapshot:body?.p_exit_snapshot??null,
+      fee_quality:empty?"no_closed":"includes_estimates",
       closed:empty?0:1,open:empty?0:1,draft:empty?0:1,wins:empty?0:1,losses:0,breakeven:0,estimated_fee_trades:empty?0:1,
       net_pnl_idr:empty?"0":"1000",win_rate:empty?null:1,expectancy_r:empty?null:"0.833333333333",
       profit_factor:null,profit_factor_status:empty?"no_closed":"no_losses",
@@ -114,7 +123,7 @@ const server=createServer(async(req,res)=>{
   }
   if(url.pathname==="/rest/v1/actual_trades") {
     if(scenario==="trade-error") return send({code:"08006"},503);
-    const row=scenario==="partial"?{...trade,status:"open",closed_at:null,open_quantity:100,remaining_cost_idr:"10125",realized_pnl_idr:"350",realized_r:null,fee_total_idr:"75"}:
+    const row=scenario.startsWith("scanner-")?{...trade,data_mode:"live"}:scenario==="partial"?{...trade,status:"open",closed_at:null,open_quantity:100,remaining_cost_idr:"10125",realized_pnl_idr:"350",realized_r:null,fee_total_idr:"75"}:
       scenario==="draft"?{...trade,status:"open",entry_finalized_at:null,closed_at:null,open_quantity:200,remaining_cost_idr:"20250",initial_risk_idr:null,realized_r:null,realized_pnl_idr:"0",fee_total_idr:"50"}:
       scenario==="ma"?{...trade,exit_policy_snapshot:{version:"actual-ma10-v1",mode:"ma_close",ma_type:"SMA",period:10}}:trade;
     if(url.searchParams.has("id")) return send(scenario==="missing"?null:row);

@@ -1,4 +1,70 @@
-# Frontend implementation status
+## Paket 2 Implementation Complete & Verified — 2026-10-04
+
+Implemented locally and verified 100% against backend migration 008 contracts:
+1. Analytics R-Curve & Strategy Attribution (R-02): Parallel RPC calls to `actual_journal_r_curve` & `actual_journal_attribution` via `parseActualRCurve` and `parseActualAttribution`; native SVG curve visualization with cumulative R & max drawdown; 4-strategy performance breakdown table.
+2. Live Paper Persistence & Reader (R-01): Live mode queries `read_paper_journal` RPC on Supabase with owner RLS, parsed strictly with `parseLivePaperJournal`; shows status badge, trades count, win rate, expectancy R, cumulative R, ambiguous count, and position table.
+3. Signal Actions Server Action (R-04): Server action `setSignalAction` calling `set_signal_action` RPC with UUID idempotency, optimistic revision locking, and `PT412` `revision_conflict` handling.
+4. Operational Observation (R-05): Operations page queries latest `scan_runs` row on Supabase (target session, status, coverage, timestamp WIB, digest) while maintaining runner disclaimers.
+5. Verification: 21 unit tests PASS, 18 Playwright tests PASS, Typecheck PASS, Next.js production build PASS.
+Status: READY FOR CANDIDATE RELEASE COMMIT & PUSH (PAKET 3).
+
+## Audit remainder reconciled — 2026-10-04
+
+Documentation-only update: FE-01–FE-08 regressions CLOSED LOCAL; FE-09 PARTIAL;
+FE-10 local QA closed with hosted acceptance UNVERIFIED; FE-11 documentation
+corrected with exact candidate release still OPEN. Missing paper/aggregate/chart/
+actions/settings/operations capabilities and hosted/Vercel evidence are tracked
+as R-01–R-08 in docs/AUDIT_REMAINING_20261004.md, with owner and closure proof.
+Partial scanner quality is a disclosed backend limitation, not a hidden demand
+for100% coverage or a reason to remove holds. Frontend corrective status YELLOW;
+full-stack readiness remains NO-GO per reported backend gates. No unchanged tests
+or remote smoke were repeated. This update changes no code/backend/env or release.
+
+## Corrective frontend implementation / local QA complete — 2026-10-04
+
+Implemented locally against baseline52d11d0; no new release SHA or deployment.
+FE-01–FE-08 correctness fixes are regression-tested: live paper excludes fixtures,
+analytics validates full cohort/p_exit_snapshot and RPC response/error states,
+unsupported browser financial aggregates removed, partial realized P&L preserved,
+scanner continuation/zero-publication/failed/partial distinguished, reference-close
+risk calculation removed, net-IDR PF/payoff null/status presentation corrected.
+Available FE-09 integration adds immutable signal metadata/rules/timing, bounded
+date/strategy reads, verified signal-linked draft and owner Operations runner link.
+
+Actual local checks PASS: unit18/18; journal57/57; scanner production-build54/54;
+final fixture-preview=false guards6/6; default workspace/Auth browser18/18;
+lint, nonincremental typecheck, ordinary Next16.3.6 build and diff check.
+Dedicated browser suites span desktop/tablet/mobile. Full scanner54 used simulated
+live with the prior preview flag=true; final false guards are separate evidence.
+Earlier dev suite timing failures/interruption remain disclosed, not PASS.
+Test ports3052/3053/3054/3056 closed after QA; user server3050 was preserved.
+Bounded scan of41 source files and15 browser bundles found no suspected private
+literal/configured-private-value matches; this is not exhaustive hosted security
+proof. CSV serializer SHA256 matches backend read-only contract.
+
+Full MVP and hosted release remain OPEN / NO-GO: persisted paper, canonical curve/
+attribution, immutable chart inputs, persistent actions/settings and operational
+metrics still require backend contracts/adapters. Unavailable UI is not completion.
+No fresh hosted JWT/RLS/lifecycle/publisher or Vercel smoke, production write,
+backend edit, env replacement, commit, push or deploy occurred in this continuation.
+Outsider/concurrency waivers remain SKIPPED / NOT VERIFIED.
+Report: docs/FRONTEND_REMEDIATION_REPORT_20261004.md.
+Proof: docs/evidence/frontend-remediation-local-20261004.json.
+Backend prompt: docs/BACKEND_REMEDIATION_HANDOFF_20261004.md.
+The older entries below are historical and do not certify this local candidate.
+
+## Audit remediation planned — 2026-10-04 (Asia/Jakarta)
+
+Status: PLANNED, not implemented or deployed by this continuation. The current
+read-only audit of HEAD52d11d0 identified FE-01 through FE-11, including live paper
+fixture reachability, analytics cohort/error/aggregate regressions, partial P&L
+and scanner empty-state presentation, incomplete live integrations and QA/doc gaps.
+The active PLAN.md now defines Action/Proof steps for frontend corrections,
+backend contract dependencies, dedicated QA and exact-deployment acceptance.
+The older plan and evidence remain historical; their PASS claims do not certify
+the latest changed flows. No code/backend/env/production changes, tests or remote
+smoke were performed while writing this plan. Commit/push/deploy require separate
+authorization. Full MVP/live acceptance remains open until the stated gates close.
 
 ## Nonempty real-trade owner read / analytics / CSV - 2026-10-03
 

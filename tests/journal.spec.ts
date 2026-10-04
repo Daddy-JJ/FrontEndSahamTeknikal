@@ -15,13 +15,14 @@ test("owner empty state, null metrics and responsive layout",async({page},info)=
   await page.goto("/journal");
   await expect(page.getByText("FIXTURE DEV",{exact:true})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Belum ada transaksi aktual"})).toBeVisible();
-  await expect(page.getByRole("button",{name:"Buat draft"})).toBeVisible();
+  await page.getByText("+ Buat Draft Transaksi Baru",{exact:true}).click();
+  await expect(page.getByRole("button",{name:"Simpan Draft"})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`test-results/journal-empty-${info.project.name}.png`,fullPage:true,caret:"initial"});
   await page.goto("/analytics");
-  const win=page.locator(".journal-metrics>div").filter({hasText:"Win rate"});
+  const win=page.locator(".analytics-stat-card").filter({hasText:"Win Rate (Closed)"});
   await expect(win.locator("strong")).toHaveText("—");
-  await expect(page.getByText("0 win · 0 loss · 0 breakeven")).toBeVisible();
+  await expect(page.getByText("0 menang · 0 kalah · 0 BEP")).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -46,7 +47,7 @@ test("missing schema, membership read failure and mode mismatch are not empty da
     await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
     await page.goto("/journal");
     await expect(page.getByRole("heading",{name:"Schema jurnal belum tersedia"})).toBeVisible();
-    await expect(page.getByRole("button",{name:"Buat draft"})).toHaveCount(0);
+    await expect(page.getByRole("button",{name:"Simpan Draft"})).toHaveCount(0);
     await page.goto("/analytics");
     await expect(page.getByRole("heading",{name:"Statistik belum dapat dibaca"})).toBeVisible();
   }
@@ -73,7 +74,7 @@ test("SOT example is formatted from server ledger, MA parameters and fee estimat
   await page.screenshot({path:`test-results/journal-closed-${info.project.name}.png`,fullPage:true,caret:"initial"});
   await page.goto("/analytics");
   await expect(page.getByText("Belum ada loss",{exact:true})).toHaveCount(2);
-  await expect(page.locator(".journal-facts>div").filter({hasText:"Closed dengan fee estimasi"})).toHaveText("Closed dengan fee estimasi1");
+  await expect(page.locator(".journal-facts>div").filter({hasText:"Trade dengan Biaya Estimasi"})).toHaveText("Trade dengan Biaya Estimasi1 trade");
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`test-results/analytics-${info.project.name}.png`,fullPage:true,caret:"initial"});
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"ma"}});
@@ -92,6 +93,11 @@ test("partial trade retains initial risk, remaining basis and null realized R",a
   await expect(page.getByRole("button",{name:"Catat pembelian"})).toHaveCount(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`test-results/journal-partial-${info.project.name}.png`,fullPage:true,caret:"initial"});
+  await page.goto("/journal");
+  const ledger=page.locator(".dense-table tbody tr").filter({hasText:"TEST"});
+  await expect(ledger).toContainText("+Rp350");
+  await expect(ledger).not.toContainText("Floating");
+  await expect(ledger.locator("td").nth(8)).toHaveText("—");
 });
 
 test("read errors disable mutations and differ from missing trade",async({page,request})=>{
@@ -107,15 +113,16 @@ test("read errors disable mutations and differ from missing trade",async({page,r
 test("retry retains request ID and payload; pending prevents double submit",async({page,request})=>{
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"retry"}});
   await page.goto("/journal");
+  await page.getByText("+ Buat Draft Transaksi Baru",{exact:true}).click();
   await page.getByLabel("Kode saham").fill("TEST");
   await page.getByLabel("Initial stop · Rp").fill("95");
   const requestId=await page.locator('input[name="request_id"]').inputValue();
-  await page.getByRole("button",{name:"Buat draft"}).click();
-  await expect(page.getByRole("button",{name:"Buat draft"})).toBeDisabled();
+  await page.getByRole("button",{name:"Simpan Draft"}).click();
+  await expect(page.getByRole("button",{name:"Simpan Draft"})).toBeDisabled();
   await expect(page.locator("form").getByRole("alert")).toContainText("belum dapat dipastikan");
   await expect(page.getByLabel("Kode saham")).toHaveValue("TEST");
   await expect(page.locator('input[name="request_id"]')).toHaveValue(requestId);
-  await page.getByRole("button",{name:"Buat draft"}).click();
+  await page.getByRole("button",{name:"Simpan Draft"}).click();
   await expect(page).toHaveURL(new RegExp(`/journal/${id}\\?saved=1`));
   const {mutations}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(mutations).toHaveLength(2);
@@ -205,13 +212,14 @@ test("expired session is refreshed on journal and authorization is rechecked on 
   await context.addCookies([{...cookie,value:"base64-"+Buffer.from(JSON.stringify(session)).toString("base64url")}]);
   const response=await page.goto("/journal");
   expect(response?.headers()["cache-control"]).toMatch(/no-cache|no-store/);
-  await expect(page.getByRole("button",{name:"Buat draft"})).toBeVisible();
+  await page.getByText("+ Buat Draft Transaksi Baru",{exact:true}).click();
+  await expect(page.getByRole("button",{name:"Simpan Draft"})).toBeVisible();
   let probe=await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(probe.calls.some((c:{path:string})=>c.path==="/auth/v1/token")).toBe(true);
   await page.getByLabel("Kode saham").fill("TEST");
   await page.getByLabel("Initial stop · Rp").fill("95");
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"outsider"}});
-  await page.getByRole("button",{name:"Buat draft"}).click();
+  await page.getByRole("button",{name:"Simpan Draft"}).click();
   await expect(page.locator("form").getByRole("alert")).toContainText("izin owner");
   probe=await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(probe.mutations).toHaveLength(0);
@@ -265,16 +273,16 @@ test("exact exit snapshot is shared by analytics and CSV without widening cohort
 test("long trade and event histories page independently with bounded reads",async({page,request})=>{
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"long-history"}});
   await page.goto("/journal");
-  await expect(page.locator(".journal-trade")).toHaveCount(100);
+  await expect(page.locator(".dense-table tbody tr")).toHaveCount(100);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const beforeTradePage=(await (await request.get("http://127.0.0.1:3053/__calls")).json()).calls.length;
   await page.getByRole("navigation",{name:"Halaman riwayat trade"}).getByRole("link",{name:"Lebih lama →"}).click();
   await expect(page).toHaveURL(/page=2/);
-  await expect(page.locator(".journal-trade")).toHaveCount(100);
+  await expect(page.locator(".dense-table tbody tr")).toHaveCount(100);
   const tradePageCalls=(await (await request.get("http://127.0.0.1:3053/__calls")).json()).calls.slice(beforeTradePage);
   expect(tradePageCalls.some((c:{path:string})=>c.path.endsWith("actual_journal_analytics"))).toBe(false);
   await page.getByRole("navigation",{name:"Halaman riwayat trade"}).getByRole("link",{name:"Lebih lama →"}).click();
-  await expect(page.locator(".journal-trade")).toHaveCount(5);
+  await expect(page.locator(".dense-table tbody tr")).toHaveCount(5);
   await page.goto(`/journal/${id}`);
   await expect(page.locator(".journal-fill")).toHaveCount(50);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -299,5 +307,43 @@ test("long trade and event histories page independently with bounded reads",asyn
       expect(c.query["latest_correction.limit"]).toBe("1");
       expect(c.query.select).toContain("actual_fill_corrections!actual_fill_corrections_fill_id_fkey");
     }
+  }
+});
+
+
+test("analytics failure is unavailable and does not preload closed history",async({page,request})=>{
+  for(const scenario of ["analytics-error","analytics-wrong-basis"]) {
+    await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+    await page.goto("/analytics");
+    await expect(page.getByRole("heading",{name:"Statistik belum dapat dibaca"})).toBeVisible();
+    await expect(page.locator(".analytics-stat-card")).toHaveCount(0);
+    const {calls}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
+    expect(calls.some((c:{path:string})=>c.path.endsWith("actual_trades"))).toBe(false);
+  }
+});
+
+test("cohort navigation retains dates and exact exit in KPI and export",async({page,request})=>{
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"closed"}});
+  await page.goto("/analytics?from=2026-09-01&to=2026-09-29&exit_snapshot=fixed2r");
+  const link=page.getByRole("link",{name:"Fractal Breakout",exact:true});
+  await expect(link).toHaveAttribute("href",/from=2026-09-01/);
+  await expect(link).toHaveAttribute("href",/to=2026-09-29/);
+  await expect(link).toHaveAttribute("href",/exit_snapshot=fixed2r/);
+  await link.click();
+  await expect(page.getByRole("link",{name:"Ekspor CSV cohort"})).toHaveAttribute("href",/strategy=FRACTAL_BREAKOUT_V1/);
+  const {calls}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
+  const rpc=calls.filter((c:{path:string})=>c.path.endsWith("actual_journal_analytics")).at(-1);
+  expect(rpc.body).toMatchObject({p_from:"2026-09-01",p_to:"2026-09-29",p_strategy:"FRACTAL_BREAKOUT_V1",p_exit_snapshot:{mode:"fixed_rr",target_r:2,version:"actual-fixed2r-v1"}});
+  expect(calls.some((c:{path:string})=>c.path.endsWith("actual_trades"))).toBe(false);
+});
+
+test("fixture paper remains isolated from actual ledger reads",async({page,request})=>{
+  for(const route of ["/journal?tab=paper","/analytics?tab=paper"]) {
+    await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"empty"}});
+    await page.goto(route);
+    await expect(page.getByText(/FIXTURE DEVELOPMENT/)).toBeVisible();
+    await expect(page.getByText(/Data sintetis untuk pengujian tampilan/)).toBeVisible();
+    const {calls}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
+    expect(calls.some((c:{path:string})=>c.path.includes("actual_"))).toBe(false);
   }
 });

@@ -1,13 +1,58 @@
 # Vercel production deployment checklist
 
-## Live production smoke verified on Vercel domain - 2026-10-03 (Asia/Jakarta)
+## Current corrective candidate — 2026-10-04
 
-End-to-end production verification completed and PASSED on https://sahamteknikal.vercel.app:
+Frontend remediation is local, uncommitted and undeployed. Historical Oct3
+user-provided smoke below has no candidate SHA; it does not certify HEAD52d11d0
+or this diff. Complete MVP/full-stack acceptance remains open. Latest backend
+handoff still distinguishes local publication from hosted publisher proof, and
+outsider/concurrency skips stay SKIPPED/NOT VERIFIED. Do not infer production
+GO from local tests, a previous domain login or an unavailable feature panel.
+
+Current scope and results: docs/FRONTEND_REMEDIATION_REPORT_20261004.md.
+Backend contract packet: docs/BACKEND_REMEDIATION_HANDOFF_20261004.md.
+
+| Variable | Production | Preview | Scope |
+| --- | --- | --- | --- |
+| NEXT_PUBLIC_SUPABASE_URL | production hcjfxbynqzsaidlwvdfx | development vgmkpsestahkfahzdtae | public browser/build |
+| NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | matching production public key | matching development public key | public browser/build |
+| DATA_MODE | live | fixture | server |
+| ALLOW_FIXTURE_PREVIEW | false or unset | true | server |
+
+Vercel separate frontend repository, root directory `.`. No service-role,
+SUPABASE_SECRET_KEY, DB password, provider/OAuth/AI secret in frontend/Vercel.
+APP_BASE_URL is not an implementation environment variable. Never copy key
+values to evidence. Public config changes require a matching new build.
+
+Origin candidate: https://sahamteknikal.vercel.app. Before release, verify actual
+domain/version, production Supabase Site URL and exact application redirect
+https://sahamteknikal.vercel.app/auth/callback; GitHub provider callback stays
+https://hcjfxbynqzsaidlwvdfx.supabase.co/auth/v1/callback. Preview Auth must use
+development and its allowed origin. Local configuration/auth was not changed.
+Enabled app_members owner must match Auth UUID; never promote a new login.
+
+Release sequence: close/disposition backend gates and missing contracts; integrate
+required MVP adapters; local build/dedicated regression review; explicit commit/
+push/deploy authorization; record candidate SHA, Vercel deployment ID/domain and
+last known-working rollback deployment; then exact-release owner login/callback/
+logout, scanner date/filter/partial/failed/no-data, journal/analytics/exact closed
+CSV, desktop/tablet/mobile acceptance. No permanent QA production trades. RLS/
+mutation/denial and >200-row proof retain separate scope and target evidence.
+Rollback uses the recorded compatible Vercel deployment after verifying its env
+and backend contract; never invent a rollback ID or revert DB migrations here.
+
+## Historical evidence — preserved, not current candidate acceptance
+
+## User-reported production smoke on Vercel domain - 2026-10-03 (Asia/Jakarta)
+
+Prior user-reported checks on https://sahamteknikal.vercel.app (no deployment SHA recorded):
 - Auth: GitHub OAuth callback and owner verification at /auth/check PASS (UID 3e877216-b881-41c0-8e16-f7bd7a3f596d, Owner aktif).
 - Scanner: Live forward run 3c700de4-8389-400e-b862-31f2c8998a64, digest 653f9f9168b20dabfc14dc9fa18090e6ed48f5d63546c897107cc44258dd4110, stored 2026-10-03 19:44:34 WIB, partial coverage 45/100, RS rank held, and hold reasons displayed per ticker PASS.
 - Journal & Analytics: Trade NCKL closed at revision 5 (PULLBACK RECLAIM V1, Net Rp1.244, 0.19R, 100% win rate) PASS.
 - CSV Export: Downloaded and parsed in Excel with exact decimals, neutral formulas, and contract version actual-journal-export-v1 PASS.
-- Status: PRODUCTION APPLICATION LIVE AND VERIFIED. Evidence: docs/evidence/vercel-production-smoke-final-20261003.json.
+- Historical user-reported label: "PRODUCTION APPLICATION LIVE AND VERIFIED".
+  This has no recorded release SHA and does not establish full-stack acceptance
+  or acceptance of the current candidate. Evidence: docs/evidence/vercel-production-smoke-final-20261003.json.
 
 ## Nonempty real-trade owner read / analytics / CSV - 2026-10-03
 

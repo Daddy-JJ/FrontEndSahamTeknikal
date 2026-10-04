@@ -1,0 +1,85 @@
+{
+  "observed_at_utc": "2026-10-04T16:04:26.738Z",
+  "scope": "local only, HTTP doubles; no hosted/Vercel",
+  "baseline_head": "52d11d0078a55f9798a47765eb5a0ce785109ca2",
+  "scanner_production_build_full": {
+    "command": "npm.cmd run test:scanner:release",
+    "stats": {
+      "startTime": "2026-10-04T15:49:42.791Z",
+      "duration": 162992.006,
+      "expected": 54,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "viewports": [
+      "desktop 1440x1000",
+      "tablet 1024x768",
+      "mobile iPhone 13"
+    ],
+    "data_mode": "simulated live",
+    "fixture_preview_flag": "prior true in server harness; DATA_MODE=live still excluded fixtures"
+  },
+  "journal": {
+    "desktop_passed": 19,
+    "mobile_tablet_passed": 38,
+    "total_passed": 57
+  },
+  "unit": {
+    "passed": 18
+  },
+  "lint": "PASS final",
+  "typecheck": "PASS final nonincremental",
+  "normal_build": {
+    "command": "npm.cmd run build",
+    "result": "PASS",
+    "next_version": "16.3.6"
+  },
+  "workspace_browser": {
+    "command": "npm.cmd test",
+    "passed": 18,
+    "result": "PASS local only"
+  },
+  "hosted_production": "NOT RUN",
+  "scanner_final_fixture_guard": {
+    "command": "npm.cmd run test:scanner:release -- --grep \"live paper|unpublished\"",
+    "stats": {
+      "startTime": "2026-10-04T15:54:20.482Z",
+      "duration": 24899.911,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "fixture_preview_flag": false,
+    "data_mode": "simulated live",
+    "scope": "unpublished and live-paper exclusion across three viewports"
+  },
+  "diff_check": "PASS",
+  "security_check": {
+    "source_files": 41,
+    "browser_bundle_files": 15,
+    "public_env_names": [
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL"
+    ],
+    "suspected_private_literal_matches": 0,
+    "configured_private_value_bundle_matches": 0,
+    "limits": "Bounded patterns/configured values only, not exhaustive unknown-secret or hosted proof"
+  },
+  "teardown": {
+    "ports_closed": [
+      3052,
+      3053,
+      3054,
+      3056
+    ],
+    "user_server_3050": "preserved"
+  },
+  "csv_contract": {
+    "frontend_hash": "AA855662A503DE3FEA11AF6548763E0C5E47A1A89F87CE2012EDC270E9A27CDA",
+    "backend_hash": "AA855662A503DE3FEA11AF6548763E0C5E47A1A89F87CE2012EDC270E9A27CDA",
+    "match": true
+  },
+  "failed_attempts": "Baseline invalid cohort reproduced; scanner dev harness/locator/navigation timing failures and interrupted dev run disclosed in PLAN/report. Full passing scanner evidence uses isolated production-build HTTP doubles."
+}

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
-import { journalOwner, type ActualTrade, type ActualAnalytics } from "@/lib/journal-server";
+import { journalOwner, type ActualTrade } from "@/lib/journal-server";
 import { JournalForm } from "@/components/journal-form";
 import { journalPageNumber, journalPageSize } from "@/lib/journal-page";
-import demoData from "@/generated/demo.json";
+import { parseActualAnalytics } from "@/lib/actual-analytics";
+import { journalFilters, journalStrategies } from "@/lib/journal-filters";
+import { PaperJournalPreview } from "@/components/paper-journal-preview";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +33,7 @@ const errorCopy: Record<string, string> = {
 };
 
 export default async function JournalPage({ searchParams }: {
-  searchParams: Promise<{ error?: string; page?: string | string[]; tab?: string }>;
+  searchParams: Promise<Record<string,string | string[] | undefined>>;
 }) {
   const context = await journalOwner();
   if (context.kind !== "ready") {
@@ -54,6 +56,12 @@ export default async function JournalPage({ searchParams }: {
 
   const query = await searchParams;
   const tab = query.tab === "paper" ? "paper" : "actual";
+  if (tab === "paper") return (
+    <JournalShell mode={context.mode}>
+      <section className="journal-hero"><h1>Paper journal</h1><Link href="/journal">Jurnal aktual</Link><Link href="/analytics?tab=paper">Analitik paper</Link></section>
+      <PaperJournalPreview mode={context.mode} view="journal" />
+    </JournalShell>
+  );
   const page = journalPageNumber(query.page);
   if (page === null) {
     return (
@@ -67,6 +75,23 @@ export default async function JournalPage({ searchParams }: {
     );
   }
 
+  let linkedSignal: {id:string;ticker:string;strategy:string} | null = null;
+  if (query.signal_id !== undefined) {
+    const validId=typeof query.signal_id === "string" && /^[0-9a-f]{64}$/.test(query.signal_id);
+    const result=validId ? await context.supabase.from("signals")
+      .select("id,ticker,strategy,data_mode,namespace").eq("id",query.signal_id!)
+      .eq("data_mode",context.mode).eq("namespace","forward").maybeSingle() : null;
+    const signal=result?.data;
+    if (!signal || result?.error || signal.id !== query.signal_id || signal.data_mode !== context.mode
+      || signal.namespace !== "forward" || !journalStrategies.includes(signal.strategy)
+      || !/^[A-Z0-9]{2,12}$/.test(signal.ticker)) return (
+      <JournalShell mode={context.mode}><section className="journal-panel">
+        <h1>Sinyal draft belum dapat diverifikasi</h1><p>Tidak ada draft atau fill yang dibuat. Pilih ulang sinyal dari scanner.</p>
+        <Link href="/scanner">Kembali ke scanner</Link>
+      </section></JournalShell>
+    );
+    linkedSignal=signal;
+  }
   const [{ data: trades, error: tradesError }, analyticsResult] = await Promise.all([
     context.supabase.from("actual_trades")
       .select("id,ticker,data_mode,primary_strategy,status,revision,initial_stop,current_stop,initial_risk_idr,provisional_risk_idr,open_quantity,remaining_cost_idr,realized_pnl_idr,realized_r,fee_total_idr,exit_policy_snapshot,closed_at,created_at")
@@ -77,29 +102,26 @@ export default async function JournalPage({ searchParams }: {
     page === 1 ? context.supabase.rpc("actual_journal_analytics") : Promise.resolve(null),
   ]);
 
-  const analytics = analyticsResult?.data;
-  const ready = !tradesError && (page > 1 || (!analyticsResult?.error
-    && analytics?.data_mode === context.mode && analytics?.mode === "actual"));
+  const summary = parseActualAnalytics(analyticsResult?.data,context.mode,journalFilters({})!);
+  const ready = !tradesError && (page > 1 || (!analyticsResult?.error && summary !== null));
   const rows = ((trades ?? []) as ActualTrade[]).slice(0, journalPageSize);
   const hasMore = (trades?.length ?? 0) > journalPageSize;
-  const summary = analytics as ActualAnalytics | null;
-  const error = query.error;
+
+  const error = typeof query.error === "string" ? query.error : null;
 
   return (
     <JournalShell mode={context.mode}>
       <section className="journal-hero">
         <div>
-          <span className="eyebrow">JURNAL / {tab === "paper" ? "PAPER SIMULATION" : "AKTUAL"} / EOD</span>
+          <span className="eyebrow">JURNAL / AKTUAL / EOD</span>
           <h1>Catatan transaksi, satu ledger finansial.</h1>
           <p>
-            {tab === "paper"
-              ? "Simulasi sinyal EOD scanner harian dengan normalisasi unit risiko R. Disiplin trade-level tanpa modal agregat fiktif."
-              : "Setiap fill dan biaya tercatat resmi. Partial exit tetap open; statistik performa hanya menghitung trade closed."}
+            Setiap fill dan biaya tercatat resmi. Partial exit tetap open; statistik performa hanya menghitung trade closed.
           </p>
         </div>
         <div className="journal-hero-actions">
           <Link href="/analytics">Buka Analytics →</Link>
-          {ready && tab === "actual" && <Link href="/journal/export">Ekspor CSV Closed</Link>}
+          {ready && <Link href="/journal/export">Ekspor CSV Closed</Link>}
         </div>
       </section>
 
@@ -113,83 +135,12 @@ export default async function JournalPage({ searchParams }: {
         <Link prefetch={false} aria-current={tab === "actual" ? "page" : undefined} href="/journal?tab=actual">
           Jurnal Aktual (Riil)
         </Link>
-        <Link prefetch={false} aria-current={tab === "paper" ? "page" : undefined} href="/journal?tab=paper">
+        <Link prefetch={false} aria-current={undefined} href="/journal?tab=paper">
           Paper Journal (Simulasi Sinyal)
         </Link>
       </nav>
 
-      {tab === "paper" ? (
-        /* ================= PAPER JOURNAL SIMULATION VIEW ================= */
-        <section className="journal-panel journal-full-panel">
-          <p className="scanner-notice">
-            <strong>SOT Invariant #7:</strong> Paper trades dan actual trades tetap terpisah secara logis.
-            Simulasi sinyal menggunakan harga open sesi berikutnya (next-open) dengan initial risk $R_0$ yang dibekukan.
-          </p>
-          <div className="journal-metrics" aria-label="Ringkasan paper journal" style={{ marginTop: "16px" }}>
-            <div>
-              <span>Simulated Trades</span>
-              <strong>{(demoData as unknown as { paper?: unknown[] }).paper?.length ?? 0}</strong>
-              <small>Forward paper book</small>
-            </div>
-            <div>
-              <span>Risk Normalization</span>
-              <strong>Unit R</strong>
-              <small>Initial risk = 1.0 R</small>
-            </div>
-            <div>
-              <span>Baseline Exit</span>
-              <strong>Fixed 2R &amp; MA10</strong>
-              <small>Dual exit experiment</small>
-            </div>
-            <div>
-              <span>Pemisahan Saldo</span>
-              <strong>100% Terisolasi</strong>
-              <small>Bukan uang riil</small>
-            </div>
-          </div>
-
-          <div className="table-scroll" style={{ marginTop: "20px" }}>
-            <table className="dense-table">
-              <thead>
-                <tr>
-                  <th className="text-left">Ticker</th>
-                  <th className="text-left">Strategi</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-right">Entry (Sim)</th>
-                  <th className="text-right">Initial SL</th>
-                  <th className="text-right">TP 2R</th>
-                  <th className="text-right">Realized R</th>
-                  <th className="text-left">Catatan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {((demoData as unknown as { paper?: Array<{ id: string; ticker: string; strategy: string; state: string; entry: number; stop: number; target: number; realized_r: number | null; alternate_r: number | null }> }).paper ?? []).map((t) => (
-                  <tr key={t.id}>
-                    <td className="text-left font-bold">{t.ticker}</td>
-                    <td className="text-left">{strategyNames[t.strategy] ?? t.strategy}</td>
-                    <td className="text-center">
-                      <span className={"subtle-badge " + (t.state === "closed" ? "emerald" : t.state === "open" ? "amber" : "gray")}>
-                        {t.state}
-                      </span>
-                    </td>
-                    <td className="text-right mono">{money(t.entry)}</td>
-                    <td className="text-right mono text-rose-600">{money(t.stop)}</td>
-                    <td className="text-right mono text-emerald-700">{money(t.target)}</td>
-                    <td className="text-right mono font-bold">
-                      {t.realized_r !== null ? `${Number(t.realized_r) > 0 ? "+" : ""}${ratio(t.realized_r)} R` : "—"}
-                    </td>
-                    <td className="text-left" style={{ fontSize: "11px", color: "var(--muted)" }}>
-                      {t.alternate_r !== null ? `Ambigu dual-hit (alt: ${ratio(t.alternate_r)} R)` : "Baseline terverifikasi"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : (
-        /* ================= ACTUAL JOURNAL VIEW ================= */
-        <>
+      <>
           {!ready ? (
             <section className="journal-panel">
               <h2>Schema jurnal belum tersedia</h2>
@@ -209,7 +160,7 @@ export default async function JournalPage({ searchParams }: {
               )}
 
               {/* Collapsible Drawer for Creating New Trade Draft */}
-              <details className="journal-drawer">
+              <details className="journal-drawer" open={linkedSignal !== null}>
                 <summary>
                   <span>+ Buat Draft Transaksi Baru</span>
                   <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "normal" }}>Klik untuk membuka / menutup form</span>
@@ -218,13 +169,14 @@ export default async function JournalPage({ searchParams }: {
                   <JournalForm className="journal-form">
                     <input type="hidden" name="action" value="create"/>
                     <input type="hidden" name="request_id" value={crypto.randomUUID()}/>
+                    {linkedSignal && <input type="hidden" name="signal_id" value={linkedSignal.id}/>}
                     <label>
                       Kode saham
-                      <input name="ticker" placeholder="BBCA" pattern="[A-Za-z0-9]{2,12}" required maxLength={12}/>
+                      <input name="ticker" defaultValue={linkedSignal?.ticker} readOnly={linkedSignal !== null} placeholder="BBCA" pattern="[A-Za-z0-9]{2,12}" required maxLength={12}/>
                     </label>
                     <label>
                       Strategi utama
-                      <select name="primary_strategy" required>
+                      <select name="primary_strategy" defaultValue={linkedSignal?.strategy} required>
                         <option value="MACD_EMA200_V1">MACD + EMA200</option>
                         <option value="FRACTAL_BREAKOUT_V1">Fractal breakout</option>
                         <option value="RS_BREAKOUT_V1">Relative strength breakout</option>
@@ -243,6 +195,7 @@ export default async function JournalPage({ searchParams }: {
                         <option value="manual">Manual / tanpa target otomatis</option>
                       </select>
                     </label>
+                    {linkedSignal && <p className="journal-help">Draft terkait sinyal terpilih. Konfirmasikan strategi dan stop; harga referensi bukan harga fill. Pencatatan draft tidak membuat transaksi broker.</p>}
                     <p className="journal-help">
                       Draft belum punya harga entry. Risiko awal dihitung dari buy fills dan dikunci saat entry difinalisasi.
                     </p>
@@ -282,7 +235,7 @@ export default async function JournalPage({ searchParams }: {
                           <th className="text-right">Initial SL</th>
                           <th className="text-right">Stop Terakhir</th>
                           <th className="text-right">Total Fee</th>
-                          <th className="text-right">Net P&amp;L (IDR)</th>
+                          <th className="text-right">Realized P&amp;L (IDR)</th>
                           <th className="text-right">Realized R</th>
                           <th className="text-center">Aksi</th>
                         </tr>
@@ -322,13 +275,9 @@ export default async function JournalPage({ searchParams }: {
                                 Rp{money(t.fee_total_idr)}
                               </td>
                               <td className="text-right mono font-bold">
-                                {isClosed ? (
-                                  <span style={{ color: pnlNum > 0 ? "var(--green)" : pnlNum < 0 ? "var(--red)" : "inherit" }}>
-                                    {pnlNum > 0 ? "+" : ""}Rp{money(t.realized_pnl_idr)}
-                                  </span>
-                                ) : (
-                                  <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Floating</span>
-                                )}
+                                <span style={{ color: pnlNum > 0 ? "var(--green)" : pnlNum < 0 ? "var(--red)" : "inherit" }}>
+                                  {pnlNum > 0 ? "+" : ""}Rp{money(t.realized_pnl_idr)}
+                                </span>
                               </td>
                               <td className="text-right mono font-bold">
                                 {isClosed && t.realized_r !== null ? (
@@ -377,8 +326,7 @@ export default async function JournalPage({ searchParams }: {
               </p>
             </>
           )}
-        </>
-      )}
+      </>
     </JournalShell>
   );
 }

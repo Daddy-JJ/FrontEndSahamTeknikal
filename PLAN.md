@@ -1,3 +1,234 @@
+# Frontend remediation and live acceptance plan — 2026-10-04
+
+Status: PAKET 1 (BACKEND) & PAKET 2 (FRONTEND) COMPLETE & VERIFIED. Paket 3 (Candidate Release & Deployment Acceptance) in progress.
+Scope: frontend repository; sibling backend read-only. Preserve the historical
+plan below. Its completion claims do not close the regressions identified by the
+2026-10-04 read-only audit.
+
+## Target and baseline
+
+Audit remainder update: docs/AUDIT_REMAINING_20261004.md is the current open-item
+register. Action: reconcile FE-01–FE-11 against local fixes and reported backend
+gates without repeating unchanged tests. Proof: source/report references, explicit
+owner/closure criteria R-01–R-08 and documentation diff check; no new hosted claims.
+
+Target: a usable owner-only web app with accurate canonical scanner/journal/
+analytics presentation, complete agreed MVP integrations, bounded data reads,
+meaningful regression checks and verified deployment behavior.
+
+Audit baseline: frontend HEAD 52d11d0, clean working tree before plan edits.
+Confirmed findings FE-01 through FE-11 are in the audit response. Eight local
+render probes reproduced affected behavior using dependency doubles; unit12/12,
+lint and nonincremental typecheck passed. These are local audit evidence, not
+fresh hosted or Vercel acceptance. Build/browser suites were not run in that audit.
+
+Release decisions:
+- A corrective release of existing live flows is separate from complete MVP.
+- Closing fixture/error/filter bugs does not make missing live paper, chart,
+  actions or configuration integrations complete.
+- No production fixture fallback, frontend financial engine, privileged frontend
+  key, QA production trade, rule change or migration001-007 reopening.
+- Existing outsider/concurrency waivers remain SKIPPED / NOT VERIFIED. A release
+  decision must disclose them; full verification cannot be inferred from waivers.
+- Do not add major dependencies or change public contracts without approval.
+
+## Verification investigation — 2026-10-04
+
+Action: After two scanner suite runs stopped on different failures, inspect
+Playwright DOM/trace and proxy before another run. First failure was the HTTP
+stub treating existing session_date.lte as exact date; fixed getAll eq handling.
+Second failure had an accessible combobox in the captured DOM but getByLabel
+exact included nested option text; use semantic combobox role/name. Invalid
+filter correctly halted scanner reads, while the existing proxy still refreshed
+Auth; assert no REST data reads rather than prohibiting required Auth refresh.
+Further date-filter trace: URL was read before client pagination navigation
+committed (run=null on the filter URL). Wait for the filter URL/link href and
+page2 URL before asserting run/filter keys; retained all bounded-read assertions.
+Proof: Captured error-context and source paths identify separate test-harness/
+locator issues, no suppressed contract check or fabricated empty UI. Rerun only
+from this new evidence, then finish the full dedicated suite.
+
+Production-harness decision: full dev scanner run still hit streamed-navigation
+and slow-render timing after the standalone filter case passed. Interrupted the
+owned failing run; no assertions/timeouts were weakened. Use test:scanner:release:
+build the unchanged app in an isolated test dist with local public config,
+DATA_MODE=live and fixture preview denied, then run the same 54 assertions on
+Next production server. Only direct children are stopped; generated type paths
+are restored conditionally. This is local production-build proof, not hosted.
+
+## Phase 0 — Reproduce and protect the baseline
+
+Owner: FRONTEND. Findings: FE-01 through FE-11. Risk: low.
+Files: tests/journal.spec.ts, tests/scanner.spec.ts, relevant unit/route tests.
+Action: Recheck Git/HEAD, relevant canonical docs and actual backend signatures.
+Run the dedicated journal/scanner suites in their isolated local-double harness,
+capture current failures and separate deleted-markup failures from domain failures.
+Add meaningful regression cases for live paper exclusion, exact/invalid cohort,
+RPC errors, partial realized P&L, empty signal continuation and invalid-stop copy.
+Proof: Repeatable failing cases identify actual behavior; tests neither touch
+production nor weaken assertions. Harness teardown stops only owned children;
+existing ports/processes and local env remain intact.
+
+## Phase 1 — Close financial integrity regressions
+
+Owner: FRONTEND. Findings: FE-01, FE-02, FE-03, FE-04. Risk: medium.
+Files: src/app/analytics/page.tsx, src/app/journal/page.tsx,
+src/lib/journal-filters.ts, src/lib/journal-server.ts and focused tests.
+Action: Gate fixture paper behind explicit permitted development/test mode.
+Live paper becomes an honest unavailable state until its backend adapter exists;
+the feature is not marked complete. Validate filters before any query. Send exact
+p_exit_snapshot, preserve the full cohort through filter navigation/export, and
+validate response mode/data_mode/basis before presenting metrics. Give RPC/table
+errors an explicit unavailable state. Stop unconditional actual queries on paper
+tabs. Remove unsupported official JS strategy/curve aggregates from active live
+presentation until Phase4 supplies a canonical backend result.
+Proof: All eight audit reproductions relevant to this phase stop exhibiting the
+bug. Live paper never contains DEMO data; invalid filters cause no analytics read;
+KPI/export use identical filters; failures do not render numeric zero/empty success.
+There is no unbounded closed-trade preload or local P&L/R aggregation.
+
+## Phase 2 — Correct ledger and scanner presentation
+
+Owner: FRONTEND. Findings: FE-05, FE-06, FE-07, FE-08. Risk: low.
+Files: src/app/journal/page.tsx, src/components/scanner-dashboard.tsx,
+src/app/analytics/page.tsx and corresponding tests.
+Action: Display backend realized P&L for open partial exits; realized R remains
+null until closed and no unrealized mark is invented. Distinguish continuation
+empty from no published signals on the selected run. Remove unsupported claims
+that no technical criteria matched. Label reference-close distance as indicative
+or omit it; do not infer fill risk or eligibility. Preserve missing/invalid stop
+reasons. Match PF/payoff labels to net IDR and backend null/status semantics.
+Proof: List/detail agreement on partial cash P&L; 26-signal pagination plus empty
+continuation has accurate copy; stop-null/invalid cases show no tradable risk;
+no-closed/no-loss/no-win/breakeven metrics match backend statuses. Partial, stale,
+failed and missing states remain distinct; incomplete RS is never ranked.
+
+## Phase 3 — Add available live signal detail and bounded navigation
+
+Owner: FRONTEND where existing snapshot fields suffice; BOTH for missing queries.
+Finding: FE-09. Risk: medium.
+Files: scanner contract/server/dashboard, a signal detail route/component,
+journal draft integration, relevant tests.
+Action: Present canonical rule checklist, reference versus fill, candidate
+eligibility reason, pivot_date versus available_session, publication time,
+config/data versions and provenance that actually exist. Add bounded date/strategy
+navigation with consistent run binding. For signal-linked draft creation, use the
+existing optional backend signal_id contract and owner validation; a signal or
+watchlist action never creates an actual fill. Unknown metadata stays unknown.
+Proof: Detail derives from the selected immutable signal/run; no latest-revision
+substitution, backplot availability, inferred provider freshness or future open.
+Filtering reads bounded pages and draft records the correct canonical signal.
+
+## Phase 4 — Resolve backend integration dependencies
+
+Owner: BACKEND for implementation in its own chat; FRONTEND for contract review
+and adapters. Findings: FE-04, FE-09. Risk: medium/high.
+Files: backend contracts/read models/migrations where needed; frontend typed
+adapters/pages/tests. Names below describe required capabilities, not existing APIs.
+
+### 4A — Canonical analytics curve and strategy attribution
+Action: Agree an additive owner-protected read contract sharing from/to/strategy/
+exit_version/exact exit snapshot and closed exit-session cohort. Backend returns
+canonical counts/decimal aggregates and ordered curve points with explicit basis,
+completeness and bounded paging where necessary. Frontend formats and plots only.
+Proof: Same-cohort KPI, attribution, curve and CSV reconcile against backend
+decimal results, including multi-strategy/multi-exit and large-history cases.
+
+### 4B — Persisted paper journal and analytics
+Action: Backend supplies durable hosted paper reads rather than runner-local files.
+Agree explicit experiment activation/version, cost status/basis, entry/exit dates,
+initial risk, pending/open/skipped/closed/data-hold, dual-hit ambiguity and alternate
+outcome metadata. Frontend implements a separate owner-protected paper adapter.
+Do not activate extra exit experiments implicitly or mix actual balances.
+Proof: Real paper data is persisted and read back across independent runs; owner/
+denial checks pass on the authorized target; next-session convention, fixed risk,
+ambiguity counts/sensitivity and cost labels survive the UI/CSV path.
+
+### 4C — Frozen chart inputs and persistent actions/configuration
+Action: Agree frozen signal-input chart retrieval and backend-derived indicator
+series; preserve available-at timing. Integrate existing set_signal_action with
+stored request UUID/expected revision and explicit PT412 handling after contract
+review. Implement the PRD operations/manual-run link and approved versioned exit/
+experiment configuration. A new settings mutation requires an agreed contract;
+do not use local React state as a persistent success receipt.
+Proof: Chart is tied to the chosen input/version with no lookahead; exact action
+replay does not add revision/audit, changed payload conflicts, stale revision is
+HTTP412; configuration changes affect only new plans/trades. Test on development/
+disposable targets; production actions require genuine approved activity.
+
+Backend rollout order: agree contract -> backend code/schema tests -> development
+application and real Auth/HTTP proof -> frontend adapter tests -> authorized
+production backend rollout -> frontend release. Never edit applied migrations
+001-007 merely to support a new feature or invent a schema/API version.
+
+## Phase 5 — Full local QA and release review
+
+Owner: FRONTEND; read-only reviewer. Findings: FE-10, FE-11. Risk: medium.
+Files: tests, Playwright configs, README.md, IMPLEMENTATION_STATUS.md,
+docs/VERCEL_DEPLOYMENT_CHECKLIST.md and current release evidence.
+Action: Update semantic locators for dense tables while retaining financial/state
+assertions. Run unit, lint, typecheck, build, default browser, dedicated journal
+and dedicated scanner suites. Cover desktop/tablet/mobile, loading/error/empty/
+partial/stale, invalid input, duplicate submit, refresh, session expiry/logout,
+lost-response retry, PT412, explicit corrections and closed CSV200+1 cursor.
+Review diff, bundle/config secret exposure and frontend/backend contract changes.
+Reconcile docs against the actual verified commit and capabilities.
+Proof: All required local suites pass with exact command/results and isolated
+fixture labels. Test artifacts and stale generated types are handled without
+discarding user work. Reviewer finds no unresolved P0/P1. Passing default18
+workspace/Auth tests is not substituted for dedicated flow suites.
+
+## Phase 6 — Hosted acceptance and controlled release
+
+Owner: BOTH, each within repository ownership. Risk: high.
+Action: Confirm current backend handoff, schema/contracts, publisher evidence and
+source dates without repeating unchanged migrations. Prepare exact candidate SHA,
+Vercel root '.', Production versus Preview env, callback/logout origins, rollback
+deployment and sanitized acceptance checklist. Production: live URL/public key,
+DATA_MODE=live, ALLOW_FIXTURE_PREVIEW=false/unset; Preview: isolated development
+project and explicitly allowed fixture. No privileged/provider/OAuth secrets in
+frontend. Commit/push/deploy and production Auth changes require current explicit
+authorization; this plan is not that authorization.
+Proof: On the exact deployed candidate, actual owner login/callback/logout and
+read-only scanner/journal/analytics/CSV smoke pass; mobile/tablet/desktop and no
+secret/token/OAuth-code exposure are checked. Backend hosted mutation/RLS/publisher
+proof is separately recorded. Never create QA production trades. Waived outsider/
+concurrency or unavailable >200 production history are disclosed, not fabricated.
+The running backend snapshot date/digest is never replaced by a newer runner's
+metadata unless that result was actually published.
+
+## Completion gates
+
+1. Frontend correctness: FE-01 through FE-08 resolved and regression-tested.
+2. MVP integration: agreed live paper, signal detail/chart, actions, analytics and
+   configuration flows are connected; an unavailable placeholder is not completion.
+3. Local QA: all relevant dedicated suites/build/review pass on the release SHA.
+4. Backend readiness: compatible deployed contracts and mandatory hosted evidence,
+   or explicit scoped release disposition for waived checks; no assumed PASS.
+5. Deployment acceptance: authorized exact Vercel release has real smoke evidence
+   and rollback reference. Only then report the verified live scope.
+
+Current outcome: Phases0-2 and the available-contract portion of Phase3 are
+implemented and locally verified. Phase5 passes: unit18, journal57, scanner54
+plus6 final fixture-denial guards, default browser18, lint, nonincremental
+typecheck and ordinary Next16.3.6 build. Browser cases cover desktop/tablet/mobile.
+The full scanner54 used the prior fixture-preview flag=true with simulated live;
+the final flag=false is separately proven by6 critical guards. Dev timing failures
+and the interrupted run are disclosed in the report; no assertions were weakened.
+All test ports3052/3053/3054/3056 were closed after QA. Source/bundle pattern and
+configured-private-value checks found no matches, with their limits disclosed.
+
+Next action: Phase4 additive contract coordination via
+docs/BACKEND_REMEDIATION_HANDOFF_20261004.md, then frontend adapters and fresh QA.
+Phase6 requires backend evidence and separate release authorization; no new
+hosted/Vercel smoke was run. Full MVP remains incomplete, not silently descoped.
+See docs/FRONTEND_REMEDIATION_REPORT_20261004.md and sanitized local evidence.
+Do not message another chat without explicit user instruction.
+
+---
+
+## Historical plan — preserved, superseded for current readiness
+
 # Frontend UI Re-Layout & Analytics Implementation Plan — 2026-10-04
 
 Scope: `frontend/` repository.

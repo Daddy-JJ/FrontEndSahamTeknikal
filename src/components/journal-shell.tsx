@@ -11,6 +11,7 @@ export function JournalShell({mode,children}:{
           <Link href="/scanner" prefetch={false}>Scanner</Link>
           <Link href="/journal">Jurnal aktual</Link>
           <Link href="/analytics">Analytics</Link>
+          <Link href="/operations">Operasi</Link>
           <Link href="/auth/check">Akun</Link>
         </nav>
         <span className={"badge "+(mode==="fixture"?"amber":mode==="live"?"green":"neutral")}>

@@ -20,7 +20,10 @@ function payloadFromForm(form: FormData, action: string): Record<string, unknown
       || !positive(initial_stop) || !["fixed_rr","ma_close","manual"].includes(policy)) return null;
     const exit_policy_snapshot=policy==="fixed_rr" ? journalExitSnapshots.fixed2r
       : policy==="ma_close" ? journalExitSnapshots.ma10 : journalExitSnapshots.manual;
-    return { ticker,primary_strategy,initial_stop,exit_policy_snapshot };
+    const signal_id=field(form,"signal_id");
+    if (signal_id && !/^[0-9a-f]{64}$/.test(signal_id)) return null;
+    return { ticker,primary_strategy,initial_stop,exit_policy_snapshot,
+      ...(signal_id ? {signal_id} : {}) };
   }
   const expected_revision=Number(field(form,"expected_revision"));
   if (!Number.isSafeInteger(expected_revision) || expected_revision < 1) return null;
@@ -86,6 +89,14 @@ export async function submitActualJournal(form: FormData): Promise<{error?: stri
   }
   const payload=payloadFromForm(form,action);
   if (!payload) return {error:"invalid_input"};
+  if (action === "create" && payload.signal_id) {
+    const {data:signal,error:signalError}=await context.supabase.from("signals")
+      .select("id,ticker,strategy,data_mode,namespace")
+      .eq("id",payload.signal_id).eq("data_mode",context.mode).eq("namespace","forward").maybeSingle();
+    if (signalError) return {error:"unavailable"};
+    if (!signal || signal.id !== payload.signal_id || signal.ticker !== payload.ticker || signal.strategy !== payload.primary_strategy
+      || signal.data_mode !== context.mode || signal.namespace !== "forward") return {error:"invalid_input"};
+  }
   const {data,error}=await context.supabase.rpc("apply_actual_journal",{
     p_action:action,p_trade_id:action==="create"?null:tradeId,
     p_payload:payload,p_request_id:requestId,

@@ -60,11 +60,108 @@ export type ActualAnalytics = {
   breakeven: number;
   estimated_fee_trades: number;
   net_pnl_idr: number | string;
-  win_rate: number | null;
-  expectancy_r: number | null;
-  profit_factor: number | null;
+  win_rate: number | string | null;
+  expectancy_r: number | string | null;
+  profit_factor: number | string | null;
   profit_factor_status: "defined" | "no_losses" | "no_closed";
-  payoff_ratio: number | null;
+  payoff_ratio: number | string | null;
   payoff_status: "defined" | "no_wins" | "no_losses" | "no_closed";
-  fee_quality?: "actual" | "includes_estimates" | "no_closed";
+  fee_quality: "actual" | "includes_estimates" | "no_closed";
+};
+
+export type ActualRCurvePoint = {
+  sequence: number;
+  trade_id: string;
+  ticker: string;
+  strategy: string;
+  exit_session: string;
+  closed_at: string;
+  realized_r: number | string;
+  cumulative_r: number | string;
+  drawdown_r: number | string;
+  realized_pnl_idr: number | string;
+  cumulative_pnl_idr: number | string;
+};
+
+export type ActualRCurve = {
+  mode: "actual";
+  data_mode: "fixture" | "live";
+  basis: "IDR";
+  cohort_date: "exit_session_Asia_Jakarta";
+  from: string | null;
+  to: string | null;
+  primary_strategy: string | null;
+  exit_version: string | null;
+  exit_snapshot: Record<string, unknown> | null;
+  total_closed: number;
+  final_cumulative_r: number | string;
+  max_drawdown_r: number | string;
+  points: ActualRCurvePoint[];
+};
+
+export type StrategyAttribution = {
+  strategy: string;
+  closed: number;
+  wins: number;
+  losses: number;
+  breakeven: number;
+  net_pnl_idr: number | string;
+  expectancy_r: number | string | null;
+  win_rate: number | string | null;
+  profit_factor: number | string | null;
+  profit_factor_status: "defined" | "no_losses" | "no_closed";
+  payoff_ratio: number | string | null;
+  payoff_status: "defined" | "no_wins" | "no_losses" | "no_closed";
+};
+
+export type ActualAttribution = {
+  mode: "actual";
+  data_mode: "fixture" | "live";
+  basis: "IDR";
+  cohort_date: "exit_session_Asia_Jakarta";
+  from: string | null;
+  to: string | null;
+  exit_version: string | null;
+  exit_snapshot: Record<string, unknown> | null;
+  strategies: StrategyAttribution[];
+};
+
+export type LivePaperTrade = {
+  id: string;
+  run_id: string | null;
+  signal_id: string | null;
+  ticker: string;
+  strategy: string;
+  experiment_id: string;
+  exit_mode: string;
+  state: "pending_entry" | "open" | "closed" | "data_hold";
+  reason: string;
+  entry_session: string | null;
+  entry_price: number | string | null;
+  initial_stop: number | string | null;
+  current_stop: number | string | null;
+  target_price: number | string | null;
+  exit_session: string | null;
+  exit_price: number | string | null;
+  exit_reason: string | null;
+  realized_r: number | string | null;
+  alternate_r: number | string | null;
+  initial_risk_idr: number | string | null;
+  updated_at: string;
+};
+
+export type LivePaperJournal = {
+  mode: "paper";
+  data_mode: "fixture" | "live";
+  trades_count: number;
+  closed_count: number;
+  open_count: number;
+  data_hold_count: number;
+  ambiguous_count: number;
+  wins: number;
+  losses: number;
+  win_rate: number | string | null;
+  expectancy_r: number | string | null;
+  cumulative_r: number | string;
+  trades: LivePaperTrade[];
 };

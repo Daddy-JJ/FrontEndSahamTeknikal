@@ -11,7 +11,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Buka http://localhost:3050. Dashboard saat ini menampilkan snapshot **fixture** sintetis. Angka demo bukan harga pasar maupun anggota KOMPAS100. Production build default menampilkan status koneksi live belum diatur dan tidak mengganti feed live dengan data demo.
+Buka http://localhost:3050. DATA_MODE=fixture dengan izin preview eksplisit menampilkan snapshot sintetis berlabel; angka demo bukan harga pasar maupun anggota KOMPAS100. DATA_MODE=live memakai scanner owner/RLS tanpa fallback fixture. Konfigurasi, data yang belum tersedia, kegagalan dan coverage parsial ditampilkan terpisah.
 
 Variabel development dicontohkan di `.env.example`. Jangan commit `.env.local`. Kunci Supabase yang diawali `NEXT_PUBLIC_` hanya untuk URL proyek dan publishable key; jangan pernah menaruh secret key, EODHD key, atau service role key di frontend.
 
@@ -27,6 +27,31 @@ npm.cmd run test:scanner
 npm.cmd run build
 ```
 
+## Status koreksi frontend — 2026-10-04
+
+Perubahan audit masih lokal dan belum dirilis. Jurnal aktual memakai ledger/RPC
+backend, termasuk partial realized P&L. Analytics memvalidasi response dan exact
+cohort exit Asia/Jakarta; filter penuh dipertahankan pada CSV. Kurva R dan
+atribusi strategi belum memiliki canonical read model dan tidak dihitung ulang
+oleh frontend. Export tetap closed, 200 baris per halaman dan seluruh cursor.
+
+Paper fixture hanya tersedia pada mode fixture yang diizinkan. Paper live belum
+terhubung ke persistence backend dan tidak memakai demo. Detail scanner memakai
+snapshot immutable/rules/provenance yang tersedia, membedakan pivot dan available
+session, mempertahankan hold RS dan menyatakan next-open belum diketahui.
+Filter tanggal/strategi dan halaman terikat run dibatasi. Draft terkait signal
+memerlukan konfirmasi stop dan owner/context validation; tidak membuat fill.
+/operations hanya membuka GitHub Actions milik owner, tanpa PAT atau dispatch.
+
+Tes browser default tidak mencakup jurnal/scanner; jalankan dua dedicated suite.
+Semua suite otomatis memakai HTTP double lokal, bukan bukti hosted production.
+test:scanner:release membangun dist test terpisah dengan key/URL lokal sintetis
+dan menguji Next production server tanpa mengganti file environment.
+Lihat docs/FRONTEND_REMEDIATION_REPORT_20261004.md dan
+ docs/BACKEND_REMEDIATION_HANDOFF_20261004.md untuk batas fitur dan urutan rilis.
+Full MVP dan acceptance pada exact Vercel release masih terbuka; hasil deployment
+lama tidak mengesahkan perubahan lokal ini. Commit/push/deploy memerlukan izin.
+
 ## Kontrak backend
 
 Backend API, scanner Python, schema kontrak, migrasi Supabase, dan dokumentasi aturan trading dipelihara di:
@@ -36,7 +61,7 @@ Dashboard fixture di `src/generated/demo.json` adalah snapshot turunan scanner P
 
 ## Login GitHub untuk aplikasi (development)
 
-Login GitHub ke Dashboard Supabase tidak otomatis menjadi login aplikasi. Alur aplikasi di /login memakai Supabase Auth PKCE; /auth/callback menyimpan sesi pada cookie; /auth/check memverifikasi pengguna dan tabel app_members lewat RLS. Halaman terakhir hanya membaca jumlah run/sinyal namespace fixture development. Dashboard fixture di / tetap demo; /scanner membaca run forward lewat owner/RLS, dan / live memakai adapter yang sama tanpa fallback demo.
+Login GitHub ke Dashboard Supabase tidak otomatis menjadi login aplikasi. Alur aplikasi di /login memakai Supabase Auth PKCE; /auth/callback menyimpan sesi pada cookie; /auth/check memverifikasi pengguna dan tabel app_members lewat RLS. Halaman terakhir memverifikasi identitas Auth dan owner enabled pada environment aktif. Dashboard fixture di / tetap demo; /scanner membaca run forward lewat owner/RLS, dan / live memakai adapter yang sama tanpa fallback demo.
 
 Siapkan provider di proyek DEVELOPMENT vgmkpsestahkfahzdtae:
 

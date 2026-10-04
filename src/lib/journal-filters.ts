@@ -33,3 +33,16 @@ export function journalFilters(query: Record<string, string | string[] | undefin
     || (exitSnapshot && exitVersion && exitVersion !== exitSnapshot.version)) return null;
   return { from, to, strategy, exitVersion, exitSnapshotKey, exitSnapshot };
 }
+
+export type JournalFilters = NonNullable<ReturnType<typeof journalFilters>>;
+
+/** Preserve the complete validated cohort across navigation and export. */
+export function journalFilterParams(filters: JournalFilters) {
+  const params = new URLSearchParams();
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (filters.strategy) params.set("strategy", filters.strategy);
+  if (filters.exitVersion) params.set("exit_version", filters.exitVersion);
+  if (filters.exitSnapshotKey) params.set("exit_snapshot", filters.exitSnapshotKey);
+  return params;
+}

@@ -1,5 +1,9 @@
 # Frontend M4 audit and development handoff
 
+Current remainder (2026-10-04): [AUDIT_REMAINING_20261004.md](AUDIT_REMAINING_20261004.md).
+Corrective code/local QA: [FRONTEND_REMEDIATION_REPORT_20261004.md](FRONTEND_REMEDIATION_REPORT_20261004.md).
+The dated evidence below is historical; it does not certify the current local candidate.
+
 Updated 2026-10-01, Asia/Jakarta. All edits in this continuation are in frontend.
 Backend owns trading rules, ledger arithmetic, revisions, authorization and RLS.
 No frontend commit, push, deployment, migration application, or production write was made.

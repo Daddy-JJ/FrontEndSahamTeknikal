@@ -45,6 +45,7 @@ export default async function setup(config: FullConfig) {
   const kind = config.metadata.smokeKind ?? "workspace";
   const port = kind === "journal" ? 3052 : kind === "scanner" ? 3056 : 3054;
   const dist = `.next-${kind}-smoke`;
+  const production = process.env.SMOKE_PRODUCTION === "true";
   const originalTypes = await readFile("next-env.d.ts", "utf8");
   const children: ChildProcess[] = [];
   async function cleanup() {
@@ -52,7 +53,7 @@ export default async function setup(config: FullConfig) {
     // Restore only the generated paths owned by this run; preserve concurrent edits.
     const currentTypes = await readFile("next-env.d.ts", "utf8");
     const expectedTypes = originalTypes.replace(/import "\.\/[^"\n]+\/types\/(routes|root-params)\.d\.ts";/g,
-      `import "./${dist}/dev/types/$1.d.ts";`);
+      `import "./${dist}/${production ? "" : "dev/"}types/$1.d.ts";`);
     if (currentTypes.includes(`./${dist}/`)
       && currentTypes.replaceAll("\r\n", "\n") === expectedTypes.replaceAll("\r\n", "\n")) {
       await writeFile("next-env.d.ts", originalTypes);
@@ -63,10 +64,10 @@ export default async function setup(config: FullConfig) {
   try {
     if (kind !== "workspace") children.push(await start("tests/support/journal-dev.mjs", {}));
     children.push(await start("tests/support/managed-next.mjs", {
-      NODE_ENV: "development", SMOKE_PORT: String(port), NEXT_TEST_DIST_DIR: dist,
+      NODE_ENV: production ? "production" : "development", SMOKE_PORT: String(port), NEXT_TEST_DIST_DIR: dist,
       NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${kind === "workspace" ? 3055 : 3053}`,
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "local-test-publishable",
-      DATA_MODE: kind === "scanner" ? "live" : "fixture", ALLOW_FIXTURE_PREVIEW: "true",
+      DATA_MODE: kind === "scanner" ? "live" : "fixture", ALLOW_FIXTURE_PREVIEW: production ? "false" : "true",
       NEXT_TELEMETRY_DISABLED: "1",
     }));
     const warmRoutes = kind === "workspace" ? ["/", "/login", "/auth/error"] : ["/login"];

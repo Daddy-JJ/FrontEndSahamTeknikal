@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
 import { readScanner } from "@/lib/scanner-server";
-import { scannerQuery, scannerHref, scanWindow, scanReasonLabels } from "@/lib/scanner-contract";
+import { scannerQuery, scannerHref, scanWindow, scanReasonLabels, scannerStrategies } from "@/lib/scanner-contract";
 
 export async function ScannerDashboard({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -54,9 +54,19 @@ export async function ScannerDashboard({ searchParams }: {
       {run.status === "failed" && <p role="alert" className="scanner-notice">Run gagal: tidak ada ticker yang lolos evaluasi kualitas. Entry ditahan; ini bukan hasil tidak ada sinyal. Baca status hold setiap ticker di bagian quality.</p>}
     </section>
     <section className="journal-panel scanner-results">
+      <form method="get" action="/scanner" className="journal-form" aria-label="Filter scanner">
+        <input type="hidden" name="section" value={section} />
+        <label>Sesi target<input name="date" type="date" defaultValue={query.date ?? ""} /></label>
+        <label>Strategi sinyal<select name="strategy" defaultValue={query.strategy ?? ""}>
+          <option value="">Semua strategi</option>
+          {scannerStrategies.map(strategy => <option key={strategy} value={strategy}>{strategy}</option>)}
+        </select></label>
+        <button className="primary-button" type="submit">Terapkan filter</button>
+      </form>
+      <p className="journal-help">Tanggal memilih run terbaru pada sesi tersebut. Filter strategi hanya membatasi sinyal diterbitkan; matriks quality tetap menunjukkan universe run.</p>
       <nav className="journal-history-tabs" aria-label="Bagian scanner">
-        <Link prefetch={false} aria-current={section === "signals" ? "page" : undefined} href={scannerHref(run.id, "signals")}>Sinyal diterbitkan</Link>
-        <Link prefetch={false} aria-current={section === "quality" ? "page" : undefined} href={scannerHref(run.id, "quality")}>Quality dan alasan skip</Link>
+        <Link prefetch={false} aria-current={section === "signals" ? "page" : undefined} href={scannerHref(run.id, "signals", 1, query)}>Sinyal diterbitkan</Link>
+        <Link prefetch={false} aria-current={section === "quality" ? "page" : undefined} href={scannerHref(run.id, "quality", 1, query)}>Quality dan alasan skip</Link>
       </nav>
       {section === "quality" ? <>
         <div className="journal-toolbar">
@@ -67,7 +77,7 @@ export async function ScannerDashboard({ searchParams }: {
           <span className="muted small">Coverage {run.coverage_valid} / {run.coverage_total}</span>
         </div>
         <div className="table-scroll">
-          <table className="dense-table">
+          <table className="dense-table" aria-label="Quality dan evaluasi ticker">
             <thead>
               <tr>
                 <th className="text-left">Ticker</th>
@@ -98,7 +108,7 @@ export async function ScannerDashboard({ searchParams }: {
                 };
 
                 return (
-                  <tr key={item.ticker}>
+                  <tr key={item.ticker} data-status={item.status}>
                     <td className="text-left font-bold">{item.ticker}</td>
                     <td className="text-left">
                       <span className={"subtle-badge " + (isEval ? "emerald" : "amber")}>
@@ -113,8 +123,7 @@ export async function ScannerDashboard({ searchParams }: {
                     <td className="text-center">{renderCell(rs, true)}</td>
                     <td className="text-center">{renderCell(pullback)}</td>
                     <td className="text-left" style={{ fontSize: "11px", color: "var(--muted)" }}>
-                      {isEval
-                        ? (rs && rs.reason === "cross_section_incomplete" ? "RS ditahan: cross-section incomplete" : "Evaluasi lengkap; kriteria teknikal aktif")
+                      {isEval ? item.candidates.map(c => <div key={c.strategy}>{c.strategy}: {scanReasonLabels[c.reason] ?? c.reason}</div>)
                         : `Ditahan: ${scanReasonLabels[item.status] ?? item.status}`}
                     </td>
                   </tr>
@@ -134,14 +143,13 @@ export async function ScannerDashboard({ searchParams }: {
         </div>
         {state.signals.length > 0 ? (
           <div className="table-scroll">
-            <table className="dense-table">
+            <table className="dense-table" aria-label="Sinyal diterbitkan">
               <thead>
                 <tr>
                   <th className="text-left">Ticker</th>
                   <th className="text-left">Strategi</th>
-                  <th className="text-right">Ref Close</th>
+                  <th className="text-right">Reference close · bukan fill</th>
                   <th className="text-right">Plan Stop</th>
-                  <th className="text-right">Risk Buffer (ΔR)</th>
                   <th className="text-left">Target Entry</th>
                   <th className="text-center">Cohort</th>
                   <th className="text-left">Keputusan</th>
@@ -151,8 +159,6 @@ export async function ScannerDashboard({ searchParams }: {
                 {state.signals.map(signal => {
                   const refClose = signal.candidate.reference_close;
                   const stop = signal.candidate.stop;
-                  const riskIdr = stop ? refClose - stop : null;
-                  const riskPct = stop && refClose > 0 ? ((refClose - stop) / refClose) * 100 : null;
                   return (
                     <tr key={signal.id}>
                       <td className="text-left font-bold" style={{ fontSize: "14px" }}>{signal.ticker}</td>
@@ -163,26 +169,44 @@ export async function ScannerDashboard({ searchParams }: {
                         Rp{new Intl.NumberFormat("id-ID").format(refClose)}
                       </td>
                       <td className="text-right mono" style={{ color: "var(--red)" }}>
-                        {stop ? `Rp${new Intl.NumberFormat("id-ID").format(stop)}` : "—"}
-                      </td>
-                      <td className="text-right mono">
-                        {riskIdr !== null && riskPct !== null ? (
-                          <span style={{ color: "var(--red)" }}>
-                            -Rp{new Intl.NumberFormat("id-ID").format(riskIdr)} (-{riskPct.toFixed(1)}%)
-                          </span>
-                        ) : "—"}
+                        {stop !== null ? `Rp${new Intl.NumberFormat("id-ID").format(stop)}` : "Belum tersedia"}
                       </td>
                       <td className="text-left">
                         <span className="mono" style={{ fontSize: "11px" }}>{signal.planned_entry_session}</span>
-                        <small style={{ display: "block", color: "var(--muted)" }}>Next-Open</small>
+                        <small style={{ display: "block", color: "var(--muted)" }}>Harga next-open dan biaya transaksi belum diketahui.</small>
                       </td>
                       <td className="text-center">
                         <span className={"subtle-badge " + (signal.cohort === "forward" ? "emerald" : "gray")}>
-                          {signal.cohort === "forward" ? "FORWARD" : "LATE"}
+                          {signal.cohort === "forward" ? "FORWARD" : "LATE / MODEL ONLY"}
                         </span>
+                        {signal.cohort === "late_model_only" && <small style={{ display: "block" }}>Bukan entry forward yang dapat dieksekusi.</small>}
                       </td>
                       <td className="text-left" style={{ fontSize: "11px", color: "var(--muted)" }}>
                         {scanReasonLabels[signal.candidate.reason] ?? signal.candidate.reason}
+                        <details style={{ whiteSpace: "normal", maxWidth: "24rem" }}>
+                          <summary>Detail {signal.ticker}</summary>
+                          <dl style={{ maxWidth: "24rem", overflowWrap: "anywhere" }}>
+                            <dt>Tanggal sinyal</dt><dd>{signal.session_date}</dd>
+                            <dt>Pivot date</dt><dd>{signal.candidate.pivot_date ?? "Tidak tersedia pada snapshot"}</dd>
+                            <dt>Available-at session</dt><dd>{signal.candidate.available_session ?? "Tidak tersedia pada snapshot"}</dd>
+                            <dt>Level backend</dt><dd>{signal.candidate.level ?? "Tidak tersedia pada snapshot"}</dd>
+                            <dt>Dipublikasikan (UTC)</dt><dd><time dateTime={signal.published_at}>{signal.published_at}</time></dd>
+                            <dt>Provider / versi</dt><dd>{signal.provider} / {signal.provider_version ?? "Tidak tersedia"}</dd>
+                            <dt>Price basis</dt><dd>{signal.price_basis ?? "Tidak tersedia"}</dd>
+                            <dt>Universe / kalender</dt><dd>{signal.universe_version} / {signal.calendar_version}</dd>
+                            <dt>Engine / source revision</dt><dd>{signal.engine_version ?? "Tidak tersedia"} / {signal.source_revision ?? "Tidak tersedia"}</dd>
+                            <dt>Config hash</dt><dd>{signal.config_hash ?? "Tidak tersedia"}</dd>
+                            <dt>Input digest</dt><dd>{signal.input_digest ?? "Tidak tersedia"}</dd>
+                          </dl>
+                          <p>Pivot date berbeda dari waktu informasi tersedia. Metadata publikasi bukan bukti freshness input.</p>
+                          {signal.candidate.rules?.length ? <ul aria-label="Rule checklist backend">
+                            {signal.candidate.rules.map((rule, index) => <li key={`${rule.name}-${index}`}>{rule.passed ? "✓" : "✗"} {rule.name}</li>)}
+                          </ul> : <p>Rule checklist tidak tersedia pada snapshot.</p>}
+                          {signal.cohort === "forward" && <>
+                            <Link prefetch={false} href={`/journal?signal_id=${signal.id}`}>Buat draft aktual</Link>
+                            <p>Draft membutuhkan konfirmasi owner; tidak membuat fill atau order broker. Reference close bukan harga transaksi.</p>
+                          </>}
+                        </details>
                       </td>
                     </tr>
                   );
@@ -193,19 +217,22 @@ export async function ScannerDashboard({ searchParams }: {
         ) : (
           <div className="journal-empty" style={{ padding: "40px 20px" }}>
             <h3 style={{ fontSize: "16px", marginBottom: "8px" }}>
-              {run.status === "complete"
-                ? `Tidak Ada Sinyal Baru untuk Sesi ${run.session_date}`
+              {query.page > 1 ? "Tidak ada sinyal pada halaman lanjutan ini."
+                : run.status === "complete"
+                ? query.strategy ? "Tidak ada sinyal yang diterbitkan untuk strategi ini pada run terpilih." : "Tidak ada sinyal yang diterbitkan untuk run ini."
                 : run.status === "failed"
                 ? "Publikasi sinyal ditahan: run gagal dan quality hold tetap berlaku."
-                : "Evaluasi parsial: beberapa saham belum lolos evaluasi kualitas."}
+                : "Nol sinyal diterbitkan; ini bukan hasil lengkap seluruh universe."}
             </h3>
             <p style={{ maxWidth: "560px", margin: "0 auto 16px" }}>
-              {run.status === "complete"
-                ? `Seluruh ${run.coverage_valid} saham universe telah dievaluasi lengkap oleh engine deterministik. Tidak ada emiten yang memenuhi seluruh kriteria entry setup malam ini. Disiplin trading: nol sinyal adalah hasil valid yang melindungi modal.`
+              {query.page > 1 ? "Halaman kosong tidak mengubah hasil run atau menyimpulkan bahwa seluruh run tidak memiliki setup. Gunakan halaman sebelumnya untuk membaca sinyal yang telah diterbitkan."
+                : run.status === "complete"
+                ? `Coverage evaluasi ${run.coverage_valid} / ${run.coverage_total}. Nol sinyal dipublikasikan tidak membuktikan bahwa tidak ada kandidat triggered; keputusan dan alasan tetap berasal dari backend.`
                 : "Periksa status hold setiap ticker pada tab 'Quality dan alasan skip'."}
             </p>
             <Link
-              href={scannerHref(run.id, "quality")}
+              prefetch={false}
+              href={scannerHref(run.id, "quality", 1, query)}
               style={{
                 display: "inline-block",
                 padding: "8px 16px",
@@ -223,9 +250,9 @@ export async function ScannerDashboard({ searchParams }: {
         )}
       </>}
       <nav className="journal-pagination" aria-label="Halaman scanner">
-        {query.page > 1 && <Link prefetch={false} href={scannerHref(run.id, section, query.page - 1)}>← Sebelumnya</Link>}
+        {query.page > 1 && <Link prefetch={false} href={scannerHref(run.id, section, query.page - 1, query)}>← Sebelumnya</Link>}
         <span>Halaman {query.page} · maksimal 25 baris</span>
-        {state.hasMore && query.page < 40 && <Link prefetch={false} href={scannerHref(run.id, section, query.page + 1)}>Berikutnya →</Link>}
+        {state.hasMore && query.page < 40 && <Link prefetch={false} href={scannerHref(run.id, section, query.page + 1, query)}>Berikutnya →</Link>}
       </nav>
     </section>
     <p className="journal-footnote">Run {run.id} · digest {run.run_digest}. Halaman lanjutan memakai run immutable yang sama.</p>

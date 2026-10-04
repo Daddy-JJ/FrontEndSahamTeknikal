@@ -1,5 +1,9 @@
 # Scanner read adapter — recovery handoff2026-10-03
 
+Current remainder (2026-10-04): [AUDIT_REMAINING_20261004.md](AUDIT_REMAINING_20261004.md).
+Corrective code/local QA: [FRONTEND_REMEDIATION_REPORT_20261004.md](FRONTEND_REMEDIATION_REPORT_20261004.md).
+The dated evidence below is historical; it does not certify the current local candidate.
+
 ## Latest backend gate alignment - 2026-10-03 (Asia/Jakarta)
 
 Documentation-only alignment from backend BACKEND_FINALIZATION_REPORT_20261003.md,

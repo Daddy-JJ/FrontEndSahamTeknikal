@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 
 const port = Number(process.env.SMOKE_PORT);
 if (![3052, 3054, 3056].includes(port) || !process.send) throw new Error("invalid_smoke_process");
-const app = next({ dev: true, hostname: "127.0.0.1", port });
+const app = next({ dev: process.env.SMOKE_PRODUCTION !== "true", hostname: "127.0.0.1", port });
 await app.prepare();
 const server = createServer(app.getRequestHandler());
 const sockets = new Set();
