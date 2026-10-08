@@ -1,3 +1,25 @@
+# Persistent paper journal and reporting — 2026-10-08
+
+Source publication authorization (2026-10-08): commit and push to `feat/persistent-paper-reporting-v1`. Production main rollout, remote migrations, activation and deployment remain separate gates. A branch push can start existing CI/preview automation; it does not establish hosted acceptance.
+
+Status: IMPLEMENTED AND TESTED LOCALLY; hosted release NOT VERIFIED. No remote release authorized.
+
+1. Action: add strict reporting readers validating mode, model, cohort, exit experiment and pagination. Proof: boundary tests reject malformed/mismatched responses without fixtures or financial recomputation.
+2. Action: integrate Paper / Actual / Signal Evaluation dashboard and persistent paper list/detail, preserving manual actual ledger and CSV. Proof: typed build and local browser checks cover filters, null metrics, failure, audit and mobile.
+3. Action: verify suites and final diff; document migration dependency. Proof: unit 28 PASS; lint/typecheck/production build PASS; browser desktop/mobile journal 40, scanner 36, reporting 12 PASS. SQL/PGlite 93 PASS includes direct frontend parser compatibility. Hosted remains NOT VERIFIED.
+
+Model: signal-close fills next session; maximum Rp1m planned loss at SL including 15/25 bps fees, floor lots; independent Fixed2R/SMA10. Confirmed close below SMA10 only. 5/10 observations never close trades.
+
+## Navigation latency follow-up - 2026-10-08
+
+Action: investigate the user's slow Vercel page navigation with public read-only probes and source dependency inspection. Then remove one serial dependency by reading membership and deployment mode concurrently after authenticated user verification; keep owner/RLS checks and fail-closed outcomes.
+Proof: public scanner/analytics 367-445 ms without login, header sin1::iad1; authenticated timings/DB region remain unverified. A delayed local HTTP regression proves overlap on desktop/mobile; the full journal suite (40 PASS) retains owner/outsider/unavailable/mode/export/mutation guards. No remote configuration or deployment changes.
+
+
+Final review: signal observations expose canonical source IDs and target prices; source details also pass mobile overflow checks. Initial scanner assertions targeted obsolete headings; updated checks verify reporting capability failure and the bounded database snapshot. Final scanner suite 36 PASS. Current candidate requires backend SQL009/RPC capability before frontend rollout; neither experiment is summed with the other, and 5/10 checkpoints never close trades.
+
+---
+
 # Frontend remediation and live acceptance plan — 2026-10-04
 
 Status: PAKET 1 (BACKEND) & PAKET 2 (FRONTEND) COMPLETE & VERIFIED. Paket 3 (Candidate Release & Deployment Acceptance) in progress.

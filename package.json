@@ -16,7 +16,8 @@
     "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
     "test:journal": "playwright test --config playwright.journal.config.ts",
     "test:scanner": "playwright test --config playwright.scanner.config.ts",
-    "test:scanner:release": "node tests/support/scanner-release-smoke.mjs"
+    "test:scanner:release": "node tests/support/scanner-release-smoke.mjs",
+    "test:reporting": "playwright test --config playwright.reporting.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

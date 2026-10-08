@@ -26,6 +26,20 @@ test("owner empty state, null metrics and responsive layout",async({page},info)=
   expect(errors).toEqual([]);
 });
 
+test("owner membership and mode reads overlap after verified authentication",async({page,request})=>{
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"owner-delayed"}});
+  await page.goto("/journal");
+  await expect(page.getByRole("heading",{name:"Catatan transaksi, satu ledger finansial."})).toBeVisible();
+  const {calls,mutations}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
+  const membership=calls.findIndex((c:{path:string})=>c.path.endsWith("/app_members"));
+  const settings=calls.findIndex((c:{path:string})=>c.path.endsWith("/deployment_settings"));
+  expect(membership).toBeGreaterThan(0);
+  expect(settings).toBeGreaterThan(0);
+  expect(calls.slice(0,Math.min(membership,settings)).some((c:{path:string})=>c.path==="/auth/v1/user")).toBe(true);
+  expect(calls[settings].membership_in_flight).toBe(true);
+  expect(mutations).toEqual([]);
+});
+
 test("anonymous and non-owner cannot read journal, export or forms",async({page,context,request})=>{
   const ownerCookies=await context.cookies();
   await context.clearCookies();
@@ -341,8 +355,8 @@ test("fixture paper remains isolated from actual ledger reads",async({page,reque
   for(const route of ["/journal?tab=paper","/analytics?tab=paper"]) {
     await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"empty"}});
     await page.goto(route);
-    await expect(page.getByText(/FIXTURE DEVELOPMENT/)).toBeVisible();
-    await expect(page.getByText(/Data sintetis untuk pengujian tampilan/)).toBeVisible();
+    await expect(page.getByText(/DATA UJI DEVELOPMENT — bukan hasil pasar atau akun riil/)).toBeVisible();
+    await expect(page.getByRole("heading",{name:route.startsWith("/journal") ? "Jurnal paper persisten" : "Transaksi pembentuk statistik"})).toBeVisible();
     const {calls}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
     expect(calls.some((c:{path:string})=>c.path.includes("actual_"))).toBe(false);
   }

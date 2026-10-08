@@ -1,5 +1,6 @@
 // Test-only HTTP double. No production imports, remote calls, database, or financial engine.
 import { createServer } from "node:http";
+import { reportingFixture, evaluationFixture, detailFixture } from "./reporting-fixtures.mjs";
 
 const tradeId = "11111111-1111-4111-8111-111111111111";
 const userId = "22222222-2222-4222-8222-222222222222";
@@ -32,26 +33,39 @@ function pageOf(url,rows) {
   const limit=Number(url.searchParams.get("limit")??rows.length);
   return rows.slice(offset,offset+limit);
 }
-let scenario = "empty", calls = [], mutations = [];
+let scenario = "empty", calls = [], mutations = [], membershipInFlight = 0;
 const server=createServer(async(req,res)=>{
   const url=new URL(req.url,"http://127.0.0.1:3053");
   let raw=""; for await(const chunk of req) raw+=chunk;
   const body=raw ? JSON.parse(raw) : null;
-  const send=(data,status=200)=>{res.writeHead(status,{"Content-Type":"application/json"});res.end(JSON.stringify(data));};
+  let call;
+  const send=(data,status=200)=>{if(call)call.status=status;res.writeHead(status,{"Content-Type":"application/json"});res.end(JSON.stringify(data));};
   if(url.pathname==="/__health") return send({test_only:true});
   if(url.pathname==="/__scenario") {scenario=body.scenario;calls=[];mutations=[];return send({ok:true});}
   if(url.pathname==="/__calls") return send({calls,mutations});
-  calls.push({path:url.pathname,query:Object.fromEntries(url.searchParams),body});
+  call={path:url.pathname,query:Object.fromEntries(url.searchParams),body,scenario};
+  calls.push(call);
   if(url.pathname==="/auth/v1/user") return send(user);
   if(url.pathname==="/auth/v1/token") return send({access_token: token(),refresh_token:"local-test-refresh",expires_in:3600,token_type:"bearer",user});
   if(url.pathname==="/auth/v1/logout") return scenario==="logout-error"
     ? send({code:"SYNTHETIC_LOGOUT_FAILURE",message:"Synthetic logout failure"},503)
     : send({});
   if(url.pathname==="/rest/v1/app_members") {
+    if(scenario==="owner-delayed") {
+      membershipInFlight++;
+      await new Promise(resolve=>setTimeout(resolve,400));
+      membershipInFlight--;
+    }
     if(scenario==="member-error") return send({code:"08006",message:"synthetic failure"},503);
     return send(scenario==="outsider" ? null : {role:"owner",enabled:true});
   }
-  if(url.pathname==="/rest/v1/deployment_settings") return send({data_mode:scenario.startsWith("scanner-") || scenario==="settings-live"?"live":"fixture"});
+  if(url.pathname==="/rest/v1/deployment_settings") {
+    if(scenario==="owner-delayed") {
+      call.membership_in_flight=membershipInFlight>0;
+      await new Promise(resolve=>setTimeout(resolve,400));
+    }
+    return send({data_mode:scenario.startsWith("scanner-") || scenario==="settings-live"?"live":"fixture"});
+  }
   if(url.pathname==="/rest/v1/scan_runs") {
     if(scenario==="scanner-read-error") return send({code:"08006"},503);
     if(scenario==="scanner-empty" || url.searchParams.getAll("session_date").some(value=>value.startsWith("eq.") && value!=="eq.2026-09-28")) return send(null);
@@ -90,6 +104,11 @@ const server=createServer(async(req,res)=>{
     return send(scenario==="scanner-no-signals" || scenario==="scanner-partial" || scenario==="scanner-recovery"?[]:pageOf(url,rows));
   }
   if(scenario==="schema-error") return send({code:"PGRST205",message:"synthetic missing migration"},404);
+  if(url.pathname==="/rest/v1/rpc/read_trade_reporting_v1" || url.pathname==="/rest/v1/rpc/read_signal_evaluation_v1" || url.pathname==="/rest/v1/rpc/read_paper_trade_v1") {
+    if(scenario==="reporting-unavailable" || scenario==="scanner-paper") return send({code:"PGRST202",message:"synthetic missing migration"},404);
+    if(scenario==="reporting-error") return send({code:"08006",message:"synthetic read failure"},503);
+    return send(url.pathname.endsWith("read_signal_evaluation_v1") ? evaluationFixture(body,scenario) : url.pathname.endsWith("read_paper_trade_v1") ? detailFixture(body,scenario) : reportingFixture(body,scenario));
+  }
   if(url.pathname==="/rest/v1/rpc/export_actual_journal") {
     const row={...trade,trade_id:tradeId,mode:"actual",contract_version:"actual-journal-export-v1",
       open_quantity:"0",signal_id:null,

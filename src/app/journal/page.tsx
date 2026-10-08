@@ -5,7 +5,7 @@ import { JournalForm } from "@/components/journal-form";
 import { journalPageNumber, journalPageSize } from "@/lib/journal-page";
 import { parseActualAnalytics } from "@/lib/actual-analytics";
 import { journalFilters, journalStrategies } from "@/lib/journal-filters";
-import { PaperJournalPreview } from "@/components/paper-journal-preview";
+import { PersistentReporting } from "@/components/trade-reporting";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +63,7 @@ export default async function JournalPage({ searchParams }: {
   if (tab === "paper") return (
     <JournalShell mode={context.mode}>
       <section className="journal-hero"><h1>Paper journal</h1><Link href="/journal">Jurnal aktual</Link><Link href="/analytics?tab=paper">Analitik paper</Link></section>
-      <PaperJournalPreview mode={context.mode} view="journal" />
+      <PersistentReporting supabase={context.supabase} mode={context.mode} query={query} view="journal" />
     </JournalShell>
   );
   const page = journalPageNumber(query.page);

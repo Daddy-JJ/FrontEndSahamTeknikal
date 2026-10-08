@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests", fullyParallel: false, workers: 1,
   testMatch: "**/*.spec.ts",
-  testIgnore: ["**/journal.spec.ts", "**/scanner.spec.ts"],
+  testIgnore: ["**/journal.spec.ts", "**/scanner.spec.ts", "**/reporting.spec.ts"],
   outputDir: "test-results/workspace",
   reporter: "list", timeout: 30000,
   // Cold development compilation can outlast Playwright's default 5s assertion wait.

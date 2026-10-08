@@ -1,3 +1,13 @@
+# Journal reporting v1 — 2026-10-08
+
+The owner-only frontend now reads persistent paper and actual reporting through `read_trade_reporting_v1`, signal observations through `read_signal_evaluation_v1`, and paper audit details through `read_paper_trade_v1`. Backend migration `202610080009_persistent_paper_reporting.sql` must precede this frontend release. No schema fallback or fixture substitution is used when the contract is unavailable.
+
+Routes: `/analytics?tab=paper|actual|signals`, `/journal?tab=paper&exit_key=fixed2r|ma10`, and `/journal/paper/[id]`. Paper exit experiments stay separate; journal cohorts use exit sessions, signal cohorts use signal sessions. The 5/10-session observations never trigger exits. SMA10 requires confirmed close below SMA10 and then exits next-open; the initial technical SL remains active. Existing actual fill forms and CSV contract are unchanged.
+
+Checks: `npm.cmd run test:unit`, `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run build`, `npm.cmd run test:reporting`, and the existing journal/scanner suites. Reporting browser tests use local synthetic HTTP doubles only. Remote migration, authenticated hosted integration and deployment remain NOT VERIFIED in this implementation.
+
+---
+
 # FrontEndSahamTeknikal
 
 Next.js frontend untuk IDX Night Scanner. Vercel dapat deploy repository ini dengan root directory `.` karena package.json dan next.config.ts berada di root.

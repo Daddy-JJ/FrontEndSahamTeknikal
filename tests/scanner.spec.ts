@@ -199,13 +199,14 @@ test("live paper never loads fixture book or actual analytics", async ({ page, r
   await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-paper" } });
   for (const route of ["/journal?tab=paper", "/analytics?tab=paper"]) {
     await page.goto(route);
-    await expect(page.getByRole("heading", { name: "Paper live belum tersedia" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Backend reporting belum siap" })).toBeVisible();
     await expect(page.getByText(/DEMO-/)).toHaveCount(0);
     await expect(page.getByText(/Baseline terverifikasi|17 transaksi/)).toHaveCount(0);
   }
   const { calls, mutations } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(mutations).toEqual([]);
   expect(calls.some((c: { path: string }) => /actual_|get_actual|export_actual/.test(c.path))).toBe(false);
+  expect(calls.filter((c: { path: string }) => c.path.endsWith("read_trade_reporting_v1"))).toHaveLength(2);
 });
 
 test("read failure and mixed-mode contracts are errors, not empty", async ({ page, request }) => {
@@ -260,11 +261,17 @@ test("owner operations opens existing workflow link without dispatch or fake sta
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"scanner-complete"}});
   await page.goto("/operations");
   await expect(page.getByRole("link",{name:"Buka GitHub Actions"})).toHaveAttribute("href","https://github.com/Daddy-JJ/BackendSahamTeknikal/actions");
-  await expect(page.getByRole("heading",{name:"Observasi operasional belum tersedia"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Observasi Status Snapshot Database"})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const {calls,mutations}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(mutations).toEqual([]);
   expect(calls.some((c:{path:string})=>c.path.includes("/rpc/"))).toBe(false);
+  const snapshots=calls.filter((c:{path:string})=>c.path.endsWith("/scan_runs"));
+  expect(snapshots).toHaveLength(1);
+  expect(snapshots[0].query).toMatchObject({limit:"1",namespace:"eq.forward",data_mode:"eq.live"});
+  await expect(page.getByText("2026-09-28",{exact:true})).toBeVisible();
+  await expect(page.getByText("100 / 100",{exact:true})).toBeVisible();
+  await expect(page.getByText("a".repeat(64),{exact:true})).toBeVisible();
 });
 
 

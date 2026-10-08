@@ -7,14 +7,17 @@ export async function journalOwner() {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return { kind: "unauthenticated" as const };
-  const { data: member, error: memberError } = await supabase
-    .from("app_members").select("role,enabled").eq("user_id",user.id).maybeSingle();
+  const [
+    { data: member, error: memberError },
+    { data: settings, error: settingsError },
+  ] = await Promise.all([
+    supabase.from("app_members").select("role,enabled").eq("user_id",user.id).maybeSingle(),
+    supabase.from("deployment_settings").select("data_mode").eq("singleton",true).single(),
+  ]);
   if (memberError) return { kind: "unavailable" as const };
   if (member?.role !== "owner" || member.enabled !== true) {
     return { kind: "forbidden" as const };
   }
-  const { data: settings, error: settingsError } = await supabase
-    .from("deployment_settings").select("data_mode").eq("singleton",true).single();
   if (settingsError || !["fixture","live"].includes(settings?.data_mode ?? "")) {
     return { kind: "unavailable" as const };
   }

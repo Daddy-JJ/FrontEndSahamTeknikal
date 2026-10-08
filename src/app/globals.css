@@ -161,3 +161,46 @@
 
 @media(max-width:850px){.journal-columns{grid-template-columns:1fr}.journal-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.analytics-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.journal-nav-inner{flex-wrap:wrap;gap:8px}.journal-nav nav{order:3;width:100%;justify-content:center;margin-left:0}.journal-main{padding:22px 20px 50px}}
 @media(max-width:520px){.journal-main{padding:18px 15px 45px}.journal-nav-inner{padding:9px 15px}.journal-brand{font-size:17px}.journal-nav .badge{font-size:8px;margin-left:auto}.journal-nav nav a{font-size:11px;padding:7px}.journal-hero{display:block;margin:20px 0}.journal-hero-actions{margin-top:17px}.journal-hero h1{font-size:29px}.journal-metrics{gap:9px}.journal-metrics>div{padding:14px;border-radius:12px}.journal-metrics strong{font-size:22px}.journal-panel{padding:17px;border-radius:14px}.journal-form{grid-template-columns:1fr}.journal-trade strong{font-size:14px}.analytics-hero-stats{grid-template-columns:1fr}}
+
+/* Versioned journal reporting: financial values remain canonical backend outputs. */
+.reporting-stack{display:grid;gap:20px;margin-top:20px;min-width:0}
+.reporting-freshness{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.reporting-version{overflow-wrap:anywhere;font-size:11px}
+.reporting-statuses{display:flex;gap:12px;flex-wrap:wrap}
+.reporting-statuses>div{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 14px;display:flex;gap:14px;align-items:center;font-size:12px}
+.reporting-statuses span{color:var(--muted)}.reporting-statuses strong{font-size:18px}
+.reporting-curve{display:block;width:100%;height:auto;margin:16px 0}
+.reporting-stack .panel-note{margin:12px 0 0}.reporting-stack .analytics-hero-stats{margin:0}
+.reporting-stack .dense-table td small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:4px}
+.reporting-stack .dense-table a{color:var(--green);text-underline-offset:3px}
+.evaluation-matrix{min-width:920px}.evaluation-matrix th{max-width:190px;white-space:normal}
+.evaluation-matrix td{padding:22px 16px;min-width:165px;vertical-align:top}
+.evaluation-matrix td:not(:first-child){text-align:center}
+.evaluation-matrix td>strong{display:block;font-size:24px;color:var(--ink);margin-bottom:6px}
+.evaluation-matrix td>span{display:block;font-size:12px}.evaluation-matrix summary{font-size:11px;margin-top:8px;cursor:pointer}
+.reporting-sensitivity{display:flex;flex-wrap:wrap;gap:30px;padding-top:18px}
+.reporting-events{list-style:none;padding:0;margin:18px 0;display:grid;gap:14px}
+.reporting-events li{border-left:2px solid var(--line);padding:0 0 0 16px;min-width:0}
+.reporting-events li>span{display:block;color:var(--muted);font-size:12px}.reporting-events details{margin-top:8px}
+.reporting-config,.reporting-events pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.7}
+.reporting-filter{grid-template-columns:repeat(4,minmax(0,1fr))}.reporting-filter>button{grid-column:auto}
+.reporting-stack .table-scroll{max-width:100%;margin:14px 0 0}
+@media(max-width:600px){.reporting-filter{grid-template-columns:1fr 1fr}.reporting-filter>button{grid-column:1/-1}
+.reporting-stack{gap:16px}.reporting-statuses{gap:8px}.reporting-statuses>div{padding:8px 10px;gap:10px}
+.reporting-freshness{font-size:11px;gap:8px}.reporting-stack .analytics-stat-card strong{font-size:23px}
+.reporting-stack .table-scroll{margin-right:0;margin-left:0}.evaluation-matrix td{padding:18px 12px}
+}
+
+.reporting-stack .analytics-stat-card small{display:block}
+
+/* Detail lists wrap; only comparison matrices need horizontal scrolling. */
+.reporting-list{min-width:0;margin-top:14px}
+.reporting-list .dense-table{table-layout:fixed}
+.reporting-list .dense-table th,.reporting-list .dense-table td{white-space:normal;overflow-wrap:anywhere;vertical-align:top;padding:10px 6px}
+@media(max-width:900px){
+.reporting-list .dense-table,.reporting-list tbody{display:block;width:100%}
+.reporting-list thead{display:none}
+.reporting-list .dense-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.reporting-list .dense-table td{display:block;border:none;padding:0;min-width:0}
+.reporting-list .dense-table td::before{content:attr(data-label);display:block;font-size:10px;line-height:1.5;color:var(--muted);margin-bottom:4px}
+}
