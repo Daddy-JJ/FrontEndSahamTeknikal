@@ -67,7 +67,7 @@ test("partial exposes denominator, skip reasons and global RS hold", async ({ pa
   await expect(page.getByText("Corporate action belum direkonsiliasi", { exact: false }).first()).toBeVisible();
   await expect(page.getByText(/Ranking RS ditahan untuk seluruh/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: `test-results/scanner-partial-${info.project.name}.png`, fullPage: true });
+  await page.screenshot({caret:"initial", path: `test-results/scanner-partial-${info.project.name}.png`, fullPage: true });
   const { calls, mutations } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(mutations).toEqual([]);
   const itemReads = calls.filter((c: { path: string }) => c.path.endsWith("scan_run_items"));
@@ -86,6 +86,7 @@ test("expired window and late cohort never claim fresh forward entry", async ({ 
   await expect(page.getByText(/Window entry sudah berakhir/)).toBeVisible();
   await expect(page.getByText(/LATE \/ MODEL ONLY/).first()).toBeVisible();
   await expect(page.getByText("Reference close · bukan fill").first()).toBeVisible();
+  await page.getByText("Detail run & sumber", { exact: true }).click();
   await expect(page.getByText(/Harga next-open dan biaya transaksi belum diketahui/).first()).toBeVisible();
   await expect(page.locator('form:not([method="get"])')).toHaveCount(0);
 });
@@ -97,7 +98,7 @@ test("signal pages pin immutable run and fetch only bounded continuation", async
   await page.getByRole("link", { name: "Berikutnya →" }).click();
   await expect(page).toHaveURL(new RegExp(`run=${runId}.*page=2`));
   await expect(page.getByRole("table").locator("tbody tr")).toHaveCount(1);
-  await expect(page.getByRole("cell", { name: "TEST026", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Detail TEST026", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Berikutnya →" })).toHaveCount(0);
   await page.goto(`/scanner?run=${runId}&section=signals&page=3`);
   await expect(page.getByText("Tidak ada sinyal pada halaman lanjutan ini.")).toBeVisible();
@@ -119,6 +120,7 @@ test("stop decisions remain backend reasons without derived risk or fill claims"
       ? "Stop tidak valid menurut backend" : "Stop belum tersedia menurut backend").first()).toBeVisible();
     await expect(page.getByText(/Risk Buffer|ΔR|-Rp-/)).toHaveCount(0);
     await expect(page.getByRole("columnheader", { name: "Reference close · bukan fill" })).toBeVisible();
+    await page.getByText("Detail run & sumber", { exact: true }).click();
     await expect(page.getByText(/Harga next-open dan biaya transaksi belum diketahui/).first()).toBeVisible();
   }
   const { mutations } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
@@ -129,14 +131,15 @@ test("signal detail presents frozen rule and temporal provenance without recalcu
   await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-complete" } });
   await page.goto("/scanner");
   const row = page.getByRole("table", { name: "Sinyal diterbitkan" }).locator("tbody tr").first();
-  await row.locator("summary").click();
-  await expect(row.getByText("2026-09-23", { exact: true })).toBeVisible();
-  await expect(row.getByText("2026-09-25", { exact: true })).toBeVisible();
-  await expect(row.getByText("Pivot date", { exact: true })).toBeVisible();
-  await expect(row.getByText("Available-at session", { exact: true })).toBeVisible();
-  await expect(row.getByRole("list", { name: "Rule checklist backend" })).toContainText("close_above_fractal");
-  await expect(row.getByText("c".repeat(64), { exact: true })).toBeVisible();
-  await expect(row.getByText("d".repeat(64), { exact: true })).toBeVisible();
+  await row.getByRole("button").click();
+  const detail = page.locator("#scanner-detail");
+  await expect(detail.getByText("2026-09-23", { exact: true })).toBeVisible();
+  await expect(detail.getByText("2026-09-25", { exact: true })).toBeVisible();
+  await expect(detail.getByText("Pivot date", { exact: true })).toBeVisible();
+  await expect(detail.getByText("Available-at session", { exact: true })).toBeVisible();
+  await expect(detail.getByRole("list", { name: "Rule checklist backend" })).toContainText("close_above_fractal");
+  await expect(detail.getByText("c".repeat(64), { exact: true })).toBeVisible();
+  await expect(detail.getByText("d".repeat(64), { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const { calls, mutations } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(mutations).toEqual([]);
@@ -161,7 +164,7 @@ test("date and strategy filters use bounded backend reads and survive pagination
   expect(selected.searchParams.get("run")).toBe(runId);
   expect(selected.searchParams.get("date")).toBe("2026-09-28");
   expect(selected.searchParams.get("strategy")).toBe("FRACTAL_BREAKOUT_V1");
-  await expect(page.getByRole("cell", { name: "TEST026", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Detail TEST026", exact: true })).toBeVisible();
   const { calls } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
   const signalReads = calls.filter((c: { path: string; query: Record<string, string> }) => c.path.endsWith("scan_run_signals") && c.query["signals.strategy"]);
   expect(signalReads).toHaveLength(2);
@@ -185,8 +188,9 @@ test("signal link only prefills a verified actual draft, never a fill", async ({
   await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-complete" } });
   await page.goto("/scanner");
   const row = page.getByRole("table", { name: "Sinyal diterbitkan" }).locator("tbody tr").first();
-  await row.locator("summary").click();
-  await row.getByRole("link", { name: "Buat draft aktual" }).click();
+  await row.getByRole("button").click();
+  const detail = page.locator("#scanner-detail");
+  await detail.getByRole("link", { name: "Buat draft aktual" }).click();
   await expect(page.getByLabel("Kode saham", { exact: true })).toHaveValue("TEST001");
   await expect(page.getByRole("combobox", { name: "Strategi utama", exact: true })).toHaveValue("FRACTAL_BREAKOUT_V1");
   await expect(page.getByLabel("Initial stop · Rp", { exact: true })).toHaveValue("");
@@ -235,7 +239,8 @@ test("recovery partial defaults to quality and preserves all hold categories", a
   await page.goto("/scanner");
   await expect(page.getByRole("table", { name: "Quality dan evaluasi ticker" })).toBeVisible();
   await expect(page.getByText("45 / 100", { exact: true })).toBeVisible();
-  await expect(page.getByText(/55 ticker belum lolos evaluasi/)).toBeVisible();
+  await expect(page.locator(".terminal-notice")).toContainText("45 dari 100 ticker dievaluasi");
+  await page.getByText("Detail run & sumber", { exact: true }).click();
   await expect(page.getByText(/bukan bukti freshness provider/)).toBeVisible();
   await expect(page.getByText("Snapshot tersimpan (WIB)")).toBeVisible();
   const statuses: string[] = [];
@@ -309,4 +314,134 @@ test("missing signal and changed strategy reject linked draft before mutation",a
   await page.goto("/journal?signal_id="+"1".padStart(64,"0"));
   await expect(page.getByRole("heading",{name:"Sinyal draft belum dapat diverifikasi"})).toBeVisible();
   await expect(page.locator("form")).toHaveCount(0);
+});
+
+test("terminal preview keeps dense geometry and loaded quality detail accessible", async ({ page, request }, info) => {
+  const browserErrors: string[] = [];
+  page.on("pageerror", error => browserErrors.push(error.message));
+  await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-partial" } });
+  await page.setViewportSize(info.project.name === "desktop" ? { width: 1366, height: 768 } : { width: 390, height: 844 });
+  await page.goto("/");
+  const table = page.getByRole("table", { name: "Quality dan evaluasi ticker" });
+  await expect(table.locator("tbody tr")).toHaveCount(25);
+  await expect(page.locator(".terminal-notice")).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  if (info.project.name === "desktop") {
+    const geometry = await table.locator("tbody tr").evaluateAll(rows => ({
+      first: rows[0].getBoundingClientRect().top,
+      visible: rows.filter(row => { const r = row.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }).length,
+      heights: rows.map(row => row.getBoundingClientRect().height),
+    }));
+    expect(geometry.first).toBeLessThanOrEqual(280);
+    expect(geometry.visible).toBeGreaterThanOrEqual(10);
+    expect(geometry.heights.every(height => height >= 32 && height <= 36)).toBe(true);
+    await info.attach("terminal-geometry", { body: JSON.stringify(geometry), contentType: "application/json" });
+  }
+  // Explicit screenshot label is test-only DOM decoration, never production fallback.
+  await page.evaluate(() => {
+    const badge = document.querySelector(".journal-nav .badge");
+    if (badge) badge.textContent = "LOCAL HTTP FIXTURE";
+    const banner = document.createElement("div");
+    banner.textContent = "LOCAL UI PREVIEW · SYNTHETIC HTTP FIXTURE · NO LIVE MARKET DATA";
+    banner.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:999;background:#68420d;color:#fff3cd;font:10px Arial;text-align:center;padding:5px";
+    document.body.append(banner);
+  });
+  await page.screenshot({caret:"initial", path: "test-results/scanner-terminal-base-" + info.project.name + ".png", fullPage: false });
+  await page.getByRole("button", { name: "Detail TEST002", exact: true }).click();
+  const detail = page.locator("#scanner-detail");
+  await expect(detail.getByRole("heading", { name: "Detail TEST002" })).toBeVisible();
+  await expect(detail.getByText("Histori belum mencukupi", { exact: false }).first()).toBeVisible();
+  await expect(detail.getByText("RS ditahan: cross-section belum lengkap", { exact: false }).first()).toBeVisible();
+  await expect(table.locator('tr[aria-selected="true"]')).toHaveCount(1);
+  const { calls } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
+  expect(calls.filter((call: { path: string }) => call.path.endsWith("scan_run_items"))).toHaveLength(1);
+  await page.screenshot({caret:"initial", path: "test-results/scanner-terminal-preview-" + info.project.name + ".png", fullPage: false });
+  await page.keyboard.press("Escape");
+  await expect(detail).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Detail TEST002", exact: true })).toBeFocused();
+  expect(browserErrors).toEqual([]);
+});
+
+test("terminal matrix preserves cell states, all rule details and keyboard focus at narrow widths", async ({ page, request }, info) => {
+  await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-terminal-matrix" } });
+  await page.goto("/scanner");
+  const table = page.getByRole("table", { name: "Quality dan evaluasi ticker" });
+  const row = table.locator("tbody tr").nth(1);
+  await expect(row).toContainText("History hold");
+  await expect(row).toContainText("✓ Triggered");
+  await expect(row).toContainText("RS Hold");
+  await expect(row).toContainText("Tidak terpicu");
+  await expect(table.locator("tbody tr").first()).toContainText("Data hold");
+  const button = row.getByRole("button", { name: "Detail TEST002", exact: true });
+  await button.focus();
+  await page.keyboard.press("Enter");
+  const detail = page.locator("#scanner-detail");
+  await expect(detail).toContainText("close_above_fractal");
+  await expect(detail).toContainText("pullback_reclaim");
+  await expect(detail.getByRole("heading", { name: "FRACTAL_BREAKOUT_V1", exact: true })).toBeVisible();
+  // 683 CSS pixels represents a 1366px display at 200% browser zoom.
+  for (const width of [683, 390, 320]) {
+    await page.setViewportSize({ width, height: 768 });
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const controls = await page.locator(".terminal-filters input:not([type=hidden]),.terminal-filters select").evaluateAll(elements =>
+      elements.map(element => ({ font: parseFloat(getComputedStyle(element).fontSize), height: element.getBoundingClientRect().height })));
+    if (info.project.name === "mobile") expect(controls.every(control => control.font >= 16 && control.height >= 44)).toBe(true);
+    await expect.poll(() => detail.evaluate(element => element.contains(document.activeElement))).toBe(true);
+    await page.keyboard.press("Tab");
+    await expect.poll(() => detail.evaluate(element => element.contains(document.activeElement))).toBe(true);
+  }
+  await page.keyboard.press("Escape");
+  await expect(button).toBeFocused();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  const { calls, mutations } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
+  expect(calls.filter((call: { path: string }) => call.path.endsWith("scan_run_items"))).toHaveLength(1);
+  expect(mutations).toEqual([]);
+});
+
+test("terminal filtered immutable page survives refresh and browser back", async ({ page, request }) => {
+  await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-complete" } });
+  const route = "/scanner?run=" + runId + "&section=signals&page=1&date=2026-09-28&strategy=FRACTAL_BREAKOUT_V1";
+  await page.goto(route);
+  await page.getByRole("button", { name: "Detail TEST001", exact: true }).click();
+  if (await page.getByRole("dialog").isVisible()) await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "Berikutnya →" }).click();
+  await expect(page).toHaveURL(new RegExp("run=" + runId + ".*page=2"));
+  await expect(page.getByRole("button", { name: "Detail TEST026", exact: true })).toBeVisible();
+  await expect(page.locator("#scanner-detail")).not.toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Detail TEST026", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Sesi target", { exact: true })).toHaveValue("2026-09-28");
+  await expect(page.getByRole("combobox", { name: "Strategi sinyal", exact: true })).toHaveValue("FRACTAL_BREAKOUT_V1");
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp("run=" + runId + ".*page=1"));
+  await expect(page.getByRole("table").locator("tbody tr")).toHaveCount(25);
+  await expect(page.locator(".scanner-terminal-shell")).toBeVisible();
+});
+
+test("drawer restores its row opener after pointer activation without prior focus", async ({ page, request }) => {
+  await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-partial" } });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/scanner");
+  const opener = page.getByRole("button", { name: "Detail TEST002", exact: true });
+  for (const method of ["escape", "close"]) {
+    await page.getByLabel("Sesi target", { exact: true }).focus();
+    await opener.evaluate(element => {
+      element.removeAttribute("data-focus-observed");
+      element.addEventListener("focus", () => element.setAttribute("data-focus-observed", "true"), { once: true });
+      // Pointer activation can omit focus on native buttons (for example Safari).
+      element.addEventListener("pointerdown", event => event.preventDefault(), { once: true });
+    });
+    await opener.click();
+    const detail = page.getByRole("dialog");
+    await expect(detail).toBeVisible();
+    await expect(opener).not.toHaveAttribute("data-focus-observed", "true");
+    if (method === "escape") await page.keyboard.press("Escape");
+    else await detail.getByRole("button", { name: "Tutup detail TEST002", exact: true }).click();
+    await expect(detail).not.toBeVisible();
+    await expect(opener).toBeFocused();
+  }
+  const { calls, mutations } = await (await request.get("http://127.0.0.1:3053/__calls")).json();
+  expect(calls.filter((call: { path: string }) => call.path.endsWith("scan_run_items"))).toHaveLength(1);
+  expect(mutations).toEqual([]);
 });

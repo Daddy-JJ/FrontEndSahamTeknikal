@@ -28,11 +28,18 @@ export type ReportingCurvePoint = {
   realized_pnl_idr: Decimal; cumulative_pnl_idr: Decimal;
 };
 export type ReportingStrategy = Omit<ReportingSummary, "max_drawdown_idr"> & { strategy: string };
+export type ScannerCoverage = {
+  status: "complete" | "partial" | "failed" | "missing";
+  session_date: string | null;
+  coverage_valid: number | null;
+  coverage_total: number | null;
+};
 type Metadata = {
   contract_version: 1; data_mode: "fixture" | "live"; model_version: string | null;
   from: string | null; to: string | null; primary_strategy: string | null;
   as_of_session: string | null; updated_at: string | null;
   coverage_status: "complete" | "partial" | "missing" | "stale";
+  scanner_coverage?: ScannerCoverage | null;
   paging: { page: number; page_size: 25; has_more: boolean };
 };
 export type TradeReporting = Metadata & {
@@ -91,10 +98,24 @@ function rate(v: unknown) { return v === null || decimal(v) && Number(v) >= 0 &&
 function sameSnapshot(v: unknown, expected: Record<string, unknown> | null) {
   return expected === null ? v === null : record(v) && Object.keys(v).length === Object.keys(expected).length && Object.keys(expected).every(k => v[k] === expected[k]);
 }
+function scannerCoverage(v: unknown): boolean {
+  // Optional for SQL009 compatibility. Null is used by actual ledger reporting.
+  if (v === undefined || v === null) return true;
+  if (!record(v) || !["complete", "partial", "failed", "missing"].includes(String(v.status))
+    || !nullableDate(v.session_date)) return false;
+  const valid = v.coverage_valid, total = v.coverage_total;
+  if (valid === null || total === null) {
+    return valid === null && total === null && (v.status === "missing" ? v.session_date === null : v.status === "failed" && date(v.session_date));
+  }
+  if (!count(valid) || !count(total) || total === 0 || valid > total || !date(v.session_date)) return false;
+  if (v.status === "complete") return valid === total;
+  if (v.status === "partial") return valid > 0 && valid < total;
+  return v.status === "failed" && valid === 0;
+}
 function metadata(v: Record<string, unknown>, dataMode: string, f: ReportingFilters) {
   return v.contract_version === 1 && v.data_mode === dataMode && v.from === f.from && v.to === f.to
     && v.primary_strategy === f.strategy && nullableDate(v.as_of_session)
-    && nullableTimestamp(v.updated_at) && ["complete", "partial", "missing", "stale"].includes(String(v.coverage_status))
+    && (v.mode !== "actual" || v.scanner_coverage == null) && scannerCoverage(v.scanner_coverage) && nullableTimestamp(v.updated_at) && ["complete", "partial", "missing", "stale"].includes(String(v.coverage_status))
     && record(v.paging) && v.paging.page === f.page && v.paging.page_size === 25 && typeof v.paging.has_more === "boolean";
 }
 function summary(v: unknown, withDrawdown = true): boolean {

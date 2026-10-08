@@ -65,11 +65,21 @@ export function PnlCurve({ points }: { points: ReportingCurvePoint[] }) {
   </svg>;
 }
 function Freshness({ report }: { report: TradeReporting | SignalEvaluation }) {
+  const scope = report.mode === "signal_evaluation" ? "Data observasi" : "Data jurnal";
+  const scanner = report.scanner_coverage;
   return <div className="reporting-freshness" role="status">
-    <span className={"badge " + (report.coverage_status === "complete" ? "green" : "amber")}>{{
-      complete: "Coverage lengkap", partial: "Coverage parsial", missing: "Data belum tersedia", stale: "Data stale",
+    <span className={"badge " + (report.coverage_status === "complete" ? "green" : "amber")}>{scope} {{
+      complete: "lengkap", partial: "parsial", missing: "belum tersedia", stale: "stale",
     }[report.coverage_status]}</span>
-    <span>Harga sampai {report.as_of_session ?? "belum tersedia"} · diperbarui {report.updated_at ? new Date(report.updated_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB" : "belum tersedia"}</span>
+    {report.mode !== "actual" && <span className={"badge " + (scanner?.status === "complete" ? "green" : "amber")} data-scanner-coverage={scanner?.status ?? "unavailable"}>
+      {scanner ? {
+        complete: "Scanner lengkap", partial: "Scanner parsial", failed: "Scanner gagal", missing: "Scanner belum tersedia",
+      }[scanner.status] : "Coverage scanner belum tersedia"}
+      {scanner?.coverage_valid !== null && scanner?.coverage_valid !== undefined && scanner.coverage_total !== null
+        ? " · " + scanner.coverage_valid + "/" + scanner.coverage_total : ""}
+      {scanner?.session_date ? " · sesi " + scanner.session_date : ""}
+    </span>}
+    <span>{report.mode === "signal_evaluation" ? "Observasi" : "Jurnal"} sampai {report.as_of_session ?? "belum tersedia"} · diperbarui {report.updated_at ? new Date(report.updated_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB" : "belum tersedia"}</span>
     <span className="reporting-version">{report.model_version ?? "ledger aktual"}</span>
   </div>;
 }
@@ -90,6 +100,9 @@ function FilterForm({ tab, f, view }: { tab: "paper" | "signals"; f: ReportingFi
       : "Tanggal membatasi trade closed. Status yang belum exit ditampilkan terpisah tanpa batas tanggal exit."}</p>
   </section>;
 }
+function Money({ value }: { value: number | string | null }) {
+  return <span className="reporting-money">{reportMoney(value)}</span>;
+}
 export function TradeRows({ trades, mode }: { trades: ReportingTrade[]; mode: "paper" | "actual" }) {
   if (!trades.length) return <div className="journal-empty"><h3>Belum ada transaksi pada halaman ini</h3><p>Rencana paper baru tercatat otomatis dari sinyal valid setelah aktivasi model.</p></div>;
   return <div className="reporting-list"><table className="dense-table reporting-trades"><thead><tr>
@@ -97,10 +110,10 @@ export function TradeRows({ trades, mode }: { trades: ReportingTrade[]; mode: "p
   </tr></thead><tbody>{trades.map(t => <tr key={t.id}>
     <td data-label="Ticker / Strategi"><strong>{t.ticker}</strong><small>{strategyLabels[t.strategy]}</small></td>
     <td data-label="Status"><span className={"badge " + (t.ambiguous || t.state === "data_hold" ? "amber" : "neutral")}>{t.ambiguous ? "Ambigu" : statusLabels[t.state] ?? t.state}</span><small>{t.reason}</small></td>
-    <td data-label="Entry / Sesi">{reportMoney(t.entry_price)}<small>{t.entry_session ?? "—"}</small></td>
-    <td data-label="Lot">{t.lots ?? "—"}</td><td data-label="SL awal">{reportMoney(t.initial_stop)}</td><td data-label="Risiko harga awal">{reportMoney(t.initial_price_risk_idr)}</td><td data-label="Planned loss + fee">{reportMoney(t.planned_loss_idr)}</td>
-    <td data-label="Exit / Sesi">{reportMoney(t.exit_price)}<small>{t.exit_session ?? "—"}</small></td><td data-label="Total fee">{reportMoney(t.fee_total_idr)}</td>
-    <td data-label="P&L net / R" className={Number(t.realized_pnl_idr) < 0 ? "negative" : "positive"}>{reportMoney(t.realized_pnl_idr)}<small>{reportRatio(t.realized_r)} R</small></td>
+    <td data-label="Entry / Sesi"><Money value={t.entry_price} /><small>{t.entry_session ?? "—"}</small></td>
+    <td data-label="Lot">{t.lots ?? "—"}</td><td data-label="SL awal"><Money value={t.initial_stop} /></td><td data-label="Risiko harga awal"><Money value={t.initial_price_risk_idr} /></td><td data-label="Planned loss + fee"><Money value={t.planned_loss_idr} /></td>
+    <td data-label="Exit / Sesi"><Money value={t.exit_price} /><small>{t.exit_session ?? "—"}</small></td><td data-label="Total fee"><Money value={t.fee_total_idr} /></td>
+    <td data-label="P&L net / R" className={Number(t.realized_pnl_idr) < 0 ? "negative" : "positive"}><Money value={t.realized_pnl_idr} /><small>{reportRatio(t.realized_r)} R</small></td>
     <td data-label="Rincian"><Link prefetch={false} href={mode === "paper" ? "/journal/paper/" + encodeURIComponent(t.id) : "/journal/" + encodeURIComponent(t.id)}>Lihat →</Link></td>
   </tr>)}</tbody></table></div>;
 }

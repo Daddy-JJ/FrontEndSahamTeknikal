@@ -1,4 +1,41 @@
+# Active: compact terminal Scanner layout - 2026-10-08
+
+Status: implementation and production-readiness verification authorized; commit/push only after relevant checks pass. Existing reporting fixes remain a separate compatible part of this release. Scope `/` live and `/scanner`, which share `ScannerDashboard`; journal/analytics/auth flows retain their default shell.
+
+## Final local verification - 2026-10-09 WIB
+
+Action: complete regression and production-build gates after the modal focus correction and strict coverage parser checks.
+Proof: unit30 PASS; browser journal40 + scanner44 + reporting18 =102 PASS; typecheck, lint and ordinary production build PASS. Desktop geometry and mobile/zoom-equivalent checks pass; Escape and Close restore an initially unfocused ticker opener. Currency tokens fit their cells at1440/1280/1200/1101/1100/901/390/320px. Reporting screenshots preserve caret state and assert no hydration errors. Read-only review has no remaining confirmed blocker.
+
+Action: release only the tested frontend with compatible SQL010 metadata, preserving canonical domain calculations and current authentication/data queries.
+Proof: final diff and secret-pattern scan clean; no dependency/provider/auth changes. Local PNG previews are explicitly synthetic; authenticated hosted owner interaction is not inferred from these tests. Exact remote release/deployment evidence is maintained in the shared IMPLEMENTATION_STATUS.md and CODEX_HANDOFF.md outside the source repos.
+
+## Target layout
+
+A Bloomberg-inspired dark terminal workspace: compact sans-serif text, tabular numeric columns, thin borders, restrained amber/cyan accents, readable positive/negative/warning states with text. Desktop: compact navigation > run status strip > inline filters/tabs > primary table and selected ticker detail. Run diagnostics expand on demand. No invented real-time prices, charts or global counts.
+
+- Action: add a scanner-only terminal shell; reduce hero/card whitespace, replace vertical run facts with a compact summary, and keep critical partial/failed/RS/window/freshness states visible. Expand full timestamps, provenance and explanatory metadata in run details.
+  Proof: 1366x768 geometry puts first data row within 280px and shows at least ten compact quality rows; normal/empty/failed/historical/loading/error states remain distinguishable. No change to default journal/analytics/auth styling.
+- Action: make the bounded 25-row table the primary workspace. Show concise strategy/status cells and move verbose per-ticker reasons and complete signal audit into an accessible selected-ticker panel (desktop) or drawer (mobile). Preserve backend values, current auto tab choice, run/date/strategy/page semantics, nulls and immutable source data.
+  Proof: keyboard/focus/Escape, selection, filter/back/refresh/pagination and existing scanner regressions. No extra data RPC or unbounded fetch; no canonical financial/indicator arithmetic in browser.
+- Action: implement compact desktop toolbar and responsive matrix at 320-390px; horizontal scrolling only inside the matrix, monetary tokens unbroken, 200% zoom and reduced-motion supported.
+  Proof: desktop/mobile browser geometry and overflow checks, readable status text, focus restoration, and journal/reporting regression suites.
+- Action: review complete frontend/backend diff and compatible SQL010 capability; commit/push the two independent repos only after meaningful local verification. Preserve active model configuration, historical signals and actual ledger.
+  Proof: units, typecheck, lint, build, SQL/Python suites, read-only review and exact commit/remote/deployment evidence; hosted proof kept separate from local doubles.
+
+Prior plans/evidence follow.
+
 # Persistent paper journal and reporting — 2026-10-08
+
+## Reporting coverage and money layout follow-up — 2026-10-08
+
+Action: read optional scanner_coverage from the existing reporting RPCs; validate status/date/counts and distinguish scanner completeness from journal/observation completeness. Preserve SQL009 compatibility without asserting missing scanner metadata is complete.
+Proof: boundary and local browser regressions cover 95/100 partial, failed/missing/invalid counts, and no additional scanner RPC.
+
+Action: keep complete currency tokens on one line in reporting/journal rows while retaining responsive cards; widen cards breakpoint when the desktop columns cannot fit.
+Proof: inspect decimal token line rectangles and cell bounds plus page/list overflow at desktop and small mobile widths. Unit, types, lint, build and targeted browser checks recorded below.
+
+
 
 ## Production rollout authorization - 2026-10-08
 

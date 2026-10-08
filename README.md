@@ -1,3 +1,13 @@
+# Compact Scanner terminal and independent coverage - 2026-10-08
+
+Scanner routes `/` (live mode) and `/scanner` use a compact dark terminal workspace: run/session/coverage/RS summary, inline filters, bounded 25-row matrix, and a selected ticker pane or mobile dialog. Full diagnostics and source audit remain available on demand. Journal, analytics and authentication retain their existing shell. There are no new market-data queries, canonical calculations or dependencies.
+
+Reporting accepts additive `scanner_coverage` from backend SQL010 and displays it separately from journal/observation coverage. SQL009 responses remain compatible, with unavailable scanner metadata labelled explicitly. Actual reporting never uses scanner coverage. Currency tokens remain unbroken in responsive trade rows.
+
+Local browser previews use labelled synthetic HTTP fixtures; they do not prove owner-authenticated production behavior. Current release verification and remote receipts are recorded in `PLAN.md`. Earlier implementation notes follow.
+
+---
+
 # Journal reporting v1 — 2026-10-08
 
 The owner-only frontend now reads persistent paper and actual reporting through `read_trade_reporting_v1`, signal observations through `read_signal_evaluation_v1`, and paper audit details through `read_paper_trade_v1`. Backend migration `202610080009_persistent_paper_reporting.sql` must precede this frontend release. No schema fallback or fixture substitution is used when the contract is unavailable.

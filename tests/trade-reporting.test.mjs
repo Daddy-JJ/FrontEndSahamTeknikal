@@ -25,6 +25,8 @@ test("actual exact snapshot must match and actual route keeps actual trade ident
  const filters={...f,exitSnapshot:snapshot};
  const data=reportingFixture({p_mode:"actual",p_exit_snapshot:snapshot});
  assert.equal(parseTradeReporting(data,"fixture","actual",filters),data);
+ assert.notEqual(parseTradeReporting({...data,scanner_coverage:null},"fixture","actual",filters),null);
+ assert.equal(parseTradeReporting({...data,scanner_coverage:{status:"complete",session_date:"2026-09-30",coverage_valid:100,coverage_total:100}},"fixture","actual",filters),null);
  assert.equal(parseTradeReporting({...data,exit_snapshot:{...snapshot,target_r:1.5}},"fixture","actual",filters),null);
 });
 test("real engine ambiguous_review and resolved won/lost observations parse",()=>{
@@ -48,4 +50,40 @@ test("paper detail is owner mode and model bound including audit event payload",
  assert.equal(parsePaperTradeDetail(detail,"live",paperId),null);
  assert.equal(parsePaperTradeDetail(detail,"fixture","other-id"),null);
  assert.equal(parsePaperTradeDetail({...detail,events:[{...detail.events[0],session_date:"2026-02-30"}]},"fixture",paperId),null);
+});
+
+test("optional scanner coverage is distinct from journal completeness and remains backwards compatible",()=>{
+ const data=reportingFixture();
+ for(const scanner_coverage of [undefined,null,
+  {status:"complete",session_date:"2026-09-30",coverage_valid:100,coverage_total:100},
+  {status:"partial",session_date:"2026-09-30",coverage_valid:95,coverage_total:100},
+  {status:"failed",session_date:"2026-09-30",coverage_valid:0,coverage_total:100},
+  {status:"failed",session_date:"2026-09-30",coverage_valid:null,coverage_total:null},
+  {status:"missing",session_date:null,coverage_valid:null,coverage_total:null},
+ ]){
+  const value={...data,coverage_status:"complete",scanner_coverage};
+  assert.equal(parseTradeReporting(value,"fixture","paper",f),value);
+  const evals={...evaluationFixture(),scanner_coverage};
+  assert.equal(parseSignalEvaluation(evals,"fixture",f),evals);
+ }
+ const partial=reportingFixture({},"reporting-scanner-partial");
+ assert.equal(partial.coverage_status,"complete");
+ assert.equal(partial.scanner_coverage.coverage_valid,95);
+ assert.equal(parseTradeReporting(partial,"fixture","paper",f),partial);
+});
+test("scanner metadata rejects malformed, empty and contradictory counts instead of assuming full coverage",()=>{
+ const base={status:"partial",session_date:"2026-09-30",coverage_valid:95,coverage_total:100};
+ const bad=[[],{},false,{...base,status:"stale"},{...base,session_date:"2026-02-30"},
+  {...base,coverage_valid:"95"},{...base,coverage_valid:95.5},{...base,coverage_valid:-1},
+  {...base,coverage_valid:101},{...base,coverage_total:0},{...base,coverage_valid:0,coverage_total:0},
+  {...base,coverage_valid:null},{...base,coverage_total:null},
+  {...base,coverage_valid:null,coverage_total:null},{...base,status:"complete"},
+  {...base,coverage_valid:100},{...base,coverage_valid:0},{...base,status:"failed"},{...base,status:"missing"},
+  {...base,status:"missing",session_date:null,coverage_valid:0,coverage_total:0},
+  {...base,status:"failed",session_date:null},
+ ];
+ for(const scanner_coverage of bad){
+  assert.equal(parseTradeReporting({...reportingFixture(),scanner_coverage},"fixture","paper",f),null,JSON.stringify(scanner_coverage));
+  assert.equal(parseSignalEvaluation({...evaluationFixture(),scanner_coverage},"fixture",f),null,JSON.stringify(scanner_coverage));
+ }
 });

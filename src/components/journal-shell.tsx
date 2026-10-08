@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-export function JournalShell({mode,children}:{
-  mode:"fixture"|"live"|null; children:React.ReactNode;
+export function JournalShell({mode,children,variant="default"}:{
+  mode:"fixture"|"live"|null; children:React.ReactNode; variant?:"default"|"terminal";
 }) {
-  return <>
+  const content = <>
     <header className="journal-nav">
       <div className="journal-nav-inner">
         <Link className="journal-brand" href="/">IDX <span>Night Scanner</span></Link>
@@ -21,4 +21,5 @@ export function JournalShell({mode,children}:{
     </header>
     <main className="journal-main">{children}</main>
   </>;
+  return variant === "terminal" ? <div className="scanner-terminal-shell">{content}</div> : content;
 }

@@ -7,7 +7,8 @@ test.beforeEach(async({context,request})=>{
  await context.addCookies([{name:"sb-127-auth-token",value:"base64-"+Buffer.from(JSON.stringify(session)).toString("base64url"),domain:"127.0.0.1",path:"/"}]);
 });
 test("paper dashboard canonical money, experiment filtering and responsive matrix",async({page,request},info)=>{
- const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
+ const errors:string[]=[],hydration:string[]=[];page.on("pageerror",e=>errors.push(e.message));
+ page.on("console",message=>{if(message.type()==="error"&&/hydrated|hydration mismatch/i.test(message.text())) hydration.push(message.text());});
  await page.goto("/analytics?tab=paper");
  await expect(page.getByRole("heading",{name:"Kurva P&L net kumulatif"})).toBeVisible();
  await expect(page.locator(".analytics-stat-card").first()).toContainText("Rp1.834.875");
@@ -19,8 +20,9 @@ test("paper dashboard canonical money, experiment filtering and responsive matri
  await expect(page.locator(".reporting-trades")).toContainText("ma_close");
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
- await page.screenshot({path:"test-results/reporting-paper-"+info.project.name+".png",fullPage:true});
+ await page.screenshot({caret:"initial",path:"test-results/reporting-paper-"+info.project.name+".png",fullPage:true});
  expect(errors).toEqual([]);
+ expect(hydration).toEqual([]);
  const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
  expect(calls.some((c:{path:string;body?:{p_exit_key?:string}})=>c.path.endsWith("read_trade_reporting_v1")&&c.body?.p_exit_key==="ma10")).toBe(true);
  expect(calls.some((c:{path:string})=>c.path.includes("actual_"))).toBe(false);
@@ -78,7 +80,7 @@ test("unavailable, malformed, stale and partial states remain explicit",async({p
   await expect(page.getByRole("heading",{name:heading})).toBeVisible();
   await expect(page.locator(".analytics-stat-card")).toHaveCount(0);
  }
- for(const [scenario,label] of [["reporting-stale","Data stale"],["reporting-partial","Coverage parsial"]]){
+ for(const [scenario,label] of [["reporting-stale","Data jurnal stale"],["reporting-partial","Data jurnal parsial"]]){
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
   await page.goto("/analytics?tab=paper");
   await expect(page.getByText(label,{exact:true})).toBeVisible();
@@ -93,4 +95,58 @@ test("invalid cohort has no reporting reads and empty samples remain undefined",
  await page.goto("/analytics?tab=paper");
  await expect(page.locator(".analytics-stat-card").filter({hasText:"Win Rate (Closed)"}).locator("strong")).toHaveText("—");
  await expect(page.getByText("Belum ada trade closed dinilai pada cohort ini.")).toBeVisible();
+});
+
+test("journal and observation completeness do not imply complete scanner coverage",async({page,request})=>{
+ for(const [route,scope] of [["/analytics?tab=paper","Data jurnal lengkap"],["/analytics?tab=signals","Data observasi parsial"]]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"reporting-scanner-partial"}});
+  await page.goto(route);
+  await expect(page.getByText(scope,{exact:true})).toBeVisible();
+  await expect(page.locator('[data-scanner-coverage="partial"]')).toHaveText("Scanner parsial · 95/100 · sesi 2026-09-30");
+  await expect(page.getByText("Coverage lengkap",{exact:true})).toHaveCount(0);
+  const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+  expect(calls.some((c:{path:string})=>["scan_runs","scan_run_items","scan_run_signals"].some(t=>c.path.endsWith("/"+t)))).toBe(false);
+  expect(calls.filter((c:{path:string})=>c.path.endsWith("read_trade_reporting_v1")||c.path.endsWith("read_signal_evaluation_v1"))).toHaveLength(1);
+ }
+});
+test("scanner missing, failed, unavailable and invalid metadata remain distinct",async({page,request})=>{
+ for(const [scenario,label] of [["reporting-scanner-missing","Scanner belum tersedia"],["reporting-scanner-failed","Scanner gagal · 0/100 · sesi 2026-09-30"],["reporting-ready","Coverage scanner belum tersedia"]]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+  await page.goto("/journal?tab=paper");
+  await expect(page.getByText(label,{exact:true})).toBeVisible();
+  await expect(page.getByText("Data jurnal lengkap",{exact:true})).toBeVisible();
+ }
+ for(const scenario of ["reporting-scanner-invalid","reporting-scanner-invalid-empty"]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+  await page.goto("/analytics?tab=paper");
+  await expect(page.getByRole("heading",{name:"Reporting belum dapat dibaca"})).toBeVisible();
+  await expect(page.locator(".analytics-stat-card")).toHaveCount(0);
+ }
+});
+test("decimal money tokens stay on one line without overflowing journal and reporting rows",async({page,request},info)=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"reporting-scanner-partial"}});
+ for(const route of ["/journal?tab=paper","/analytics?tab=paper"]){
+  await page.goto(route);
+  const token=page.locator(".reporting-money").filter({hasText:"Rp919.725,63"});
+  await expect(token).toBeVisible();
+  for(const width of [1440,1280,1200,1101,1100,901,390,320]){
+   await page.setViewportSize({width,height:1000});
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+   expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
+   const layout=await token.evaluate(node=>{
+    const range=document.createRange();range.selectNodeContents(node);
+    const cell=node.closest("td")!,bounds=node.getBoundingClientRect(),cellBounds=cell.getBoundingClientRect();
+    return {lines:range.getClientRects().length,nowrap:getComputedStyle(node).whiteSpace,fits:bounds.left>=cellBounds.left-1&&bounds.right<=cellBounds.right+1};
+   });
+   expect(layout).toEqual({lines:1,nowrap:"nowrap",fits:true});
+   const money=await page.locator(".reporting-money").evaluateAll(nodes=>nodes.map(node=>{
+    const range=document.createRange();range.selectNodeContents(node);
+    const bounds=node.getBoundingClientRect(),cell=node.closest("td")!.getBoundingClientRect();
+    return {value:node.textContent,lines:range.getClientRects().length,fits:bounds.left>=cell.left-1&&bounds.right<=cell.right+1};
+   }));
+   expect(money.filter(value=>value.lines!==1||!value.fits),"Every monetary token fits its cell at width "+width).toEqual([]);
+   if(width===1440) await page.screenshot({caret:"initial",path:"test-results/reporting-decimal-wide-"+info.project.name+".png",fullPage:true});
+  }
+ }
+ await page.screenshot({caret:"initial",path:"test-results/reporting-decimal-"+info.project.name+".png",fullPage:true});
 });
