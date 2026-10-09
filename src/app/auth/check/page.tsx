@@ -8,6 +8,7 @@ import {
 } from "@/lib/supabase/dev-probe";
 import { readDevRevisionProbe, type RevisionProbe } from "@/lib/supabase/dev-revision-probe";
 import { signOut, verifyDevOwnerAction } from "./actions";
+import { JournalShell } from "@/components/journal-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export default async function AuthCheckPage({
   }
 
   const probe = (await searchParams).probe;
-  return <main className="configuration-page auth-page">
+  return <JournalShell mode={null} activePage="account" showMode={false}><main className="configuration-page auth-page">
     <span className="eyebrow">IDX NIGHT SCANNER · VERIFIKASI AKSES</span>
     <h1>{owner ? "Sesi owner terverifikasi" : "Akun belum memiliki akses owner"}</h1>
     {owner
@@ -92,5 +93,5 @@ export default async function AuthCheckPage({
     {owner && isDevProject && actionExists && !actionVerified && <p className="auth-note">Sinyal fixture sudah memiliki aksi lain. Uji otomatis ditahan agar tidak menimpa data.</p>}
     <form action={signOut}><button type="submit" className="primary-button">Keluar</button></form>
     <p><Link href="/">Kembali ke beranda</Link></p>
-  </main>;
+  </main></JournalShell>;
 }

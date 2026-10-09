@@ -38,7 +38,7 @@ export default async function JournalPage({ searchParams }: {
   const context = await journalOwner();
   if (context.kind !== "ready") {
     return (
-      <JournalShell mode={null}>
+      <JournalShell mode={null} activePage="journal">
         <section className="journal-hero">
           <div>
             <span className="eyebrow">JURNAL TRANSAKSI</span>
@@ -61,7 +61,7 @@ export default async function JournalPage({ searchParams }: {
   const query = await searchParams;
   const tab = query.tab === "paper" ? "paper" : "actual";
   if (tab === "paper") return (
-    <JournalShell mode={context.mode}>
+    <JournalShell mode={context.mode} activePage="journal">
       <section className="journal-hero"><h1>Paper journal</h1><Link href="/journal">Jurnal aktual</Link><Link href="/analytics?tab=paper">Analitik paper</Link></section>
       <PersistentReporting supabase={context.supabase} mode={context.mode} query={query} view="journal" />
     </JournalShell>
@@ -69,7 +69,7 @@ export default async function JournalPage({ searchParams }: {
   const page = journalPageNumber(query.page);
   if (page === null) {
     return (
-      <JournalShell mode={context.mode}>
+      <JournalShell mode={context.mode} activePage="journal">
         <section className="journal-hero">
           <div>
             <span className="eyebrow">NAVIGASI RIWAYAT</span>
@@ -94,7 +94,7 @@ export default async function JournalPage({ searchParams }: {
     if (!signal || result?.error || signal.id !== query.signal_id || signal.data_mode !== context.mode
       || signal.namespace !== "forward" || !journalStrategies.includes(signal.strategy)
       || !/^[A-Z0-9]{2,12}$/.test(signal.ticker)) return (
-      <JournalShell mode={context.mode}>
+      <JournalShell mode={context.mode} activePage="journal">
         <section className="journal-panel">
           <span className="eyebrow">DRAFT TRADE</span>
           <h1>Sinyal draft belum dapat diverifikasi</h1>
@@ -125,7 +125,7 @@ export default async function JournalPage({ searchParams }: {
   const error = typeof query.error === "string" ? query.error : null;
 
   return (
-    <JournalShell mode={context.mode}>
+    <JournalShell mode={context.mode} activePage="journal">
       <section className="journal-hero">
         <div>
           <span className="eyebrow">JURNAL / AKTUAL / EOD</span>

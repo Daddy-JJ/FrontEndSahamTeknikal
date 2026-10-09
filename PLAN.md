@@ -1,3 +1,12 @@
+# Active plan: consistent terminal UI across the website - 2026-10-09 WIB
+
+Status: LOCAL IMPLEMENTATION VERIFIED; commit, push and Production verification pending. User explicitly authorized all release steps. Detailed route/state inventory, shared tokens, phased Action/Proof and acceptance gates: [docs/UI_TERMINAL_ROLLOUT_PLAN.md](docs/UI_TERMINAL_ROLLOUT_PLAN.md). Current work extends the scoped terminal shell to owner pages, system states and the fixture workspace; domain behavior remains unchanged. Prior compact Scanner release was committed/pushed as 0aff30d; its evidence below remains historical and separate.
+
+Action: extend the approved Scanner visual language through shared foundations, journals/details/export, all analytics tabs, operations/account/auth/system states and fixture-only preview, preserving current contracts and financial behavior.
+Proof: unit 30/30; reporting 27/27; scanner 66/66; Workspace/auth 21/21 plus unconfigured-root 3/3; typecheck, lint, diff check and production build PASS. Mobile/desktop/tablet visual and currency overflow checks PASS. Exact commit/deployment and authenticated owner smoke remain pending.
+
+---
+
 # Active: compact terminal Scanner layout - 2026-10-08
 
 Status: implementation and production-readiness verification authorized; commit/push only after relevant checks pass. Existing reporting fixes remain a separate compatible part of this release. Scope `/` live and `/scanner`, which share `ScannerDashboard`; journal/analytics/auth flows retain their default shell.

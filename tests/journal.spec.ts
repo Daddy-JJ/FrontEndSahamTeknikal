@@ -13,6 +13,8 @@ test.beforeEach(async({context,request})=>{
 test("owner empty state, null metrics and responsive layout",async({page},info)=>{
   const errors:string[]=[]; page.on("pageerror",e=>errors.push(e.message));
   await page.goto("/journal");
+  await expect(page.locator(".site-terminal-shell")).toBeVisible();
+  await expect(page.locator(".journal-nav a[aria-current=page]")).toHaveText("Jurnal");
   await expect(page.getByText("FIXTURE DEV",{exact:true})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Belum ada transaksi aktual"})).toBeVisible();
   await page.getByText("+ Buat Draft Transaksi Baru",{exact:true}).click();

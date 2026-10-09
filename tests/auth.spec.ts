@@ -14,7 +14,7 @@ test("OAuth callback rejects a request without an authorization code", async ({ 
   await expect(page.getByRole("heading", { name: "Login belum selesai" })).toBeVisible();
   const retry = page.getByRole("link", { name: "Coba kembali" });
   await expect(retry).toBeVisible();
-  await expect(retry).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(retry).toHaveCSS("color", "rgb(156, 228, 244)");
 });
 
 test("OAuth callback redirect is not cached or forwarded as a referrer", async ({ request }) => {

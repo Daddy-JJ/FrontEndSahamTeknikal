@@ -10,7 +10,7 @@ export default async function ExportPage({searchParams}:{searchParams:Promise<Re
     else if(value!==undefined) query.set(key,value);
   }
   const result=await journalExport(query);
-  if(result.kind!=="ready") return <JournalShell mode={null}>
+  if(result.kind!=="ready") return <JournalShell mode={null} activePage="journal">
     <section className="journal-hero"><h1>Ekspor belum tersedia</h1><p>{result.kind==="invalid_filter"
       ?"Filter cohort atau cursor tidak valid.":"Periksa sesi owner, koneksi, dan schema jurnal."}</p></section>
     <Link href="/analytics">Kembali ke analytics</Link>
@@ -18,7 +18,7 @@ export default async function ExportPage({searchParams}:{searchParams:Promise<Re
   const {page}=result;
   const download=new URLSearchParams(query); if(!download.has("after")) download.set("after","start");
   const next=new URLSearchParams(query); if(page.next_after) next.set("after",page.next_after);
-  return <JournalShell mode={result.mode}>
+  return <JournalShell mode={result.mode} activePage="journal">
     <section className="journal-hero"><div><span className="eyebrow">CSV / ACTUAL / CLOSED</span>
       <h1>Ekspor jurnal per bagian</h1><p>Filter tanggal exit Asia/Jakarta: {query.get("from")||"awal histori"} sampai {query.get("to")||"akhir histori"}.
       Setiap bagian memuat maksimal 200 trade. Unduh bagian ini sebelum membuka bagian berikutnya.</p></div></section>

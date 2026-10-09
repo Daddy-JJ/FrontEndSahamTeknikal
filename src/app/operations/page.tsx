@@ -8,7 +8,7 @@ export default async function OperationsPage() {
   const owner = await journalOwner();
   if (owner.kind !== "ready") {
     return (
-      <JournalShell mode={null}>
+      <JournalShell mode={null} activePage="operations">
         <section className="journal-panel">
           <span className="eyebrow">OPERASI SCANNER</span>
           <h1>Operasi belum dapat dibuka</h1>
@@ -41,7 +41,7 @@ export default async function OperationsPage() {
     : null;
 
   return (
-    <JournalShell mode={owner.mode}>
+    <JournalShell mode={owner.mode} activePage="operations">
       <section className="journal-hero">
         <div>
           <span className="eyebrow">OPERASI SCANNER</span>

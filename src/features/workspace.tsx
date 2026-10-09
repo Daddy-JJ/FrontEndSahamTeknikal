@@ -65,7 +65,7 @@ export function Workspace({ snapshot: s }: { snapshot: Snapshot }) {
 
   function move(next: View) { setView(next); setCommand(false); setCommandSearch(""); }
 
-  return <>
+  return <div className="scanner-terminal-shell site-terminal-shell fixture-terminal-shell">
     <a href="#main" className="skip-link">Langsung ke konten</a>
     <header className="navbar"><div className="nav-inner">
       <button className="brand" onClick={() => move("overview")} aria-label="Ruang Sinyal, ringkasan"><span className="brand-mark"><Layers3 size={21} /></span><span>ruang<span className="brand-light">sinyal</span><small>IDX NIGHT SCANNER</small></span></button>
@@ -158,5 +158,5 @@ export function Workspace({ snapshot: s }: { snapshot: Snapshot }) {
       {navigation.filter(n => n.label.toLowerCase().includes(commandSearch.toLowerCase())).map(n => <button key={n.id} onClick={() => move(n.id)}><n.icon size={18} /><span>{n.label}</span><ArrowRight size={14} /></button>)}
       {Object.keys(s.charts).filter(t => t.toLowerCase().includes(commandSearch.toLowerCase())).map(t => <button key={t} onClick={() => { setChartTicker(t); setQuery(t); move("scanner"); }}><Telescope size={18} /><span>{t} <small>· sintetis</small></span><ArrowRight size={14} /></button>)}
     </div><p className="small muted">Tab untuk memilih · Enter untuk membuka · Esc untuk menutup</p></Modal>}
-  </>;
+  </div>;
 }

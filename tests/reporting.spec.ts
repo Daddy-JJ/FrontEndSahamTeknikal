@@ -10,6 +10,8 @@ test("paper dashboard canonical money, experiment filtering and responsive matri
  const errors:string[]=[],hydration:string[]=[];page.on("pageerror",e=>errors.push(e.message));
  page.on("console",message=>{if(message.type()==="error"&&/hydrated|hydration mismatch/i.test(message.text())) hydration.push(message.text());});
  await page.goto("/analytics?tab=paper");
+ await expect(page.locator(".site-terminal-shell")).toBeVisible();
+ await expect(page.locator(".journal-nav a[aria-current=page]")).toHaveText("Analytics");
  await expect(page.getByRole("heading",{name:"Kurva P&L net kumulatif"})).toBeVisible();
  await expect(page.locator(".analytics-stat-card").first()).toContainText("Rp1.834.875");
  await expect(page.getByRole("link",{name:"Evaluasi Sinyal",exact:true})).toBeVisible();

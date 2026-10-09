@@ -1,3 +1,5 @@
+import { JournalShell } from "@/components/journal-shell";
+
 export default function Loading() {
-  return <main className="configuration-page" aria-busy="true" aria-label="Memuat workspace"><div className="skeleton" /><div className="skeleton" /><p>Menyiapkan workspace…</p></main>;
+  return <JournalShell mode={null} showMode={false}><main className="configuration-page terminal-loading" aria-busy="true" aria-label="Memuat workspace"><div className="skeleton" /><div className="skeleton" /><p>Menyiapkan workspace…</p></main></JournalShell>;
 }

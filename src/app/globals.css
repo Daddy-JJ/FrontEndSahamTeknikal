@@ -195,10 +195,10 @@
 
 /* Detail labels wrap; monetary tokens remain whole. Only matrices scroll horizontally. */
 .reporting-list{min-width:0;margin-top:14px}
-.reporting-list .dense-table{table-layout:auto}
+.reporting-list .dense-table{table-layout:fixed;width:100%}
 .reporting-list .reporting-money{display:inline-block;white-space:nowrap;overflow-wrap:normal;word-break:normal}
 .reporting-list .dense-table th,.reporting-list .dense-table td{white-space:normal;overflow-wrap:anywhere;vertical-align:top;padding:10px 6px}
-@media(max-width:1100px){
+@media(max-width:1300px){
 .reporting-list .dense-table,.reporting-list tbody{display:block;width:100%}
 .reporting-list thead{display:none}
 .reporting-list .dense-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
@@ -206,7 +206,7 @@
 .reporting-list .dense-table td::before{content:attr(data-label);display:block;font-size:10px;line-height:1.5;color:var(--muted);margin-bottom:4px}
 }
 
-/* Scanner terminal is opt-in; journal, analytics, auth, and fixture workspace keep their own theme. */
+/* Scanner reference remains isolated; site-terminal-shell reuses the same tokens across shared pages and fixture preview. */
 .scanner-terminal-shell{--bg:#0b1015;--surface:#111922;--ink:#dce4ed;--muted:#9aaaba;--line:#293644;--green:#7ed5b5;--amber:#eab56b;--red:#f58e85;min-height:100svh;background:var(--bg);color:var(--ink);font:13px/1.4 Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums}
 .scanner-terminal-shell .journal-nav{background:#0d141c;border-color:var(--line);backdrop-filter:none}
 .scanner-terminal-shell .journal-nav-inner{max-width:none;min-height:48px;padding:0 16px;gap:20px;flex-wrap:nowrap}
@@ -301,3 +301,228 @@
 
 .terminal-source-audit summary{cursor:pointer;color:#6bd5ed}
 @media(pointer:coarse){.terminal-run-detail summary,.terminal-source-audit summary{min-height:44px;padding-block:12px}}
+
+
+/* Shared terminal language for journals, analytics, operations, auth and fixture preview. */
+.site-terminal-shell{
+  --bg:#0b1015;--surface:#111922;--surface-raised:#17222e;--ink:#dce4ed;--muted:#9aaaba;--line:#293644;
+  --green:#7ed5b5;--green-soft:#11332e;--amber:#eab56b;--red:#f58e85;--accent:#6bd5ed;--accent-soft:#142b38;
+  --radius:4px;--shadow:none;min-height:100svh;background:var(--bg);color:var(--ink);font:13px/1.45 Arial,Helvetica,sans-serif;
+  font-variant-numeric:tabular-nums;color-scheme:dark;
+}
+.site-terminal-shell :is(h1,h2,h3){font-family:Arial,Helvetica,sans-serif;letter-spacing:0;color:var(--ink)}
+.site-terminal-shell h1{font-size:clamp(21px,2vw,28px);font-weight:600;line-height:1.3}
+.site-terminal-shell h2{font-size:17px;font-weight:600;line-height:1.35}
+.site-terminal-shell h3{font-size:14px;font-weight:600}
+.site-terminal-shell :is(.muted,.small,.journal-help,.journal-footnote,.panel-note){color:var(--muted)}
+.site-terminal-shell .eyebrow{font-size:10px;letter-spacing:1.3px;color:var(--amber);margin-bottom:6px}
+.site-terminal-shell .positive{color:var(--green)}.site-terminal-shell .negative{color:var(--red)}
+.site-terminal-shell .journal-nav{background:#0d141c;border-color:var(--line);backdrop-filter:none}
+.site-terminal-shell .journal-nav-inner{max-width:none;min-height:48px;padding:0 16px;gap:16px;flex-wrap:nowrap}
+.site-terminal-shell .journal-brand{font:700 15px Arial,Helvetica,sans-serif;letter-spacing:0;color:var(--amber)}
+.site-terminal-shell .journal-brand span{color:var(--ink);font-weight:500}
+.site-terminal-shell .journal-nav nav{gap:3px;width:auto;order:0;justify-content:start;margin-left:auto}
+.site-terminal-shell .journal-nav nav a{min-height:34px;display:inline-flex;align-items:center;padding:6px 9px;border-radius:3px;color:var(--muted);font:12px Arial,Helvetica,sans-serif}
+.site-terminal-shell .journal-nav nav a[aria-current=page]{background:#17222e;color:var(--amber);box-shadow:inset 0 -2px var(--amber)}
+.site-terminal-shell .journal-nav nav a:hover{background:#1c2c3c;color:var(--accent)}
+.site-terminal-shell .journal-main{max-width:none;padding:14px 16px 28px}
+.site-terminal-shell .journal-hero{align-items:center;gap:16px;margin:10px 0 16px}
+.site-terminal-shell .journal-hero p{margin-top:5px;font-size:12px;line-height:1.55;color:var(--muted)}
+.site-terminal-shell .journal-hero-actions{gap:7px}
+.site-terminal-shell :is(.journal-hero-actions a,.journal-back,.reporting-stack a,.journal-panel a:not(.primary-button),.journal-main>p a){color:var(--accent);text-underline-offset:3px}
+.site-terminal-shell .journal-hero-actions a{padding:7px 10px;background:var(--accent-soft);border:1px solid #294b5c;border-radius:3px}
+.site-terminal-shell :is(.journal-panel,.panel,.analytics-stat-card,.analytics-chart-container){min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:4px;box-shadow:none;color:var(--ink)}
+.site-terminal-shell .journal-panel{padding:18px 20px}
+.site-terminal-shell .journal-panel h1{font:600 20px/1.3 Arial,Helvetica,sans-serif;letter-spacing:0;margin-bottom:4px}
+.site-terminal-shell .journal-panel>p{font-size:12px;line-height:1.6;color:var(--muted)}
+.site-terminal-shell .journal-panel h2{font:600 16px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0}
+.site-terminal-shell .journal-panel h3{color:var(--ink)}
+.site-terminal-shell .journal-columns{gap:10px;margin-bottom:10px}
+.site-terminal-shell .journal-full-panel{margin-top:10px}
+.site-terminal-shell .journal-metrics{gap:8px;margin:10px 0}
+.site-terminal-shell .journal-metrics>div,.site-terminal-shell .reporting-statuses>div{background:var(--surface);border:1px solid var(--line);border-radius:4px;box-shadow:none;padding:12px 14px}
+.site-terminal-shell .journal-metrics strong{font:600 clamp(20px,2vw,27px)/1.25 Arial,Helvetica,sans-serif;letter-spacing:0;color:var(--ink)}
+.site-terminal-shell .journal-panel-heading{margin-bottom:12px}
+.site-terminal-shell .journal-form{gap:10px;margin-top:12px}
+.site-terminal-shell .journal-form label,.site-terminal-shell .stack-label{color:var(--muted);font:11px Arial,Helvetica,sans-serif}
+.site-terminal-shell :is(input,select,textarea){min-height:36px;background:#0d141c;border:1px solid #354656;border-radius:3px;color:var(--ink);font:13px Arial,Helvetica,sans-serif;color-scheme:dark}
+.site-terminal-shell .journal-form :is(input,select,textarea){padding:9px 10px}
+.site-terminal-shell :is(input,select,textarea)::placeholder{color:#8091a2;opacity:1}
+.site-terminal-shell :is(input,select,textarea):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.site-terminal-shell :is(button,.primary-button,.secondary-button,.secondary-link){font-family:Arial,Helvetica,sans-serif}
+.site-terminal-shell .primary-button{min-height:38px;margin-top:0;padding:8px 13px;background:#183345;border:1px solid #38566b;border-radius:3px;color:#9ce4f4;font-size:12px;font-weight:600;box-shadow:none}
+.site-terminal-shell .primary-button:hover{background:#25465e;color:#fff;transform:none;box-shadow:none}
+.site-terminal-shell .secondary-link,.site-terminal-shell .secondary-button{min-height:38px;padding:8px 12px;background:#17222e;border:1px solid #354656;border-radius:3px;color:#c5d2df;font-size:12px}
+.site-terminal-shell .secondary-link:hover,.site-terminal-shell .secondary-button:hover{background:#203346;border-color:#527087;color:var(--accent)}
+.site-terminal-shell .journal-secondary{background:#172b2c;border-color:#31514b;color:var(--green)}
+.site-terminal-shell .journal-actions{gap:8px;margin-top:14px}
+.site-terminal-shell .journal-actions :is(.primary-button,.secondary-link,.secondary-button){margin-top:0}
+.site-terminal-shell .journal-alert,.site-terminal-shell .journal-banner,.site-terminal-shell .journal-success,.site-terminal-shell .journal-notice,.site-terminal-shell .scanner-notice,.site-terminal-shell .info-note{border-radius:3px;padding:9px 11px;font-size:11px;line-height:1.55}
+.site-terminal-shell .journal-alert{background:#2a1e1d;border:1px solid #673c36;color:#f1b5a9}
+.site-terminal-shell .journal-banner{background:#292319;border:1px solid #5b4929;color:#e5c98e}
+.site-terminal-shell .journal-success{background:#142923;border:1px solid #315d4d;color:#a9e2c9}
+.site-terminal-shell .info-note{background:#1e211c;border:1px solid #484333;color:#c5b68f}
+.site-terminal-shell .journal-empty{padding:24px 14px;color:var(--muted)}
+.site-terminal-shell .journal-empty h3{color:var(--ink)}
+.site-terminal-shell .journal-trade{padding:10px 8px;border-color:#263442;color:var(--ink);border-radius:3px}
+.site-terminal-shell .journal-trade:hover{background:#17222e;transform:none}
+.site-terminal-shell .journal-trade strong{font-size:14px}
+.site-terminal-shell .journal-facts div,.site-terminal-shell .journal-fill{border-color:var(--line);padding:8px 0}
+.site-terminal-shell .journal-facts dt,.site-terminal-shell .journal-fill small{color:var(--muted)}
+.site-terminal-shell .journal-history p{background:#131e29;border-color:#375269;color:#bdcad7}
+.site-terminal-shell .journal-pagination a,.site-terminal-shell .journal-history-tabs a{min-height:36px;display:inline-flex;align-items:center;padding:7px 10px;border:1px solid #354656;border-radius:3px;background:#141e28;color:#b8c6d4;font-size:12px}
+.site-terminal-shell .journal-history-tabs a[aria-current=page],.site-terminal-shell .journal-pagination a:hover{background:#172b38;border-color:#41647b;color:var(--accent)}
+.site-terminal-shell .journal-drawer{background:#0d141c;border-color:var(--line);border-radius:3px}
+.site-terminal-shell .journal-drawer summary{background:#17222e;color:var(--accent)}
+.site-terminal-shell .journal-drawer summary:hover{background:#1c2c3c}
+.site-terminal-shell .journal-drawer-body{padding:14px}
+.site-terminal-shell .table-scroll{max-width:100%;overflow:auto;overscroll-behavior-inline:contain}
+.site-terminal-shell .reporting-list{max-width:100%;min-width:0;overflow:visible}
+.site-terminal-shell .reporting-stack>.journal-panel{max-width:none}
+.site-terminal-shell table{width:100%;border-collapse:collapse;font:12px/1.4 Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums}
+.site-terminal-shell :is(th,.dense-table th){background:#182330;color:#9bb0c4;border-color:var(--line);font:600 10px/1.4 Arial,Helvetica,sans-serif;letter-spacing:.35px;text-transform:uppercase;padding:8px 10px;white-space:nowrap}
+.site-terminal-shell :is(td,.dense-table td){color:var(--ink);border-color:#202e3c;padding:8px 10px;vertical-align:top}
+.site-terminal-shell tbody tr:nth-child(even){background:#131e29}
+.site-terminal-shell tbody tr:hover{background:#1b2d3d}
+.site-terminal-shell .dense-table a{color:var(--accent);text-underline-offset:3px}
+.site-terminal-shell .subtle-badge{border-radius:3px}
+.site-terminal-shell .subtle-badge.purple,.site-terminal-shell .subtle-badge.blue,.site-terminal-shell .subtle-badge.cyan{background:#142b38;border-color:#294b5c;color:#9bdcf0}
+.site-terminal-shell .subtle-badge.emerald{background:#11332e;border-color:#285149;color:#7ed5b5}
+.site-terminal-shell .subtle-badge.amber{background:#332919;border-color:#66502c;color:#eab56b}
+.site-terminal-shell .subtle-badge.gray{background:#202b36;border-color:#41505f;color:#c2cddb}
+.site-terminal-shell .analytics-hero-stats{gap:8px;margin:10px 0}
+.site-terminal-shell .analytics-stat-card{padding:12px 14px}
+.site-terminal-shell .analytics-stat-card strong{font:600 23px/1.3 Arial,Helvetica,sans-serif;color:var(--ink)}
+.site-terminal-shell .analytics-chart-container{padding:14px;margin:10px 0}
+.site-terminal-shell .analytics-filter-row{background:#0d141c;border-color:var(--line);border-radius:3px;padding:10px;margin:10px 0}
+.site-terminal-shell .reporting-stack{gap:10px;margin-top:10px}
+.site-terminal-shell .reporting-stack .panel{padding:14px}
+.site-terminal-shell .reporting-statuses{gap:6px}
+.site-terminal-shell .reporting-statuses>div{gap:10px;padding:7px 10px}
+.site-terminal-shell .reporting-statuses strong{font-size:15px}
+.site-terminal-shell .reporting-curve{max-height:230px;margin:8px 0}
+.site-terminal-shell .reporting-freshness{font-size:11px;gap:8px}
+.site-terminal-shell .auth-page,.site-terminal-shell .configuration-page{max-width:720px;margin:clamp(28px,7vh,72px) auto;padding:24px;background:#111922;border:1px solid var(--line);border-radius:4px;box-shadow:none}
+.site-terminal-shell .auth-page p{font-size:13px;line-height:1.6;color:var(--muted)}
+.site-terminal-shell .auth-page .auth-note{margin:16px 0;border-color:#526347;color:#a8b99d}
+.site-terminal-shell .auth-page .auth-action{margin-top:14px}
+.site-terminal-shell .auth-page .auth-action p,.site-terminal-shell .auth-page .auth-error{color:#f1b5a9}
+.site-terminal-shell .auth-page .auth-success{color:#a9e2c9}
+.site-terminal-shell .auth-page>a:not(.primary-button),.site-terminal-shell .auth-page>p>a{color:var(--accent)}
+.site-terminal-shell .auth-facts{gap:7px;margin-top:16px}
+.site-terminal-shell .auth-facts>div{padding:10px 12px;background:#0d141c;border-color:var(--line);border-radius:3px}
+.site-terminal-shell .auth-link{background:#142b38;border-color:#294b5c;color:#9bdcf0;border-radius:3px}
+.site-terminal-shell .auth-link:hover{background:#1c394a}
+.site-terminal-shell .badge.green,.site-terminal-shell .badge.emerald{background:#11332e;color:#7ed5b5;border-color:#285149}
+.site-terminal-shell .badge.amber{background:#332919;color:#eab56b;border-color:#66502c}
+.site-terminal-shell .badge.red{background:#35211f;color:#f58e85;border-color:#71413b}
+.site-terminal-shell .badge.neutral{background:#202b36;color:#c2cddb;border-color:#41505f}
+.site-terminal-shell .modal{background:#111922;color:var(--ink);border:1px solid #395269;border-radius:4px;box-shadow:0 24px 70px #0009}
+.site-terminal-shell .modal::backdrop{background:#000b;backdrop-filter:none}
+.site-terminal-shell .modal-top{border-bottom:1px solid var(--line);padding-bottom:10px}
+.site-terminal-shell .icon-button{background:#17222e;border-color:#354656;color:#c2cddb;border-radius:3px}
+.site-terminal-shell .command-results button:hover{background:#172b38}
+.site-terminal-shell .state-preview{min-height:0;background:#0d141c;border-color:var(--line);border-radius:3px;padding:14px;margin:12px 0}
+.site-terminal-shell .demo-strip{background:#201e18;border:1px solid #5b4929;color:#d6c499;border-radius:3px;padding:7px 10px;font:11px/1.5 Arial,Helvetica,sans-serif}
+.site-terminal-shell .demo-strip strong{color:var(--amber)}
+.site-terminal-shell .demo-description{border-color:#5b4929}
+.site-terminal-shell .workspace{max-width:none;padding:14px 16px 24px}
+.site-terminal-shell .navbar{position:sticky;background:#0d141c;border-color:var(--line);backdrop-filter:none}
+.site-terminal-shell .nav-inner{max-width:none;min-height:48px;padding:0 16px;gap:12px}
+.site-terminal-shell .brand{font:700 15px Arial,Helvetica,sans-serif;color:var(--amber);letter-spacing:0}
+.site-terminal-shell .brand-mark{width:28px;height:30px;border-radius:3px;background:#183345;color:#9ce4f4;box-shadow:none}
+.site-terminal-shell .navbar nav{gap:2px}
+.site-terminal-shell .nav-link{min-height:36px;padding:7px 9px;border-radius:3px;color:var(--muted);font:12px Arial,Helvetica,sans-serif}
+.site-terminal-shell .nav-link.active{background:#17222e;color:var(--amber);box-shadow:inset 0 -2px var(--amber)}
+.site-terminal-shell .nav-link:hover{background:#1c2c3c;color:var(--accent)}
+.site-terminal-shell .command-button,.site-terminal-shell .auth-link{background:#111922;border-color:#354656;color:#b8c6d4;border-radius:3px}
+.site-terminal-shell kbd{background:#202b36;border-color:#41505f;color:#dce4ed}
+.site-terminal-shell .page-heading{margin:16px 0 14px}
+.site-terminal-shell .page-heading p,.site-terminal-shell .session-card div>span{color:var(--muted)}
+.site-terminal-shell .metric-grid{gap:8px;margin-bottom:10px}
+.site-terminal-shell .metric-card,.site-terminal-shell .signal-card{background:#111922;border-color:var(--line);border-radius:4px;box-shadow:none}
+.site-terminal-shell .metric-card{padding:13px 14px}
+.site-terminal-shell .metric-label,.site-terminal-shell .metric-foot{color:var(--muted)}
+.site-terminal-shell .metric-value{font:600 27px/1.3 Arial,Helvetica,sans-serif;letter-spacing:0;color:var(--ink);margin:5px 0}
+.site-terminal-shell .metric-value>span{font:12px Arial,Helvetica,sans-serif;color:var(--muted)}
+.site-terminal-shell .accent-card{background:#14251f;border-color:#315449}
+.site-terminal-shell .bento-grid{gap:10px;margin-bottom:10px}
+.site-terminal-shell .panel{padding:14px}
+.site-terminal-shell .panel-heading{margin-bottom:10px}
+.site-terminal-shell .signal-grid{gap:8px}
+.site-terminal-shell .signal-card{padding:12px;transition:border-color .15s}
+.site-terminal-shell .signal-card:hover{border-color:#486278;transform:none;box-shadow:none}
+.site-terminal-shell .strategy-row{border-color:var(--line)}
+.site-terminal-shell .strategy-row.chosen,.site-terminal-shell .strategy-row:hover{background:#17222e}
+.site-terminal-shell .strategy-number,.site-terminal-shell .strategy-count,.site-terminal-shell .setup-tag span{background:#17222e;border-color:#354656;color:#9aaaba}
+.site-terminal-shell .strategy-note,.site-terminal-shell .info-note{background:#1e211c;color:#c5b68f;border-color:#484333}
+.site-terminal-shell .signal-top small,.site-terminal-shell .signal-levels,.site-terminal-shell .strategy-row small{color:var(--muted)}
+.site-terminal-shell .signal-levels{border-color:var(--line)}
+.site-terminal-shell .signal-levels strong{color:var(--ink)}
+.site-terminal-shell .ticker-emblem{background:#172b38;color:var(--accent);border-radius:3px}
+.site-terminal-shell .search-field,.site-terminal-shell .filter-toggle{background:#0d141c;border-color:#354656;color:var(--muted);border-radius:3px}
+.site-terminal-shell .search-field input{background:transparent}
+.site-terminal-shell .filter-toggle.selected{background:#142b38;border-color:#41647b;color:var(--accent)}
+.site-terminal-shell .segmented{background:#0d141c;border-color:var(--line);border-radius:3px}
+.site-terminal-shell .segmented button{min-height:34px;border-radius:2px;color:var(--muted)}
+.site-terminal-shell .segmented button[aria-pressed=true]{background:#172b38;color:var(--accent);box-shadow:inset 0 -2px var(--accent)}
+.site-terminal-shell .table-scroll{margin:10px 0 0}
+.site-terminal-shell .table-scroll table:not(.dense-table) th{background:#182330;color:#9bb0c4}
+.site-terminal-shell .table-scroll table:not(.dense-table) td{border-color:#202e3c}
+.site-terminal-shell .connection{border-color:var(--line)}
+.site-terminal-shell .state-preview p,.site-terminal-shell .connection small{color:var(--muted)}
+.site-terminal-shell .empty{color:var(--muted)}
+.site-terminal-shell .empty h3{color:var(--ink)}
+.site-terminal-shell .workspace-footer{border-color:var(--line);color:var(--muted)}
+.site-terminal-shell .toast{background:#183b33;border:1px solid #315d4d;border-radius:4px;color:#d7f0e4}
+.site-terminal-shell .skeleton{background:linear-gradient(100deg,#17222e 30%,#253342 50%,#17222e 70%);background-size:200% 100%;border-radius:3px}
+.site-terminal-shell .terminal-loading,.site-terminal-shell .terminal-error{min-height:30vh}
+.site-terminal-shell .terminal-system-panel{max-width:760px}
+.site-terminal-shell :is(button,a,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.site-terminal-shell .skip-link{background:#17222e;color:var(--accent);border:1px solid #41647b}
+@media(max-width:900px){
+  .site-terminal-shell .journal-nav-inner{flex-wrap:wrap;gap:5px 12px;padding:8px 12px}
+  .site-terminal-shell .journal-nav nav{order:3;width:100%;margin-left:0;justify-content:space-between}
+  .site-terminal-shell .journal-main{padding:10px 12px 20px}
+  .site-terminal-shell .workspace{padding:10px 12px 20px}
+  .site-terminal-shell .nav-inner{flex-wrap:wrap;min-height:0;padding:7px 12px;gap:6px}
+  .site-terminal-shell .navbar nav{order:3;width:100%;justify-content:space-between;overflow:auto}
+  .site-terminal-shell .command-button{margin-left:auto}
+  .site-terminal-shell .journal-hero{align-items:start}
+  .site-terminal-shell .journal-columns{grid-template-columns:1fr}
+  .site-terminal-shell .bento-grid{grid-template-columns:1fr}
+  .site-terminal-shell .journal-metrics,.site-terminal-shell .analytics-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .site-terminal-shell .journal-nav-inner{padding:8px}
+  .site-terminal-shell .journal-brand{font-size:14px}
+  .site-terminal-shell .journal-nav nav a{font-size:11px;padding:7px 4px}
+  .site-terminal-shell .journal-main,.site-terminal-shell .workspace{padding:8px 8px 18px}
+  .site-terminal-shell .journal-hero{display:block;margin:10px 0}
+  .site-terminal-shell .journal-hero-actions{margin-top:10px}
+  .site-terminal-shell .journal-panel{padding:12px}
+  .site-terminal-shell .journal-form{grid-template-columns:1fr}
+  .site-terminal-shell .journal-metrics,.site-terminal-shell .analytics-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .site-terminal-shell .journal-metrics>div{padding:10px}
+  .site-terminal-shell .journal-metrics strong{font-size:20px}
+  .site-terminal-shell .journal-facts div{align-items:start}
+  .site-terminal-shell .journal-facts dt{max-width:46%;white-space:normal}
+  .site-terminal-shell .journal-facts dd{max-width:54%;font-size:11px}
+  .site-terminal-shell .auth-page,.site-terminal-shell .configuration-page{margin:20px 8px;padding:16px}
+  .site-terminal-shell .auth-link{font-size:10px;padding:6px}
+  .site-terminal-shell .page-heading{display:block;margin:12px 0}
+  .site-terminal-shell .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .site-terminal-shell .metric-card{padding:10px}
+  .site-terminal-shell .metric-value{font-size:22px}
+  .site-terminal-shell .demo-strip{align-items:flex-start;flex-wrap:wrap}
+  .site-terminal-shell .demo-strip>span{flex-wrap:wrap}
+  .site-terminal-shell .demo-description{flex-basis:100%;border:0;padding:0}
+  .site-terminal-shell .signal-grid,.site-terminal-shell .analytics-grid{grid-template-columns:1fr}
+  .site-terminal-shell .journal-panel .table-scroll{margin-inline:-4px}
+  .site-terminal-shell :is(.journal-form input,.journal-form select,.journal-form textarea,.terminal-filters input,.terminal-filters select){font-size:16px;min-height:44px}
+}
+@media(pointer:coarse){.site-terminal-shell .journal-nav nav a,.site-terminal-shell .journal-history-tabs a,.site-terminal-shell .journal-pagination a,.site-terminal-shell .segmented button,.site-terminal-shell .icon-button{min-height:44px}.site-terminal-shell .primary-button,.site-terminal-shell .secondary-link,.site-terminal-shell .secondary-button{min-height:44px}}
+
+.site-terminal-shell .chart-grid{stroke:#293644}.site-terminal-shell .chart-label{fill:#9aaaba}.site-terminal-shell .candle-up{color:#7ed5b5}.site-terminal-shell .candle-down{color:#f58e85}.site-terminal-shell .legend-candle{background:#7ed5b5}.site-terminal-shell .legend-ma{background:#eab56b}
+
+.site-terminal-shell .watch-button{background:#17222e;border-color:#354656;color:#9bdcf0}.site-terminal-shell .watch-button[aria-pressed=true]{background:#11332e;border-color:#285149;color:#7ed5b5}

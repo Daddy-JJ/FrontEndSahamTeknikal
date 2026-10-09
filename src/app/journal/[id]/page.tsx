@@ -60,15 +60,15 @@ export default async function TradePage({params,searchParams}:{
   const query=await searchParams;
   const selection=journalHistorySelection(query);
   const context=await journalOwner();
-  if (context.kind!=="ready" || !uuid.test(id) || !selection) return <JournalShell mode={null}>
+  if (context.kind!=="ready" || !uuid.test(id) || !selection) return <JournalShell mode={null} activePage="journal">
     <section className="journal-hero"><h1>Trade tidak tersedia</h1><p>Masuk sebagai owner dan periksa tautan jurnal.</p>
       <Link href="/journal">Kembali ke jurnal</Link></section></JournalShell>;
   const {data:tradeData,error:tradeError}=await context.supabase.from("actual_trades")
     .select("*").eq("id",id).eq("data_mode",context.mode).maybeSingle();
-  if (tradeError) return <JournalShell mode={context.mode}>
+  if (tradeError) return <JournalShell mode={context.mode} activePage="journal">
     <section className="journal-hero"><h1>Trade belum dapat dibaca</h1><p>Pembacaan jurnal gagal. Coba lagi setelah koneksi dan schema tersedia.</p></section>
   </JournalShell>;
-  if (!tradeData) return <JournalShell mode={context.mode}>
+  if (!tradeData) return <JournalShell mode={context.mode} activePage="journal">
     <section className="journal-hero"><h1>Trade tidak ditemukan</h1><p>Data ini belum tersedia untuk owner dan mode proyek saat ini.</p>
       <Link href="/journal">Kembali ke jurnal</Link></section></JournalShell>;
   const trade=tradeData as ActualTrade;
@@ -121,12 +121,12 @@ export default async function TradePage({params,searchParams}:{
   }
   const latest=new Map<string,Correction>();
   for(const fill of fills) if(fill.latest_correction[0]) latest.set(fill.id,fill.latest_correction[0]);
-  if (readError) return <JournalShell mode={context.mode}>
+  if (readError) return <JournalShell mode={context.mode} activePage="journal">
     <section className="journal-hero"><h1>Riwayat trade belum dapat dibaca</h1></section>
     <p role="alert" className="journal-alert">Pembacaan fill atau audit gagal. Form dinonaktifkan sampai halaman riwayat dapat dibaca; ini bukan jurnal kosong.</p>
     <Link href="/journal">Kembali ke jurnal</Link>
   </JournalShell>;
-  return <JournalShell mode={context.mode}>
+  return <JournalShell mode={context.mode} activePage="journal">
     <section className="journal-hero"><div><Link className="journal-back" href="/journal">← Jurnal aktual</Link>
       <span className="eyebrow">TRADE AKTUAL / {trade.primary_strategy.replaceAll("_"," ")}</span>
       <h1>{trade.ticker} <span className={"badge "+(trade.status==="closed"?"green":trade.status==="open"?"amber":"neutral")}>{trade.status}</span></h1>

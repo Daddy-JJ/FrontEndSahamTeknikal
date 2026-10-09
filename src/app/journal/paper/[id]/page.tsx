@@ -6,12 +6,12 @@ import { ReportingUnavailable, reportMoney, reportRatio } from "@/components/tra
 export const dynamic = "force-dynamic";
 export default async function PaperDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const owner = await journalOwner();
-  if (owner.kind !== "ready") return <JournalShell mode={null}><section className="journal-panel"><h1>Jurnal belum dapat dibuka</h1><p>Sesi owner aktif dan mode data terverifikasi diperlukan.</p><Link href="/login">Masuk sebagai owner</Link></section></JournalShell>;
+  if (owner.kind !== "ready") return <JournalShell mode={null} activePage="journal"><section className="journal-panel"><h1>Jurnal belum dapat dibuka</h1><p>Sesi owner aktif dan mode data terverifikasi diperlukan.</p><Link href="/login">Masuk sebagai owner</Link></section></JournalShell>;
   const { id } = await params;
-  if (!/^[a-zA-Z0-9_-]{1,160}$/.test(id)) return <JournalShell mode={owner.mode}><section className="journal-panel"><h1>Trade tidak ditemukan</h1></section></JournalShell>;
+  if (!/^[a-zA-Z0-9_-]{1,160}$/.test(id)) return <JournalShell mode={owner.mode} activePage="journal"><section className="journal-panel"><h1>Trade tidak ditemukan</h1></section></JournalShell>;
   const result = await owner.supabase.rpc("read_paper_trade_v1", { p_trade_id: id });
   const detail = result.error ? null : parsePaperTradeDetail(result.data, owner.mode, id);
-  if (!detail) return <JournalShell mode={owner.mode}><Link className="journal-back" href="/journal?tab=paper">← Jurnal paper</Link>
+  if (!detail) return <JournalShell mode={owner.mode} activePage="journal"><Link className="journal-back" href="/journal?tab=paper">← Jurnal paper</Link>
     {!result.error && result.data === null ? <section className="journal-panel"><h1>Trade tidak ditemukan</h1><p>Trade tidak tersedia pada model atau owner ini.</p></section> : <ReportingUnavailable missing={["PGRST202", "42883"].includes(result.error?.code ?? "")} />}</JournalShell>;
   const t = detail.trade;
   const facts: [string, string | number | null][] = [
@@ -24,7 +24,7 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ id
     ["P&L net", reportMoney(t.realized_pnl_idr)], ["Realized R", reportRatio(t.realized_r) + " R"],
     ["Alasan", t.reason], ["Versi model", detail.model_version], ["Source digest", t.source_digest],
   ];
-  return <JournalShell mode={owner.mode}>
+  return <JournalShell mode={owner.mode} activePage="journal">
     <Link className="journal-back" href={"/journal?tab=paper&exit_key=" + t.exit_key}>← Jurnal paper</Link>
     <section className="journal-hero"><div><span className="eyebrow">PAPER · AUDIT TRADE</span><h1>{t.ticker} · {t.exit_key === "ma10" ? "SMA10" : "Fixed 2R"}</h1><p>{t.ambiguous ? "Ambigu · terpisah dari statistik utama" : t.state} · entry simulasi sebesar close hari sinyal.</p></div></section>
     {owner.mode === "fixture" && <p className="journal-banner">DATA UJI DEVELOPMENT — bukan transaksi broker.</p>}

@@ -9,7 +9,7 @@ export async function ScannerDashboard({ searchParams }: {
 }) {
   const query = scannerQuery(await searchParams);
   if (!query) return (
-    <JournalShell mode={null} variant="terminal">
+    <JournalShell mode={null} variant="terminal" activePage="scanner">
       <section className="journal-panel">
         <span className="eyebrow">SCANNER</span>
         <h1>Halaman scanner tidak valid</h1>
@@ -26,7 +26,7 @@ export async function ScannerDashboard({ searchParams }: {
       : state.kind === "contract-error" ? "Kontrak scanner belum dapat diverifikasi"
       : state.kind === "forbidden" ? "Akses scanner ditolak" : "Akses scanner belum tersedia";
     return (
-      <JournalShell mode={"mode" in state ? state.mode ?? null : null} variant="terminal">
+      <JournalShell mode={"mode" in state ? state.mode ?? null : null} variant="terminal" activePage="scanner">
         <section className="journal-panel">
           <span className="eyebrow">OTENTIKASI &amp; AKSES</span><h1>{heading}</h1>
           <p role={state.kind.endsWith("error") ? "alert" : "status"}>
@@ -40,7 +40,7 @@ export async function ScannerDashboard({ searchParams }: {
       </JournalShell>
     );
   }
-  return <JournalShell mode={state.mode} variant="terminal">
+  return <JournalShell mode={state.mode} variant="terminal" activePage="scanner">
     <ScannerTerminal key={[state.run.id, state.section, query.page, query.date, query.strategy].join(":")} run={state.run} query={query} section={state.section}
       items={state.items} signals={state.signals} hasMore={state.hasMore}
       entryWindow={scanWindow(state.run, state.checkedAt)}

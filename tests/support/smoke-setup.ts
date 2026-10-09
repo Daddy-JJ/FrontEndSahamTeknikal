@@ -67,7 +67,7 @@ export default async function setup(config: FullConfig) {
       NODE_ENV: production ? "production" : "development", SMOKE_PORT: String(port), NEXT_TEST_DIST_DIR: dist,
       NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${kind === "workspace" ? 3055 : 3053}`,
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "local-test-publishable",
-      DATA_MODE: kind === "scanner" ? "live" : "fixture", ALLOW_FIXTURE_PREVIEW: production ? "false" : "true",
+      DATA_MODE: process.env.SMOKE_DATA_MODE ?? (kind === "scanner" ? "live" : "fixture"), ALLOW_FIXTURE_PREVIEW: production ? "false" : "true",
       NEXT_TELEMETRY_DISABLED: "1",
     }));
     const warmRoutes = kind === "workspace" ? ["/", "/login", "/auth/error"] : ["/login"];
