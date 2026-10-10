@@ -62,7 +62,7 @@ test("missing schema, membership read failure and mode mismatch are not empty da
   for(const scenario of ["schema-error","mode-mismatch"]) {
     await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
     await page.goto("/journal");
-    await expect(page.getByRole("heading",{name:"Schema jurnal belum tersedia"})).toBeVisible();
+    await expect(page.getByRole("heading",{name:scenario==="schema-error"?"Backend jurnal belum siap":"Jurnal belum dapat dibaca"})).toBeVisible();
     await expect(page.getByRole("button",{name:"Simpan Draft"})).toHaveCount(0);
     await page.goto("/analytics");
     await expect(page.getByRole("heading",{name:"Statistik belum dapat dibaca"})).toBeVisible();
@@ -289,15 +289,16 @@ test("exact exit snapshot is shared by analytics and CSV without widening cohort
 test("long trade and event histories page independently with bounded reads",async({page,request})=>{
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"long-history"}});
   await page.goto("/journal");
-  await expect(page.locator(".dense-table tbody tr")).toHaveCount(100);
+  await expect(page.locator(".dense-table tbody tr")).toHaveCount(25);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const beforeTradePage=(await (await request.get("http://127.0.0.1:3053/__calls")).json()).calls.length;
   await page.getByRole("navigation",{name:"Halaman riwayat trade"}).getByRole("link",{name:"Lebih lama →"}).click();
   await expect(page).toHaveURL(/page=2/);
-  await expect(page.locator(".dense-table tbody tr")).toHaveCount(100);
+  await expect(page.locator(".dense-table tbody tr")).toHaveCount(25);
   const tradePageCalls=(await (await request.get("http://127.0.0.1:3053/__calls")).json()).calls.slice(beforeTradePage);
   expect(tradePageCalls.some((c:{path:string})=>c.path.endsWith("actual_journal_analytics"))).toBe(false);
   await page.getByRole("navigation",{name:"Halaman riwayat trade"}).getByRole("link",{name:"Lebih lama →"}).click();
+  await page.goto("/journal?tab=actual&page=9");
   await expect(page.locator(".dense-table tbody tr")).toHaveCount(5);
   await page.goto(`/journal/${id}`);
   await expect(page.locator(".journal-fill")).toHaveCount(50);
@@ -358,8 +359,47 @@ test("fixture paper remains isolated from actual ledger reads",async({page,reque
     await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"empty"}});
     await page.goto(route);
     await expect(page.getByText(/DATA UJI DEVELOPMENT — bukan hasil pasar atau akun riil/)).toBeVisible();
-    await expect(page.getByRole("heading",{name:route.startsWith("/journal") ? "Jurnal paper persisten" : "Transaksi pembentuk statistik"})).toBeVisible();
+    await expect(page.getByRole("heading",{name:route.startsWith("/journal") ? "Jurnal paper persisten" : "Transaksi dan eligibility statistik"})).toBeVisible();
     const {calls}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
     expect(calls.some((c:{path:string})=>c.path.includes("actual_"))).toBe(false);
   }
+});
+
+test("actual journal and analytics share canonical exit filters through refresh and CSV navigation",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"closed"}});
+ await page.goto("/journal?tab=actual&from=2026-09-01&to=2026-09-29&strategy=MACD_EMA200_V1&exit_snapshot=fixed2r");
+ await expect(page.locator(".dense-table tbody tr")).toHaveCount(1);
+ await expect(page.getByRole("link",{name:"Ekspor CSV Closed"})).toHaveAttribute("href",/from=2026-09-01.*to=2026-09-29.*strategy=MACD_EMA200_V1.*exit_snapshot=fixed2r/);
+ await page.reload();
+ await expect(page.getByLabel("Dari sesi exit")).toHaveValue("2026-09-01");
+ const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+ const report=calls.filter((c:{path:string})=>c.path.endsWith("read_trade_reporting_v1")).at(-1);
+ expect(report.body).toMatchObject({p_mode:"actual",p_from:"2026-09-01",p_to:"2026-09-29",p_strategy:"MACD_EMA200_V1",p_exit_snapshot:{version:"actual-fixed2r-v1",mode:"fixed_rr",target_r:2}});
+ expect(calls.some((c:{path:string})=>c.path.endsWith("actual_trades"))).toBe(false);
+ await page.getByRole("link",{name:"Buka Analytics",exact:false}).click();
+ await expect(page).toHaveURL(/tab=actual/);
+ expect(new URL(page.url()).searchParams.get("from")).toBe("2026-09-01");
+ expect(new URL(page.url()).searchParams.get("exit_snapshot")).toBe("fixed2r");
+});
+
+test("invalid actual journal filters do not read an unrestricted cohort",async({page,request})=>{
+ for(const query of ["from=2026-02-30","strategy=UNKNOWN","exit_snapshot=UNKNOWN","tab=UNKNOWN"]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"closed"}});
+  await page.goto("/journal?"+query);
+  await expect(page.getByRole("heading",{name:"Filter cohort tidak valid"})).toBeVisible();
+  const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+  expect(calls.some((c:{path:string})=>c.path.endsWith("read_trade_reporting_v1")||c.path.endsWith("actual_trades"))).toBe(false);
+ }
+});
+
+test("actual draft and partial positions are labelled outside closed exit statistics",async({page,request})=>{
+ for(const [scenario,label] of [["actual-draft-empty","draft"],["partial","open"]]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+  await page.goto("/journal?tab=actual&from=2026-09-01&to=2026-09-29");
+  await expect(page.locator(".dense-table tbody tr")).toContainText(label);
+  await expect(page.locator(".dense-table tbody tr")).toContainText("Di luar statistik utama");
+  await expect(page.locator(".journal-metrics").getByText("Closed",{exact:true}).locator("..")).toContainText("0");
+  await expect(page.getByText("Open dan draft tetap ditampilkan terpisah",{exact:false})).toBeVisible();
+  if(scenario==="actual-draft-empty") await expect(page.locator(".dense-table tbody tr")).toContainText("Menunggu fill");
+ }
 });

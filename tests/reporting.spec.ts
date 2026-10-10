@@ -38,10 +38,10 @@ test("signal observation shows won/lost, denominators, holds and no time exit",a
  await expect(page.locator("#signal-observations")).toContainText("Berhasil");
  await expect(page.locator("#signal-observations")).toContainText("Gagal");
  await expect(page.locator("#signal-observations")).toContainText("Menunggu");
- await page.locator("#signal-observations summary").click();
+ await page.locator("#signal-observations summary").first().click();
  await expect(page.getByText("a".repeat(64),{exact:true})).toBeVisible();
- await expect(page.locator("#signal-observations details")).toContainText("Rp1.075");
- await expect(page.locator("#signal-observations details")).toContainText("Rp1.150");
+ await expect(page.locator("#signal-observations details").first()).toContainText("Rp1.075");
+ await expect(page.locator("#signal-observations details").first()).toContainText("Rp1.150");
  await expect(page.getByRole("combobox",{name:"Eksperimen exit"})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
@@ -61,15 +61,15 @@ test("actual IDR reporting preserves exact snapshot, CSV and detail route",async
  const rpc=calls.filter((c:{path:string})=>c.path.endsWith("read_trade_reporting_v1")).at(-1);
  expect(rpc.body).toMatchObject({p_mode:"actual",p_exit_snapshot:{version:"actual-fixed2r-v1",mode:"fixed_rr",target_r:2},p_from:"2026-09-01",p_to:"2026-09-30"});
 });
-test("paper detail audit and SMA10 confirmed close semantics",async({page,request})=>{
- await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"reporting-ambiguous"}});
+test("paper detail audit and SMA10 confirmed close semantics",async({page})=>{
  await page.goto("/journal/paper/paper-test-v1");
  await expect(page.getByRole("heading",{name:"TEST · SMA10"})).toBeVisible();
- await expect(page.getByText("Ambigu · terpisah dari statistik utama",{exact:false})).toBeVisible();
+ await expect(page.getByText("entry",{exact:true})).toBeVisible();
+ await expect(page.getByText("exit",{exact:true})).toBeVisible();
  await expect(page.getByText("SMA10 dipicu hanya oleh close terkonfirmasi di bawah SMA10",{exact:false})).toBeVisible();
  await expect(page.locator(".journal-facts")).toContainText("Rp945.000");
  await expect(page.locator(".journal-facts")).toContainText("Rp993.037,5");
- await expect(page.getByText("plan_created",{exact:true})).toBeVisible();
+ await expect(page.getByText("pending_exit",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
  await page.reload();
@@ -151,4 +151,54 @@ test("decimal money tokens stay on one line without overflowing journal and repo
   }
  }
  await page.screenshot({caret:"initial",path:"test-results/reporting-decimal-"+info.project.name+".png",fullPage:true});
+});
+
+test("SQL-generated synthetic oracle renders assessed and excluded results with unfinished counterpart",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"reporting-oracle"}});
+ await page.goto("/analytics?tab=paper");
+ await expect(page.getByText("FIXTURE DEV",{exact:true})).toBeVisible();
+ await expect(page.locator(".analytics-stat-card").first()).toContainText("Rp841.837,5");
+ await expect(page.getByRole("heading",{name:"Perbandingan sampel eksperimen"})).toBeVisible();
+ await expect(page.locator('[data-processing-health="data_hold"]')).toContainText("2026-10-09");
+ const ambiguous=page.locator(".reporting-trades tr").filter({hasText:"Ambigu"});
+ await expect(ambiguous).toContainText("Di luar statistik utama");
+ await page.getByText("Entry bersama dan hasil masing-masing",{exact:true}).click();
+ await expect(page.getByRole("link",{name:"Open",exact:true})).toBeVisible();
+ await page.goto("/journal/paper/a-fixed_rr");
+ await expect(page.locator(".reporting-events strong")).toHaveText(["entry","exit"]);
+ await expect(page.locator(".journal-facts")).toContainText("Rp1.834.875");
+ await page.goto("/journal/paper/d-ma_close");
+ await expect(page.getByRole("heading",{name:"TESTD · SMA10"})).toBeVisible();
+ await expect(page.locator(".reporting-events strong")).toHaveText(["entry","pending_exit","exit"]);
+ await expect(page.locator(".journal-facts")).toContainText("late_model_only");
+ await expect(page.locator(".journal-facts")).toContainText("Rp1.834.875");
+ await page.reload();
+ await expect(page.locator(".reporting-events strong")).toHaveText(["entry","pending_exit","exit"]);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("processing health distinguishes overdue, failure, held data and old backend readiness",async({page,request})=>{
+ for(const [scenario,status,heading] of [["health-overdue","overdue","Pemrosesan terlambat"],["health-failed","failed","Pemrosesan gagal"],["health-data-hold","data_hold","Pemrosesan tertahan oleh data"]]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+  await page.goto("/analytics?tab=paper");
+  await expect(page.getByRole("heading",{name:heading,exact:true})).toBeVisible();
+  await expect(page.locator('[data-processing-health="'+status+'"]').getByRole("definition").filter({hasText:"4"})).toHaveCount(1);
+  await expect(page.getByText("Data jurnal lengkap",{exact:true})).toBeVisible();
+ }
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"health-unavailable"}});
+ await page.goto("/operations");
+ await expect(page.getByRole("heading",{name:"Status pemrosesan belum dapat dibaca"})).toBeVisible();
+ const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+ expect(calls.filter((c:{path:string})=>c.path.endsWith("read_paper_processing_health_v1"))).toHaveLength(1);
+});
+
+test("operations read failure is distinct from empty run history",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"operations-read-error"}});
+ await page.goto("/operations");
+ await expect(page.locator(".journal-panel [role=alert]")).toContainText("belum dapat dibaca");
+ await expect(page.getByText("Belum ada snapshot run forward",{exact:false})).toHaveCount(0);
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"operations-empty"}});
+ await page.goto("/operations");
+ await expect(page.getByText("Belum ada snapshot run forward",{exact:false})).toBeVisible();
+ await expect(page.locator(".journal-panel [role=alert]")).toHaveCount(0);
 });

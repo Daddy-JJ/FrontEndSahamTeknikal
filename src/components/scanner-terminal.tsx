@@ -166,7 +166,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
     <p className="terminal-notice" role={run.status === "failed" ? "alert" : "status"}>
       {run.status === "failed" ? "Run gagal: entry ditahan; ini bukan hasil tidak ada sinyal. " : run.status === "partial" ? "Evaluasi parsial: " + run.coverage_valid + " dari " + run.coverage_total + " ticker dievaluasi. " : ""}
       {rsHeld && "Ranking RS ditahan untuk seluruh cross-section. "}
-      {entryWindow === "elapsed" && "Window entry sudah berakhir · hasil historis. "}
+      {entryWindow === "elapsed" && "Publikasi forward berakhir. Rencana paper tetap diproses EOD. "}
       Freshness input belum dapat diverifikasi.
     </p>
     <div className={"terminal-workspace " + (selection && !drawer ? "has-detail" : "")}>

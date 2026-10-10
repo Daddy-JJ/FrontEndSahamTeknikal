@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
 import { journalOwner } from "@/lib/journal-server";
+import { parseProcessingHealth } from "@/lib/trade-reporting";
+import { ProcessingHealthNotice } from "@/components/processing-health";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,7 @@ export default async function OperationsPage() {
     );
   }
 
-  const { data: latestRun } = await owner.supabase
+  const [snapshotResult, healthResult] = await Promise.all([owner.supabase
     .from("scan_runs")
     .select("id,session_date,status,coverage_valid,coverage_total,stored_at,run_digest")
     .eq("namespace", "forward")
@@ -29,7 +31,9 @@ export default async function OperationsPage() {
     .order("session_date", { ascending: false })
     .order("stored_at", { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .maybeSingle(), owner.supabase.rpc("read_paper_processing_health_v1")]);
+  const latestRun = snapshotResult.error ? null : snapshotResult.data;
+  const health = healthResult.error ? null : parseProcessingHealth(healthResult.data, owner.mode);
 
   const storedWib = latestRun?.stored_at
     ? new Intl.DateTimeFormat("id-ID", {
@@ -71,7 +75,7 @@ export default async function OperationsPage() {
 
       <section className="journal-panel">
         <h2>Observasi Status Snapshot Database</h2>
-        {latestRun ? (
+        {snapshotResult.error ? <p role="alert">Snapshot database belum dapat dibaca. Kegagalan koneksi atau izin bukan berarti tidak ada run.</p> : latestRun ? (
           <dl className="journal-facts">
             <div>
               <dt>Sesi target terakhir</dt>
@@ -102,6 +106,8 @@ export default async function OperationsPage() {
           <p>Belum ada snapshot run forward yang tersimpan pada database untuk mode {owner.mode}.</p>
         )}
       </section>
+
+      <ProcessingHealthNotice health={health} unavailable={!!healthResult.error || !health} />
 
       <section className="journal-panel">
         <h2>Batas Observasi Operasional</h2>

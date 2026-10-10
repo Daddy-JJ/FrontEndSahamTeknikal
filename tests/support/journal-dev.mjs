@@ -1,6 +1,15 @@
 // Test-only HTTP double. No production imports, remote calls, database, or financial engine.
 import { createServer } from "node:http";
-import { reportingFixture, evaluationFixture, detailFixture } from "./reporting-fixtures.mjs";
+import {readFileSync} from "node:fs";
+import { reportingFixture, evaluationFixture, detailFixture, healthFixture } from "./reporting-fixtures.mjs";
+// SQL-generated synthetic financial oracle. Only the transport namespace is adapted
+// so the existing fixture badge remains visible; prices/results are never rewritten.
+const oracle=JSON.parse(readFileSync(new URL("../fixtures/paper-reporting-v1.json",import.meta.url)));
+function oracleResponse(key){
+ const value=structuredClone(oracle[key]);value.data_mode="fixture";
+ if(value.processing_health)value.processing_health.data_mode="fixture";
+ return value;
+}
 
 const tradeId = "11111111-1111-4111-8111-111111111111";
 const userId = "22222222-2222-4222-8222-222222222222";
@@ -67,7 +76,8 @@ const server=createServer(async(req,res)=>{
     return send({data_mode:scenario.startsWith("scanner-") || scenario==="settings-live"?"live":"fixture"});
   }
   if(url.pathname==="/rest/v1/scan_runs") {
-    if(scenario==="scanner-read-error") return send({code:"08006"},503);
+    if(scenario==="scanner-read-error"||scenario==="operations-read-error") return send({code:"08006"},503);
+    if(scenario==="operations-empty")return send(null);
     if(scenario==="scanner-empty" || url.searchParams.getAll("session_date").some(value=>value.startsWith("eq.") && value!=="eq.2026-09-28")) return send(null);
     const partial=["scanner-partial","scanner-recovery","scanner-terminal-matrix"].includes(scenario);
     const failed=scenario==="scanner-failed";
@@ -76,6 +86,12 @@ const server=createServer(async(req,res)=>{
       coverage_total:100,stored_at:"2026-09-28T14:00:00Z",run_digest:"a".repeat(64),
       ranking_status:partial||failed?"cross_section_incomplete":"complete",publication_deadline:"2026-09-29T02:00:00Z"};
     return send(run);
+  }
+  if(url.pathname==="/rest/v1/rpc/read_paper_processing_health_v1"){
+    if(scenario==="health-unavailable")return send({code:"PGRST202"},404);
+    const health=scenario==="reporting-oracle"?oracleResponse("health"):healthFixture(scenario);
+    if(scenario.startsWith("scanner-"))health.data_mode="live";
+    return send(health);
   }
   if(url.pathname==="/rest/v1/scan_run_items") {
     const rows=Array.from({length:100},(_,i)=>{
@@ -110,8 +126,22 @@ const server=createServer(async(req,res)=>{
   if(scenario==="schema-error") return send({code:"PGRST205",message:"synthetic missing migration"},404);
   if(url.pathname==="/rest/v1/rpc/read_trade_reporting_v1" || url.pathname==="/rest/v1/rpc/read_signal_evaluation_v1" || url.pathname==="/rest/v1/rpc/read_paper_trade_v1") {
     if(scenario==="reporting-unavailable" || scenario==="scanner-paper") return send({code:"PGRST202",message:"synthetic missing migration"},404);
-    if(scenario==="reporting-error") return send({code:"08006",message:"synthetic read failure"},503);
-    return send(url.pathname.endsWith("read_signal_evaluation_v1") ? evaluationFixture(body,scenario) : url.pathname.endsWith("read_paper_trade_v1") ? detailFixture(body,scenario) : reportingFixture(body,scenario));
+    if(scenario==="reporting-error"||scenario==="trade-error") return send({code:"08006",message:"synthetic read failure"},503);
+    if(scenario==="reporting-oracle")return send(oracleResponse(url.pathname.endsWith("read_signal_evaluation_v1")?"evaluation":url.pathname.endsWith("read_paper_trade_v1")?body.p_trade_id==="a-ma_close"?"detail_ma10":body.p_trade_id==="d-ma_close"?"detail_ma10_closed":"detail_fixed2r":body.p_mode==="actual"?"actual_reporting":body.p_exit_key==="ma10"?"reporting_ma10":"reporting_fixed2r"));
+    const result=url.pathname.endsWith("read_signal_evaluation_v1") ? evaluationFixture(body,scenario) : url.pathname.endsWith("read_paper_trade_v1") ? detailFixture(body,scenario) : reportingFixture(body,scenario);
+    // Scanner production-build tests use a synthetic live namespace on loopback.
+    // Match its mocked deployment_settings; never adapt a real RPC response.
+    if(scenario.startsWith("scanner-")){
+      result.data_mode="live";
+      if(result.processing_health)result.processing_health.data_mode="live";
+    }
+    if(scenario==="long-history"&&body.p_mode==="actual"){
+      const rows=manyRows.map(row=>({...result.trades[0],id:row.id,ticker:row.ticker}));
+      const s={...result.summary,closed:rows.length,wins:rows.length,net_pnl_idr:String(rows.length*1000)};
+      const offset=((body.p_page??1)-1)*25;
+      Object.assign(result,{summary:s,strategies:[{strategy:s.primary_strategy??"MACD_EMA200_V1",...s}],trades:rows.slice(offset,offset+25),curve:rows.map((row,i)=>({sequence:i+1,trade_id:row.id,ticker:row.ticker,strategy:row.strategy,exit_session:row.exit_session,realized_pnl_idr:"1000",cumulative_pnl_idr:String((i+1)*1000)})),paging:{page:body.p_page??1,page_size:25,has_more:offset+25<rows.length}});
+    }
+    return send(result);
   }
   if(url.pathname==="/rest/v1/rpc/export_actual_journal") {
     const row={...trade,trade_id:tradeId,mode:"actual",contract_version:"actual-journal-export-v1",

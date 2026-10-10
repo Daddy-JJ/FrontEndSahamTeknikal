@@ -83,7 +83,8 @@ test("partial exposes denominator, skip reasons and global RS hold", async ({ pa
 test("expired window and late cohort never claim fresh forward entry", async ({ page, request }) => {
   await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-late" } });
   await page.goto("/scanner");
-  await expect(page.getByText(/Window entry sudah berakhir/)).toBeVisible();
+  await expect(page.getByText(/Publikasi forward berakhir/)).toBeVisible();
+  await expect(page.locator(".terminal-notice")).toContainText("Rencana paper tetap diproses EOD");
   await expect(page.getByText(/LATE \/ MODEL ONLY/).first()).toBeVisible();
   await expect(page.getByText("Reference close · bukan fill").first()).toBeVisible();
   await page.getByText("Detail run & sumber", { exact: true }).click();
@@ -270,7 +271,7 @@ test("owner operations opens existing workflow link without dispatch or fake sta
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const {calls,mutations}=await (await request.get("http://127.0.0.1:3053/__calls")).json();
   expect(mutations).toEqual([]);
-  expect(calls.some((c:{path:string})=>c.path.includes("/rpc/"))).toBe(false);
+  expect(calls.filter((c:{path:string})=>c.path.includes("/rpc/")).map((c:{path:string})=>c.path)).toEqual(["/rest/v1/rpc/read_paper_processing_health_v1"]);
   const snapshots=calls.filter((c:{path:string})=>c.path.endsWith("/scan_runs"));
   expect(snapshots).toHaveLength(1);
   expect(snapshots[0].query).toMatchObject({limit:"1",namespace:"eq.forward",data_mode:"eq.live"});

@@ -1,3 +1,31 @@
+## Authorized production release in progress - 2026-10-10 WIB
+
+Action: user authorized commit/push and deployment of the locally verified G01-G17 remediation. Recheck both main branches, pause scanner during a fresh encrypted capture, fully restore/rehearse SQL011, apply backend capability first, commit/push both repos, verify exact-SHA Vercel Production, resume and recover the committed Oct8 paper cohort through Oct9 without publishing historical signals.
+Proof: GitHub fetch shows both main branches match origin. Read-only production preflight confirms SQL001-010, live mode/valid owner, no duplicate economics, checkpoint Oct8/revision1, eight pending plans/four evaluations/zero events. Scanner workflow paused with no active job. All prior local checks are retained below; backup/migration/deployment/recovery are not yet claimed complete.
+
+Release receipts: backend/data/production-release-evidence/sql011-release-20261010 (private ignored diagnostics); durable shared handoff: docs/REMEDIATION_RELEASE_20261010.md. No trading rule, provider, activation or actual ledger change is authorized by this rollout. Earlier local/historical evidence follows.
+
+## Incident remediation - locally verified, release pending (2026-10-10 WIB)
+
+Status: IMPLEMENTED AND VERIFIED LOCALLY. G01-G17 fixes cover independent persisted paper recovery, verified-calendar cadence, job/checkpoint health, exact-risk/evaluation integrity and canonical journal/reporting. Production/history remains unchanged in this remediation; commit/push/migration/deployment/recovery await separate release authorization.
+
+Action: implement the approved incident plan while preserving signal-close entry, initial risks, both exit experiments, actual ledger/CSV and old book/config. Proof: Python377 PASS/5 native opt-in SKIPPED; Ruff PASS; SQL/PGlite116 PASS, with final SQL01118/release-plan5/persistent-reporting21 subsets PASS after the additive health timestamp update; native PostgreSQL integrity/CAS/RLS probe PASS (six checks). Frontend unit36 PASS; reporting36 and journal69 browser cases PASS across full runs plus corrected-case reruns; production-built scanner66 cases PASS across the full65 passing cases and the affected-case rerun; typecheck/lint/build/diff checks PASS.
+
+Next action: after release authorization, fresh encrypted backup/restore rehearsal, SQL011 capability first, compatible frontend, runtime/workflow, then committed-cohort paper-only Oct9 recovery and live reconciliation. Authenticated production browser, real outsider JWT, current production restore and multi-session stability remain unverified. The native backup/restore subset was PARTIAL due Docker startup/cleanup timeouts; the separate no-network integrity probe passed with test-only bounded startup allowances. Do not infer current production recovery from the local eight-entry/seven-open/one-closed replay. Gap mapping, exact evidence limits, prior failed attempts and release order: [handoff](../docs/REMEDIATION_RELEASE_20261010.md).
+
+# Active audit and remediation plan - journal/analytics 2026-10-09
+
+Status: READ-ONLY REVIEW / RETEST; no UI implementation, commit/push or deploy in this turn. Previous whole-site visual release is deployed; its older pending markers below are historical. Full cross-repo audit and Action/Proof plan: [shared audit](../docs/AUDIT_JOURNAL_ENTRY_20261009.md).
+
+- Action: plan explicit EOD scheduled-entry vs overdue processing labels, scanner publication-deadline wording and Operations job/checkpoint health. Proof required: backend-derived expected-session/holiday/night recovery fixtures, live read-only reconciliation, DB errors render error rather than empty.
+- Action: plan actual journal canonical exit filters shared with analytics/CSV, explicit metric eligibility/exclusion reason and sensitivity denominators, missing paper IDR payoff/PF and experiment sample/holding comparison. Proof required: same filtered source trades across journal/statistics/export, partial/draft positions separated, no canonical calculations moved into browser.
+- Action: strengthen relational parser invariants and replace contradictory financial fixture states with canonical engine/SQL payloads. Proof required: reject inconsistent win-rate/cell totals; assert true entry/exit audit chain, ambiguous main exclusion and differentiated sensitivities, auth/refresh/back/mobile.
+- Action: retest local unit/reporting/journal browser suites, typecheck and lint against unchanged source. Proof: unit30PASS/reporting27PASS/journal60PASS/typecheck/lintPASS; desktop/mobile/tablet browser checks use local fixture HTTP. Live-vs-fixture limitations recorded in shared audit.
+
+Capability/schema rollout belongs to backend first. Production owner-browser proof is not inferred from local mocks or SQL role claims. Earlier plans follow.
+
+---
+
 # Active plan: consistent terminal UI across the website - 2026-10-09 WIB
 
 Status: LOCAL IMPLEMENTATION VERIFIED; commit, push and Production verification pending. User explicitly authorized all release steps. Detailed route/state inventory, shared tokens, phased Action/Proof and acceptance gates: [docs/UI_TERMINAL_ROLLOUT_PLAN.md](docs/UI_TERMINAL_ROLLOUT_PLAN.md). Current work extends the scoped terminal shell to owner pages, system states and the fixture workspace; domain behavior remains unchanged. Prior compact Scanner release was committed/pushed as 0aff30d; its evidence below remains historical and separate.

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
-import { journalOwner, type ActualTrade } from "@/lib/journal-server";
+import { journalOwner } from "@/lib/journal-server";
 import { JournalForm } from "@/components/journal-form";
-import { journalPageNumber, journalPageSize } from "@/lib/journal-page";
-import { parseActualAnalytics } from "@/lib/actual-analytics";
-import { journalFilters, journalStrategies } from "@/lib/journal-filters";
-import { PersistentReporting } from "@/components/trade-reporting";
+import { journalPageNumber } from "@/lib/journal-page";
+import { parseTradeReporting } from "@/lib/trade-reporting";
+import { journalFilterParams, journalStrategies } from "@/lib/journal-filters";
+import { ActualCohortFilters, PersistentReporting, reportLink, reportingFilters } from "@/components/trade-reporting";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +83,8 @@ export default async function JournalPage({ searchParams }: {
       </JournalShell>
     );
   }
+  const filters = reportingFilters(query);
+  if (!filters || query.tab !== undefined && query.tab !== "actual") return <JournalShell mode={context.mode} activePage="journal"><section className="journal-panel"><h1>Filter cohort tidak valid</h1><p>Periksa tanggal, strategi, halaman, dan konfigurasi exit. Cohort tidak diperluas ketika filter gagal.</p><Link href="/journal?tab=actual">Hapus filter</Link></section></JournalShell>;
 
   let linkedSignal: {id:string;ticker:string;strategy:string} | null = null;
   if (query.signal_id !== undefined) {
@@ -107,20 +109,16 @@ export default async function JournalPage({ searchParams }: {
     );
     linkedSignal=signal;
   }
-  const [{ data: trades, error: tradesError }, analyticsResult] = await Promise.all([
-    context.supabase.from("actual_trades")
-      .select("id,ticker,data_mode,primary_strategy,status,revision,initial_stop,current_stop,initial_risk_idr,provisional_risk_idr,open_quantity,remaining_cost_idr,realized_pnl_idr,realized_r,fee_total_idr,exit_policy_snapshot,closed_at,created_at")
-      .eq("data_mode", context.mode)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range((page - 1) * journalPageSize, page * journalPageSize),
-    page === 1 ? context.supabase.rpc("actual_journal_analytics") : Promise.resolve(null),
-  ]);
-
-  const summary = parseActualAnalytics(analyticsResult?.data,context.mode,journalFilters({})!);
-  const ready = !tradesError && (page > 1 || (!analyticsResult?.error && summary !== null));
-  const rows = ((trades ?? []) as ActualTrade[]).slice(0, journalPageSize);
-  const hasMore = (trades?.length ?? 0) > journalPageSize;
+  const reportingResult = await context.supabase.rpc("read_trade_reporting_v1", {
+    p_mode: "actual", p_from: filters.from, p_to: filters.to, p_strategy: filters.strategy,
+    p_exit_key: null, p_page: filters.page, p_exit_version: filters.exitVersion, p_exit_snapshot: filters.exitSnapshot,
+  });
+  const report = reportingResult.error ? null : parseTradeReporting(reportingResult.data, context.mode, "actual", filters);
+  const summary = report?.summary;
+  const ready = report !== null;
+  const rows = (report?.trades ?? []).map(t => ({ ...t, primary_strategy: t.strategy, status: t.state, open_quantity: t.open_quantity! }));
+  const hasMore = report?.paging.has_more ?? false;
+  const cohortParams = journalFilterParams(filters).toString();
 
   const error = typeof query.error === "string" ? query.error : null;
 
@@ -135,8 +133,8 @@ export default async function JournalPage({ searchParams }: {
           </p>
         </div>
         <div className="journal-hero-actions">
-          <Link href="/analytics">Buka Analytics →</Link>
-          {ready && <Link href="/journal/export">Ekspor CSV Closed</Link>}
+          <Link href={"/analytics?tab=actual&" + cohortParams}>Buka Analytics →</Link>
+          {ready && <Link href={"/journal/export" + (cohortParams ? "?" + cohortParams : "")}>Ekspor CSV Closed</Link>}
         </div>
       </section>
 
@@ -154,24 +152,25 @@ export default async function JournalPage({ searchParams }: {
           Paper Journal (Simulasi Sinyal)
         </Link>
       </nav>
+      <ActualCohortFilters f={filters} view="journal" />
 
       <>
           {!ready ? (
             <section className="journal-panel">
-              <h2>Schema jurnal belum tersedia</h2>
-              <p>Migrasi M4 belum diterapkan atau pembacaan owner sedang gagal. Tidak ada angka demo yang ditampilkan sebagai hasil aktual.</p>
+              <h2>{["PGRST202", "PGRST205", "42883"].includes(reportingResult.error?.code ?? "") ? "Backend jurnal belum siap" : "Jurnal belum dapat dibaca"}</h2>
+              <p>Kontrak reporting aktual beserta quantity, stop, dan revision diperlukan untuk cohort ini. Pembacaan atau validasi yang gagal tidak dianggap sebagai jurnal kosong; tidak ada angka demo yang ditampilkan sebagai hasil aktual.</p>
             </section>
           ) : (
             <>
               {page === 1 ? (
                 <section className="journal-metrics" aria-label="Ringkasan jurnal aktual">
                   <div><span>Closed</span><strong>{summary?.closed ?? 0}</strong><small>Sampel statistik</small></div>
-                  <div><span>Posisi open</span><strong>{summary?.open ?? 0}</strong><small>Di luar win rate</small></div>
+                  <div><span>Posisi open</span><strong>{report?.statuses.open ?? 0}</strong><small>Di luar win rate · draft {report?.statuses.draft ?? "belum tersedia"}</small></div>
                   <div><span>Net P&amp;L closed</span><strong>Rp{money(summary?.net_pnl_idr)}</strong><small>Sesudah fee per fill</small></div>
                   <div><span>Win rate</span><strong>{summary?.win_rate == null ? "—" : ratio(Number(summary.win_rate) * 100) + "%"}</strong><small>Breakeven ikut denominator</small></div>
                 </section>
               ) : (
-                <p className="journal-footnote"><Link href="/journal">Ringkasan statistik ada pada halaman terbaru.</Link></p>
+                <p className="journal-footnote"><Link href={reportLink("/journal", "actual", filters, { page: 1 })}>Ringkasan statistik ada pada halaman pertama cohort ini.</Link></p>
               )}
 
               {/* Collapsible Drawer for Creating New Trade Draft */}
@@ -226,8 +225,9 @@ export default async function JournalPage({ searchParams }: {
                     <span className="eyebrow">BUKU BESAR AKTUAL</span>
                     <h2>Daftar Transaksi</h2>
                   </div>
-                  <span className="muted small">Halaman {page} · {journalPageSize} baris per halaman</span>
+                  <span className="muted small">Halaman {page} · 25 baris per halaman</span>
                 </div>
+                <p className="panel-note">Closed mengikuti periode exit yang dipilih. Open dan draft tetap ditampilkan terpisah dari sampel statistik closed, tanpa batas tanggal exit.</p>
 
                 {rows.length === 0 ? (
                   <div className="journal-empty">
@@ -274,6 +274,7 @@ export default async function JournalPage({ searchParams }: {
                                 <span className={"subtle-badge " + (isClosed ? "emerald" : t.status === "open" ? "amber" : "gray")}>
                                   {t.status}
                                 </span>
+                                <small>{t.metric_eligible === undefined ? "Eligibility backend belum tersedia" : t.metric_eligible ? "Closed dinilai" : "Di luar statistik utama · " + (t.exclusion_reason ?? t.status)}</small>
                               </td>
                               <td className="text-right mono">
                                 {isClosed ? (
@@ -330,8 +331,8 @@ export default async function JournalPage({ searchParams }: {
 
                 {(page > 1 || hasMore) && (
                   <nav className="journal-pagination" aria-label="Halaman riwayat trade" style={{ marginTop: "16px" }}>
-                    {page > 1 && <Link href={page === 2 ? "/journal" : "/journal?page=" + (page - 1)}>← Lebih baru</Link>}
-                    {hasMore && <Link href={"/journal?page=" + (page + 1)}>Lebih lama →</Link>}
+                    {page > 1 && <Link href={reportLink("/journal", "actual", filters, { page: page - 1 })}>← Lebih baru</Link>}
+                    {hasMore && <Link href={reportLink("/journal", "actual", filters, { page: page + 1 })}>Lebih lama →</Link>}
                   </nav>
                 )}
               </section>

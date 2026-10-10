@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
-import { PersistentReporting, ReportingTabs, TradeDashboard, reportingFilters } from "@/components/trade-reporting";
+import { ActualCohortFilters, PersistentReporting, ReportingTabs, TradeDashboard, reportingFilters } from "@/components/trade-reporting";
 import { journalOwner } from "@/lib/journal-server";
 import { parseActualAnalytics } from "@/lib/actual-analytics";
 import { parseTradeReporting, strategyLabels } from "@/lib/trade-reporting";
@@ -46,20 +46,10 @@ export default async function AnalyticsPage({ searchParams }: {
   return <JournalShell mode={context.mode} activePage="analytics">
     <section className="journal-hero"><div><span className="eyebrow">ANALYTICS / AKTUAL / EOD</span><h1>Ukur proses, baca hasil deterministik.</h1>
       <p>Performa trade closed berdasarkan tanggal exit Asia/Jakarta dan biaya pada ledger. Posisi open terpisah dari win rate.</p></div>
-      <div className="journal-hero-actions"><Link href="/journal">← Kembali ke Jurnal</Link><Link href={"/journal/export" + (exportParams ? "?" + exportParams : "")}>Ekspor CSV cohort</Link></div></section>
+      <div className="journal-hero-actions"><Link href={"/journal?tab=actual&" + exportParams}>← Kembali ke Jurnal</Link><Link href={"/journal/export" + (exportParams ? "?" + exportParams : "")}>Ekspor CSV cohort</Link></div></section>
     {context.mode === "fixture" && <p className="journal-banner">DATA UJI DEVELOPMENT — bukan performa akun trading riil.</p>}
     <ReportingTabs tab="actual" />
-    <section className="journal-panel" aria-label="Filter cohort statistik"><form className="journal-form" action="/analytics" method="get">
-      <input type="hidden" name="tab" value="actual" />
-      <label>Dari sesi exit<input type="date" name="from" defaultValue={filters.from ?? ""} /></label>
-      <label>Sampai sesi exit<input type="date" name="to" defaultValue={filters.to ?? ""} /></label>
-      <label>Strategi<select name="strategy" defaultValue={filters.strategy ?? ""}><option value="">Semua strategi</option>{journalStrategies.map(s => <option key={s} value={s}>{strategyLabels[s]}</option>)}</select></label>
-      <label>Konfigurasi exit persis<select name="exit_snapshot" defaultValue={filters.exitSnapshotKey ?? ""}>
-        <option value="">Semua konfigurasi</option><option value="fixed2r">Fixed 2R · actual-fixed2r-v1</option><option value="ma10">SMA10 · actual-ma10-v1</option><option value="manual">Manual · actual-manual-v1</option>
-      </select></label>
-      <label>Versi exit (opsional)<input name="exit_version" defaultValue={filters.exitVersion ?? ""} maxLength={60} pattern="[A-Za-z0-9_-]{1,60}" /></label>
-      <button className="primary-button" type="submit">Terapkan cohort</button><Link href="/analytics?tab=actual">Hapus semua filter</Link>
-    </form><p className="panel-note">Tanggal membatasi trade closed. Jumlah open dan draft memakai filter strategi/exit, tanpa batas tanggal exit.</p></section>
+    <ActualCohortFilters f={f} view="analytics" />
     <nav className="analytics-filter-row" aria-label="Filter cepat strategi">{[null, ...journalStrategies].map(s => <Link key={s ?? "all"} prefetch={false}
       href={"/analytics?tab=actual&" + journalFilterParams({ ...filters, strategy: s })} aria-current={filters.strategy === s ? "page" : undefined}>{s ? strategyLabels[s] : "Semua strategi"}</Link>)}</nav>
     <TradeDashboard report={report} f={f} />

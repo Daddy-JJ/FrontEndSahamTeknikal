@@ -23,6 +23,8 @@ export default async function PaperDetailPage({ params }: { params: Promise<{ id
     ["Fee jual", reportMoney(t.exit_fee_idr)], ["Total fee", reportMoney(t.fee_total_idr)],
     ["P&L net", reportMoney(t.realized_pnl_idr)], ["Realized R", reportRatio(t.realized_r) + " R"],
     ["Alasan", t.reason], ["Versi model", detail.model_version], ["Source digest", t.source_digest],
+    ["Eligibility statistik utama", t.metric_eligible === undefined ? "Backend belum menyediakan eligibility" : t.metric_eligible ? "Closed dinilai" : "Dikecualikan · " + (t.exclusion_reason ?? t.state)],
+    ["Cohort sumber", t.cohort ?? "Belum tersedia"], ["Holding · sesi", t.holding_sessions ?? null],
   ];
   return <JournalShell mode={owner.mode} activePage="journal">
     <Link className="journal-back" href={"/journal?tab=paper&exit_key=" + t.exit_key}>← Jurnal paper</Link>
