@@ -1,8 +1,9 @@
 import "server-only";
+import { cache } from "react";
 import { createClient, publicSupabaseConfig } from "@/lib/supabase/server";
 import { appDataMode, fixturePreviewAllowed } from "@/lib/data-mode";
 
-export async function journalOwner() {
+export const journalOwner = cache(async function journalOwner() {
   if (!publicSupabaseConfig()) return { kind: "unconfigured" as const };
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -27,7 +28,7 @@ export async function journalOwner() {
   }
   return { kind: "ready" as const, supabase, ownerId:user.id,
     mode: settings!.data_mode as "fixture" | "live" };
-}
+});
 
 export type ActualTrade = {
   id: string;
