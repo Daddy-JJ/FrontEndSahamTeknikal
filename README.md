@@ -1,3 +1,7 @@
+## Incident diagnostics release - 2026-10-13
+
+Compatible SQL012 diagnostics are released for Scanner, paper journal/details, Analytics and Operations: missing source fields/session, publication deadline, pinned historical attempt, attempted versus fully resolved processing, model-wide holds, stages/SHA/heartbeat/watchdog and economic versus persistence timestamps. Frontend formats canonical results without additional data requests, financial arithmetic or actual-ledger/CSV changes. Units40/browser192/typecheck/lint/build and public production smoke pass. Hosted owner-role payloads after catch-up/retry pass strict parsers; owner-browser remains unavailable. Backend source holds stay visible and do not become successful/no-signal results. Release and monitoring boundaries: [PLAN](PLAN.md).
+
 ## Remediation release verified - 2026-10-10
 
 Action: completed the authorized release after the backup/restore gate; applied the additive backend migration before the compatible frontend and verified the released runtime's recovery and retry behavior.
