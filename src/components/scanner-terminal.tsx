@@ -47,6 +47,13 @@ function Detail({ selection, run }: { selection: Selection; run: ScanRun }) {
     {selection.item.candidates.length ? selection.item.candidates.map(candidate =>
       <CandidateDetail key={candidate.strategy} candidate={candidate} named />
     ) : <p className="terminal-hold">Ditahan: {label(selection.item.status)}. Evaluasi strategi tidak tersedia pada snapshot.</p>}
+    {selection.item.diagnostics ? <section className="terminal-candidate"><h3>Diagnostik sumber</h3><dl className="terminal-audit">
+      <dt>Alasan backend</dt><dd>{label(selection.item.diagnostics.code)}</dd>
+      <dt>Sesi data yang diperlukan</dt><dd>{selection.item.diagnostics.session ?? "Belum diketahui"}</dd>
+      <dt>Field OHLCV hilang</dt><dd>{selection.item.diagnostics.missing_fields.length ? selection.item.diagnostics.missing_fields.join(", ") : "Tidak ada field hilang yang dilaporkan"}</dd>
+      <dt>Status recovery</dt><dd>{selection.item.diagnostics.recovery_status ? label(selection.item.diagnostics.recovery_status) : "Belum tersedia"}</dd>
+    </dl><p className="terminal-muted">Data yang belum valid tetap ditahan. Diagnostik ini berasal dari capture backend, bukan perhitungan ulang di browser.</p></section>
+      : <p className="terminal-muted">Rincian diagnostik sumber belum tersedia pada snapshot ini.</p>}
     <details className="terminal-source-audit"><summary>Audit snapshot</summary><dl className="terminal-audit"><dt>Sesi target run</dt><dd>{run.session_date}</dd><dt>Run</dt><dd>{run.id}</dd><dt>Run digest</dt><dd>{run.run_digest}</dd></dl>
     <p className="terminal-muted">Alasan dan aturan adalah snapshot backend. Tidak ada indikator yang dihitung ulang di browser.</p></details>
   </>;
@@ -133,7 +140,8 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       </div>
       <div className="terminal-run-line terminal-muted">
         <span>Snapshot <time dateTime={run.stored_at}>{storedWib} WIB</time></span>
-        <span>Window entry: {entryWindow === "elapsed" ? "berakhir · historis" : entryWindow === "open" ? "belum berakhir" : "belum tersedia"}</span>
+        <span>Batas publikasi forward: {entryWindow === "elapsed" ? "berakhir" : entryWindow === "open" ? "belum berakhir" : "belum tersedia"}</span>
+        {query.run && <span>Attempt tersimpan dipilih · refresh mempertahankan run ini</span>}
         <details className="terminal-run-detail"><summary>Detail run &amp; sumber</summary>
           <div className="terminal-run-audit">
             <dl className="terminal-audit">
@@ -145,7 +153,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
               <dt>Run</dt><dd>{run.id}</dd><dt>Run digest</dt><dd>{run.run_digest}</dd>
             </dl>
             <p>Tanggal target dan waktu penyimpanan/publikasi snapshot bukan bukti freshness provider. Fetch provider yang gagal kualitas tidak otomatis menjadi snapshot terbaru. Freshness input belum dapat diverifikasi dari metadata run yang tersedia.</p>
-            <p>Kalender dan window entry berasal dari backend, bukan tebakan hari kerja. Harga next-open dan biaya transaksi belum diketahui untuk draft aktual. Paper memakai asumsi fill close sinyal sesuai versi model jurnal. Halaman lanjutan memakai run immutable yang sama.</p>
+            <p>Kalender dan batas publikasi forward berasal dari backend, bukan tebakan hari kerja. Batas publikasi bukan jadwal fill paper. Harga next-open dan biaya transaksi belum diketahui untuk draft aktual. Paper memakai asumsi fill close sinyal sesuai versi model jurnal. Halaman lanjutan memakai run immutable yang sama.</p>
           </div>
         </details>
       </div>
@@ -164,7 +172,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       <Link prefetch={false} aria-current={section === "quality" ? "page" : undefined} href={scannerHref(run.id, "quality", 1, query)}>Quality dan alasan skip</Link>
     </nav>
     <p className="terminal-notice" role={run.status === "failed" ? "alert" : "status"}>
-      {run.status === "failed" ? "Run gagal: entry ditahan; ini bukan hasil tidak ada sinyal. " : run.status === "partial" ? "Evaluasi parsial: " + run.coverage_valid + " dari " + run.coverage_total + " ticker dievaluasi. " : ""}
+      {run.status === "failed" ? "Run gagal: publikasi sinyal baru ditahan; ini bukan hasil tidak ada sinyal. Paper dari sinyal sebelumnya tetap diproses jika datanya valid. " : run.status === "partial" ? "Evaluasi parsial: " + run.coverage_valid + " dari " + run.coverage_total + " ticker dievaluasi. " : ""}
       {rsHeld && "Ranking RS ditahan untuk seluruh cross-section. "}
       {entryWindow === "elapsed" && "Publikasi forward berakhir. Rencana paper tetap diproses EOD. "}
       Freshness input belum dapat diverifikasi.

@@ -39,6 +39,18 @@ test("skip snapshots cannot masquerade as evaluated candidates", () => {
   assert.equal(parseScanItem({ ...skip, snapshot: { ...skip.snapshot, ticker: "OTHER" } }), null);
 });
 
+test("quality diagnostics preserve canonical missing fields and reject malformed recovery metadata", () => {
+  const diagnostics = { contract_version: 1, code: "missing_close", session: "2026-10-12", missing_fields: ["close"], recovery_status: "exhausted" };
+  const item = { ticker: "TEST", status: "data_quality_hold", snapshot: { ticker: "TEST", status: "data_quality_hold", candidates: [], diagnostics } };
+  assert.deepEqual(parseScanItem(item).diagnostics, diagnostics);
+  assert.ok(parseScanItem({ ...item, snapshot: { ...item.snapshot, diagnostics: null } }));
+  for (const change of [{ contract_version: 2 }, { code: "https://provider.invalid/?token=private" },
+    { session: "2026-02-30" }, { missing_fields: ["close", "close"] }, { missing_fields: ["secret"] },
+    { recovery_status: "https://private.invalid" }, { missing_fields: "close" }]) {
+    assert.equal(parseScanItem({ ...item, snapshot: { ...item.snapshot, diagnostics: { ...diagnostics, ...change } } }), null);
+  }
+});
+
 test("optional signal detail metadata is validated without inventing unavailable values", () => {
   const detailed = { ...signal.signals, config_hash: "c".repeat(64), input_digest: "d".repeat(64),
     price_basis: "unadjusted", provider_version: "synthetic-test-only", engine_version: "synthetic-test-only",

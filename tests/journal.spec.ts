@@ -378,6 +378,10 @@ test("actual journal and analytics share canonical exit filters through refresh 
  expect(calls.some((c:{path:string})=>c.path.endsWith("actual_trades"))).toBe(false);
  await page.getByRole("link",{name:"Buka Analytics",exact:false}).click();
  await expect(page).toHaveURL(/tab=actual/);
+ // URL commit precedes the streamed RPC result. Finish this navigation before
+ // the next test resets the shared HTTP double's counters/scenario.
+ await expect(page.getByRole("heading",{name:"Ukur proses, baca hasil deterministik.",exact:true})).toBeVisible();
+ await expect(page.getByRole("region",{name:"Ringkasan performa net"})).toContainText("Rp1.000");
  expect(new URL(page.url()).searchParams.get("from")).toBe("2026-09-01");
  expect(new URL(page.url()).searchParams.get("exit_snapshot")).toBe("fixed2r");
 });

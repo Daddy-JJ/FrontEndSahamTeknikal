@@ -1,3 +1,13 @@
+## Approved P6–P8 incident remediation — 2026-10-13
+
+Status: VERIFIED LOCALLY; RELEASE IN PROGRESS under user-approved P1–P8 (`../docs/AUDIT_SCANNER_JOURNAL_20261013.md`), including commit/push/Production deployment and catch-up. Backend SQL012 must precede additive contract consumers. Routes, trading arithmetic, actual ledger/CSV, authentication and data requests remain canonical.
+
+Proof update: unit40, typecheck/lint/production build PASS; production-build Scanner72, journal69 and reporting51 desktop/mobile/tablet PASS. The late previous Analytics request in the shared mock was proved from its bounded cohort payload; navigation now waits for the destination heading and canonical result without weakening the invalid-filter assertion. SQL012 is applied; hosted read-only owner-role payloads pass strict parsers. Lease-stalled held/failed combinations are accepted, while failed-with-running without a recorded failure remains rejected. Edge/secret/extension provisioning is verified. Browser inventory is empty: authenticated hosted owner-browser remains NOT VERIFIED. Production deployment and catch-up gates follow.
+
+1. Action: accept additive, strictly validated diagnostics and attempted/resolved/oldest-unresolved health, held-count scope/breakdowns, watchdog status and economic-versus-processing timestamps; keep legacy payload compatibility. Proof: negative/relational parser regression tests against old and new payloads.
+2. Action: clarify production mode, publication deadline and pinned historical run; expose source missing-field/session detail and honest processing/backlog state in Scanner, journal, Analytics and Operations. Proof: browser desktop/mobile filters, navigation/refresh, detail, failure and unchanged financial output.
+3. Action: run unit, typecheck, lint, production build and relevant Playwright; inspect diff/secrets and release after backend capability. Proof: exact checks/SHAs/Vercel deployment/public smoke; authenticated owner verification separately labelled when unavailable.
+
 ## Remediation release verified - 2026-10-10
 
 Action: completed the authorized release after the backup/restore gate; applied the additive backend migration before the compatible frontend and verified the released runtime's recovery and retry behavior.

@@ -5,6 +5,25 @@ export const strategy = "MACD_EMA200_V1";
 export const summary = {closed:1,wins:1,losses:0,breakeven:0,net_pnl_idr:"1834875.00",win_rate:1,expectancy_idr:"1834875.00",expectancy_r:"1.941666666667",max_drawdown_idr:"0",profit_factor_idr:null,payoff_ratio_idr:null,profit_factor_state:"no_losses",payoff_ratio_state:"no_losses"};
 export const emptySummary = {closed:0,wins:0,losses:0,breakeven:0,net_pnl_idr:"0",win_rate:null,expectancy_idr:null,expectancy_r:null,max_drawdown_idr:"0",profit_factor_idr:null,payoff_ratio_idr:null,profit_factor_state:"no_closed",payoff_ratio_state:"no_closed"};
 export function healthFixture(scenario="ready") {
+ if(scenario==="health-runtime-stalled-hold"||scenario==="health-runtime-stalled-failed"){
+  const failed=scenario.endsWith("failed");
+  return {...healthFixture("health-current-hold"),status:failed?"failed":"data_hold",overdue:true,
+   latest_job_status:failed?"failed":"running",latest_job_phase:"job",failure_code:failed?"paper_data_hold":null,
+   runtime_heartbeat_at:"2026-10-12T20:20:00Z",runtime_stalled:true,operational_failure_code:"heartbeat_stalled"};
+ }
+ if(scenario==="health-runtime-stalled")return {...healthFixture(),status:"overdue",overdue:true,latest_job_status:"running",
+  latest_job_phase:"job",attempt_session:"2026-09-30",last_fully_resolved_session:"2026-09-30",earliest_unresolved_session:null,
+  trade_data_hold_count:0,evaluation_data_hold_count:0,filled_trade_data_hold_count:0,unfilled_trade_data_hold_count:0,
+  scope:"all_experiments_and_evaluations",runtime_heartbeat_at:"2026-09-30T12:00:00Z",runtime_stalled:true,
+  operational_failure_code:"heartbeat_stalled",latest_scanner_status:"succeeded",latest_publication_status:"skipped",latest_paper_status:null,
+  latest_job_run_id:"12345678901",latest_job_source_sha:"a".repeat(40),
+  watchdog:{enabled:true,last_checked_at:"2026-09-30T14:00:00Z",last_dispatch_at:null,last_dispatch_status:"skipped"}};
+ if(scenario==="health-current-hold")return {...healthFixture("health-failed"),expected_session:"2026-10-12",processed_session:"2026-10-12",
+  pending_entry_due:12,data_hold_count:29,held_since_session:"2026-10-12",checked_at:"2026-10-13T00:00:00Z",
+  last_attempt_at:"2026-10-12T20:27:30Z",failure_code:"zero_usable_coverage",attempt_session:"2026-10-12",
+  last_fully_resolved_session:"2026-10-09",earliest_unresolved_session:"2026-10-12",trade_data_hold_count:19,
+  evaluation_data_hold_count:10,filled_trade_data_hold_count:7,unfilled_trade_data_hold_count:12,scope:"all_experiments_and_evaluations",
+  next_eligible_processing_at:"2026-10-12T09:15:00Z",watchdog:{enabled:false,last_checked_at:null,last_dispatch_at:null,last_dispatch_status:null}};
  const overdue=["health-overdue","health-failed","health-data-hold"].includes(scenario);
  return {contract_version:1,data_mode:"fixture",model_version:modelVersion,expected_session:"2026-09-30",processed_session:scenario==="health-data-hold"?"2026-09-30":overdue?"2026-09-29":"2026-09-30",status:scenario==="health-data-hold"?"data_hold":scenario==="health-failed"?"failed":overdue?"overdue":"ready",overdue,pending_entry_due:overdue?4:0,data_hold_count:scenario==="health-data-hold"?1:0,held_since_session:scenario==="health-data-hold"?"2026-09-29":null,calendar_version:"SYNTHETIC-TEST-CALENDAR",checked_at:"2026-09-30T14:00:00Z",latest_job_status:scenario==="health-failed"?"failed":"succeeded",latest_job_phase:"paper",failure_code:scenario==="health-failed"?"provider_missing_bar":null,last_attempt_at:"2026-09-30T13:00:00Z"};
 }
@@ -80,9 +99,11 @@ export function detailFixture(body={},scenario="reporting-ready") {
   const t=tradeFixture();
   const ambiguous=scenario==="reporting-ambiguous";
   if(ambiguous)Object.assign(t,{state:"ambiguous_review",ambiguous:true,metric_eligible:false,exclusion_reason:"ambiguous",exit_price:null,realized_pnl_idr:null,realized_r:null});
-  return {contract_version:1,mode:"paper",data_mode:"fixture",model_version:modelVersion,
-    trade:{...t,id:body.p_trade_id??paperId,current_stop:"925",entry_fee_idr:"18900",exit_fee_idr:ambiguous?null:"36225",exit_mode:ambiguous?"fixed_rr":"ma_close",exit_key:ambiguous?"fixed2r":"ma10",target_price:ambiguous?"1150":null,config_snapshot:{entry_fill:"signal_close",max_risk_idr:1000000,buy_fee_bps:15,sell_fee_bps:25,slippage_bps:0,exit:ambiguous?{mode:"fixed_rr",target_r:2}:{mode:"ma_close",ma_type:"SMA",period:10}},source_digest:"b".repeat(64)},
-    events:[{event_id:"event-entry-v1",event_type:"entry",session_date:"2026-09-29",payload:{price:"1000"}},
-      ...(!ambiguous?[{event_id:"event-ma-v1",event_type:"pending_exit",session_date:"2026-09-29",payload:{reason:"ma_breakdown",close:"1001",ma_value:"1010"}}]:[]),
-      {event_id:"event-exit-v1",event_type:ambiguous?"ambiguous":"exit",session_date:"2026-09-30",payload:{reason:ambiguous?"dual_hit":"ma_close"}}]};
+   const processing=scenario==="detail-processing"?{processing:{contract_version:1,entry_processed_at:"2026-10-02T11:00:00Z",last_processed_session:"2026-09-30",earliest_unresolved_session:null}}:{};
+   const recorded=scenario==="detail-processing"?{recorded_at:"2026-10-02T11:00:00Z"}:{};
+   return {contract_version:1,mode:"paper",data_mode:"fixture",model_version:modelVersion,
+     trade:{...t,...processing,id:body.p_trade_id??paperId,current_stop:"925",entry_fee_idr:"18900",exit_fee_idr:ambiguous?null:"36225",exit_mode:ambiguous?"fixed_rr":"ma_close",exit_key:ambiguous?"fixed2r":"ma10",target_price:ambiguous?"1150":null,config_snapshot:{entry_fill:"signal_close",max_risk_idr:1000000,buy_fee_bps:15,sell_fee_bps:25,slippage_bps:0,exit:ambiguous?{mode:"fixed_rr",target_r:2}:{mode:"ma_close",ma_type:"SMA",period:10}},source_digest:"b".repeat(64)},
+     events:[{...recorded,event_id:"event-entry-v1",event_type:"entry",session_date:"2026-09-29",payload:{price:"1000"}},
+       ...(!ambiguous?[{...recorded,event_id:"event-ma-v1",event_type:"pending_exit",session_date:"2026-09-29",payload:{reason:"ma_breakdown",close:"1001",ma_value:"1010"}}]:[]),
+       {...recorded,event_id:"event-exit-v1",event_type:ambiguous?"ambiguous":"exit",session_date:"2026-09-30",payload:{reason:ambiguous?"dual_hit":"ma_close"}}]};
 }

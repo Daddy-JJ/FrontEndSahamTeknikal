@@ -26,6 +26,40 @@ test("failed latest run opens quality holds and traverses all100 items with boun
   const latest = calls.find((c: { path: string; query: { status?: string } }) => c.path.endsWith("scan_runs") && !c.query.status);
   expect(latest.query.order).toBe("session_date.desc,stored_at.desc,id.desc");
 });
+
+test("failed diagnostics explain missing close and pinned refresh preserves the selected attempt", async ({page,request}) => {
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"scanner-failed"}});
+  await page.goto(`/scanner?run=${runId}&section=quality&page=1`);
+  await expect(page.getByText("MODE PRODUKSI",{exact:true})).toBeVisible();
+  await expect(page.getByText("Attempt tersimpan dipilih · refresh mempertahankan run ini",{exact:true})).toBeVisible();
+  await expect(page.locator(".terminal-run")).toContainText("Batas publikasi forward");
+  await expect(page.locator(".terminal-notice")).toContainText("Paper dari sinyal sebelumnya tetap diproses jika datanya valid");
+  await page.getByRole("button",{name:"Detail TEST001",exact:true}).click();
+  const detail=page.locator("#scanner-detail");
+  await expect(detail.getByRole("heading",{name:"Diagnostik sumber"})).toBeVisible();
+  await expect(detail).toContainText("Harga close hilang");
+  await expect(detail).toContainText("Batas percobaan tercapai");
+  await expect(detail.locator("dd").filter({hasText:/^close$/})).toHaveCount(1);
+  await page.getByRole("button",{name:"Tutup detail TEST001",exact:true}).click();
+  await page.reload();
+  await expect(page.getByRole("heading",{name:"Scan gagal",exact:true})).toBeVisible();
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"scanner-complete"}});
+  await page.getByRole("link",{name:"Run terbaru ↗",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"Hasil scan diterbitkan",exact:true})).toBeVisible();
+  await expect(page.getByText("Attempt tersimpan dipilih · refresh mempertahankan run ini",{exact:true})).toHaveCount(0);
+  const {calls,mutations}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+  expect(mutations).toEqual([]);
+  expect(calls.filter((c:{path:string})=>c.path.endsWith("scan_run_signals"))).toHaveLength(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("invalid source diagnostic metadata fails the contract instead of showing a usable result",async({page,request})=>{
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"scanner-diagnostics-invalid"}});
+  await page.goto("/scanner");
+  await expect(page.getByRole("heading",{name:"Kontrak scanner belum dapat diverifikasi",exact:true})).toBeVisible();
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(page.getByText("private.invalid",{exact:false})).toHaveCount(0);
+});
 test.beforeEach(async ({ context, request }) => {
   await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-empty" } });
   const userId = "22222222-2222-4222-8222-222222222222";

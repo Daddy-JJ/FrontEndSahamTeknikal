@@ -94,7 +94,7 @@ function Freshness({ report }: { report: TradeReporting | SignalEvaluation }) {
         ? " · " + scanner.coverage_valid + "/" + scanner.coverage_total : ""}
       {scanner?.session_date ? " · sesi " + scanner.session_date : ""}
     </span>}
-    <span>{report.mode === "signal_evaluation" ? "Observasi" : "Jurnal"} sampai {report.as_of_session ?? "belum tersedia"} · diperbarui {report.updated_at ? new Date(report.updated_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB" : "belum tersedia"}</span>
+    <span>{report.mode === "signal_evaluation" ? "State observasi per sesi" : report.mode === "paper" ? "State jurnal per sesi" : "Laporan aktual per sesi"} {report.as_of_session ?? "belum tersedia"} · diperbarui {report.updated_at ? new Date(report.updated_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB" : "belum tersedia"}</span>
     <span className="reporting-version">{report.model_version ?? "ledger aktual"}</span>
   </div>;
 }

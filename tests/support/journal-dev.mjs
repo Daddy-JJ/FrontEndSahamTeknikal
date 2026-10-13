@@ -80,7 +80,7 @@ const server=createServer(async(req,res)=>{
     if(scenario==="operations-empty")return send(null);
     if(scenario==="scanner-empty" || url.searchParams.getAll("session_date").some(value=>value.startsWith("eq.") && value!=="eq.2026-09-28")) return send(null);
     const partial=["scanner-partial","scanner-recovery","scanner-terminal-matrix"].includes(scenario);
-    const failed=scenario==="scanner-failed";
+    const failed=["scanner-failed","scanner-diagnostics-invalid"].includes(scenario);
     const run={id:tradeId,namespace:"forward",data_mode:scenario==="scanner-mode-mismatch"?"fixture":"live",
       session_date:"2026-09-28",status:failed?"failed":partial?"partial":"complete",coverage_valid:failed?0:scenario==="scanner-recovery"?45:partial?99:100,
       coverage_total:100,stored_at:"2026-09-28T14:00:00Z",run_digest:"a".repeat(64),
@@ -96,7 +96,7 @@ const server=createServer(async(req,res)=>{
   if(url.pathname==="/rest/v1/scan_run_items") {
     const rows=Array.from({length:100},(_,i)=>{
       const ticker=`TEST${String(i+1).padStart(3,"0")}`;
-      const status=scenario==="scanner-recovery" ? (i<45?"evaluated":i<70?"corporate_action_hold":"data_quality_hold") : scenario==="scanner-failed"?"data_quality_hold":["scanner-partial","scanner-terminal-matrix"].includes(scenario) && i===0?"corporate_action_hold":"evaluated";
+      const status=scenario==="scanner-recovery" ? (i<45?"evaluated":i<70?"corporate_action_hold":"data_quality_hold") : ["scanner-failed","scanner-diagnostics-invalid"].includes(scenario)?"data_quality_hold":["scanner-partial","scanner-terminal-matrix"].includes(scenario) && i===0?"corporate_action_hold":"evaluated";
       return {ticker,status,snapshot:{ticker,status,candidates:status==="evaluated"?[
         {strategy:"MACD_EMA200_V1",triggered:false,reason:"insufficient_history",reference_close:100,stop:null},
         {strategy:"RS_BREAKOUT_V1",triggered:false,reason:"cross_section_incomplete",reference_close:100,stop:null},
@@ -104,7 +104,9 @@ const server=createServer(async(req,res)=>{
           {strategy:"FRACTAL_BREAKOUT_V1",triggered:true,reason:"eligible",reference_close:100,stop:95,rules:[{name:"close_above_fractal",passed:true}],level:98,pivot_date:"2026-09-23",available_session:"2026-09-25"},
           {strategy:"PULLBACK_RECLAIM_V1",triggered:false,reason:"no_signal",reference_close:100,stop:95,rules:[{name:"pullback_reclaim",passed:false}]}
         ] : []),
-      ]:[]}};
+      ]:[],...(["scanner-failed","scanner-diagnostics-invalid"].includes(scenario)?{diagnostics:{contract_version:1,
+        code:scenario==="scanner-diagnostics-invalid"?"https://private.invalid/?token=hidden":"missing_close",
+        session:"2026-09-28",missing_fields:["close"],recovery_status:"exhausted"}}:{})}};
     });
     return send(pageOf(url,rows));
   }
@@ -126,6 +128,7 @@ const server=createServer(async(req,res)=>{
   if(scenario==="schema-error") return send({code:"PGRST205",message:"synthetic missing migration"},404);
   if(url.pathname==="/rest/v1/rpc/read_trade_reporting_v1" || url.pathname==="/rest/v1/rpc/read_signal_evaluation_v1" || url.pathname==="/rest/v1/rpc/read_paper_trade_v1") {
     if(scenario==="reporting-unavailable" || scenario==="scanner-paper") return send({code:"PGRST202",message:"synthetic missing migration"},404);
+    if(scenario==="reporting-auth-error") return send({code:"42501",message:"synthetic authorization failure"},401);
     if(scenario==="reporting-error"||scenario==="trade-error") return send({code:"08006",message:"synthetic read failure"},503);
     if(scenario==="reporting-oracle")return send(oracleResponse(url.pathname.endsWith("read_signal_evaluation_v1")?"evaluation":url.pathname.endsWith("read_paper_trade_v1")?body.p_trade_id==="a-ma_close"?"detail_ma10":body.p_trade_id==="d-ma_close"?"detail_ma10_closed":"detail_fixed2r":body.p_mode==="actual"?"actual_reporting":body.p_exit_key==="ma10"?"reporting_ma10":"reporting_fixed2r"));
     const result=url.pathname.endsWith("read_signal_evaluation_v1") ? evaluationFixture(body,scenario) : url.pathname.endsWith("read_paper_trade_v1") ? detailFixture(body,scenario) : reportingFixture(body,scenario);

@@ -26,6 +26,14 @@ export type ProcessingHealth = {
   last_attempt_at: string | null;
   next_eligible_processing_at?: string | null;
   data_hold_count: number; held_since_session: string | null;
+  attempt_session?: string | null; last_fully_resolved_session?: string | null; earliest_unresolved_session?: string | null;
+  trade_data_hold_count?: number; evaluation_data_hold_count?: number;
+  filled_trade_data_hold_count?: number; unfilled_trade_data_hold_count?: number;
+  scope?: "all_experiments_and_evaluations";
+  latest_scanner_status?: string | null; latest_publication_status?: string | null; latest_paper_status?: string | null;
+  latest_job_run_id?: string | null; latest_job_source_sha?: string | null;
+  runtime_heartbeat_at?: string | null; runtime_stalled?: boolean; operational_failure_code?: "heartbeat_stalled" | null;
+  watchdog?: { enabled: boolean; last_checked_at: string | null; last_dispatch_at: string | null; last_dispatch_status: string | null } | null;
 };
 export type ReportingTrade = {
   id: string; ticker: string; strategy: string; state: string;
@@ -103,8 +111,10 @@ export type PaperTradeDetail = {
   trade: ReportingTrade & {
     current_stop: Decimal | null; entry_fee_idr: Decimal | null; exit_fee_idr: Decimal | null;
     exit_mode: string; exit_key: string; config_snapshot: Record<string, unknown>; source_digest: string | null;
+    processing?: { contract_version: 1; entry_processed_at: string | null; last_processed_session: string | null;
+      earliest_unresolved_session: string | null } | null;
   };
-  events: { event_id: string; event_type: string; session_date: string; payload: Record<string, unknown> }[];
+  events: { event_id: string; event_type: string; session_date: string; payload: Record<string, unknown>; recorded_at?: string | null }[];
 };
 function record(v: unknown): v is Record<string, unknown> { return v !== null && typeof v === "object" && !Array.isArray(v); }
 function count(v: unknown): v is number { return Number.isSafeInteger(v) && Number(v) >= 0; }
@@ -172,6 +182,35 @@ export function parseProcessingHealth(value: unknown, dataMode: "fixture" | "liv
   if (value.status === "calendar_unknown" && value.expected_session !== null) return null;
   if (value.status === "data_hold" && (value.data_hold_count === 0 || value.held_since_session === null)) return null;
   if (value.status === "ready" && value.data_hold_count !== 0) return null;
+  if (value.status === "failed" && value.latest_job_status !== "failed"
+    || value.failure_code !== null && value.latest_job_status !== "failed") return null;
+  if (["latest_scanner_status", "latest_publication_status", "latest_paper_status"].some(key => value[key] !== undefined
+    && value[key] !== null && !["running", "succeeded", "failed", "skipped"].includes(String(value[key])))
+    || value.latest_job_run_id !== undefined && value.latest_job_run_id !== null && (typeof value.latest_job_run_id !== "string" || !/^\d{1,30}$/.test(value.latest_job_run_id))
+    || value.latest_job_source_sha !== undefined && value.latest_job_source_sha !== null && (typeof value.latest_job_source_sha !== "string" || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(value.latest_job_source_sha))) return null;
+  const runtimeFields = ["runtime_heartbeat_at", "runtime_stalled", "operational_failure_code"];
+  if (runtimeFields.some(key => value[key] !== undefined)
+    && (!nullableTimestamp(value.runtime_heartbeat_at) || typeof value.runtime_stalled !== "boolean"
+      || value.operational_failure_code !== (value.runtime_stalled ? "heartbeat_stalled" : null)
+      || value.runtime_stalled && (value.runtime_heartbeat_at === null
+        || !["overdue", "data_hold", "failed"].includes(String(value.status)) || !value.overdue))) return null;
+  const completionFields = ["attempt_session", "last_fully_resolved_session", "earliest_unresolved_session", "scope",
+    "trade_data_hold_count", "evaluation_data_hold_count", "filled_trade_data_hold_count", "unfilled_trade_data_hold_count"];
+  if (completionFields.some(key => value[key] !== undefined)) {
+    if (value.scope !== "all_experiments_and_evaluations"
+      || !["attempt_session", "last_fully_resolved_session", "earliest_unresolved_session"].every(key => nullableDate(value[key]))
+      || !["trade_data_hold_count", "evaluation_data_hold_count", "filled_trade_data_hold_count", "unfilled_trade_data_hold_count"].every(key => count(value[key]))
+      || value.attempt_session !== value.processed_session
+      || Number(value.trade_data_hold_count) + Number(value.evaluation_data_hold_count) !== value.data_hold_count
+      || Number(value.filled_trade_data_hold_count) + Number(value.unfilled_trade_data_hold_count) !== value.trade_data_hold_count
+      || value.last_fully_resolved_session !== null && (value.attempt_session === null || String(value.last_fully_resolved_session) > String(value.attempt_session)
+        || value.earliest_unresolved_session !== null && String(value.last_fully_resolved_session) >= String(value.earliest_unresolved_session))
+      || value.status === "ready" && value.earliest_unresolved_session !== null && String(value.earliest_unresolved_session) <= String(value.expected_session)) return null;
+  }
+  if (value.watchdog != null && (!record(value.watchdog) || typeof value.watchdog.enabled !== "boolean"
+    || !nullableTimestamp(value.watchdog.last_checked_at) || !nullableTimestamp(value.watchdog.last_dispatch_at)
+    || value.watchdog.last_dispatch_status !== null && (typeof value.watchdog.last_dispatch_status !== "string"
+      || !/^[a-z][a-z0-9_:-]{0,99}$/.test(value.watchdog.last_dispatch_status)))) return null;
   return value as ProcessingHealth;
 }
 function ratioFields(v: Record<string, unknown>) {
@@ -290,6 +329,11 @@ export function parsePaperTradeDetail(value: unknown, dataMode: "fixture" | "liv
     || (value.trade.exit_key === "ma10" ? value.trade.target_price !== null
       : value.trade.target_price !== null && Number(value.trade.target_price) <= Number(value.trade.entry_price))
     || !record(value.trade.config_snapshot) || !nullableString(value.trade.source_digest) || !Array.isArray(value.events)) return null;
-  if (value.events.some(e => !record(e) || typeof e.event_id !== "string" || typeof e.event_type !== "string" || !date(e.session_date) || !record(e.payload))) return null;
+  const processing = value.trade.processing;
+  if (processing != null && (!record(processing) || processing.contract_version !== 1
+    || !nullableTimestamp(processing.entry_processed_at) || !nullableDate(processing.last_processed_session)
+    || !nullableDate(processing.earliest_unresolved_session))) return null;
+  if (value.events.some(e => !record(e) || typeof e.event_id !== "string" || typeof e.event_type !== "string" || !date(e.session_date) || !record(e.payload)
+    || e.recorded_at !== undefined && !nullableTimestamp(e.recorded_at))) return null;
   return value as PaperTradeDetail;
 }

@@ -127,6 +127,61 @@ test("processing-health readiness cannot claim an overdue or unknown calendar ch
  assert.equal(parseProcessingHealth({...health,next_eligible_processing_at:"not-a-timestamp"},"fixture"),null);
  const overdue=healthFixture("health-overdue");assert.equal(parseProcessingHealth(overdue,"fixture"),overdue);
 });
+
+test("processing health separates attempted sessions, unresolved objects and experiment scope",()=>{
+ const base=healthFixture("health-failed");
+ const health={...base,processed_session:"2026-10-12",expected_session:"2026-10-12",pending_entry_due:12,
+  checked_at:"2026-10-13T00:00:00Z",last_attempt_at:"2026-10-12T20:27:30Z",failure_code:"zero_usable_coverage",
+  data_hold_count:29,held_since_session:"2026-10-12",attempt_session:"2026-10-12",last_fully_resolved_session:"2026-10-09",
+  earliest_unresolved_session:"2026-10-12",trade_data_hold_count:19,evaluation_data_hold_count:10,
+  filled_trade_data_hold_count:7,unfilled_trade_data_hold_count:12,scope:"all_experiments_and_evaluations",
+  watchdog:{enabled:true,last_checked_at:"2026-10-13T00:00:00Z",last_dispatch_at:null,last_dispatch_status:null}};
+ assert.equal(parseProcessingHealth(health,"fixture"),health);
+ for(const change of [{scope:"selected_experiment"},{trade_data_hold_count:18},{filled_trade_data_hold_count:8},
+  {attempt_session:"2026-10-09"},{last_fully_resolved_session:"2026-10-13"},{earliest_unresolved_session:"2026-10-09"},
+  {status:"ready",overdue:false},{latest_job_status:"succeeded"},
+  {watchdog:{...health.watchdog,enabled:"true"}},{watchdog:{...health.watchdog,last_dispatch_at:"invalid"}},
+  {watchdog:{...health.watchdog,last_dispatch_status:"https://token.invalid"}}]) {
+  assert.equal(parseProcessingHealth({...health,...change},"fixture"),null,JSON.stringify(change));
+ }
+ const partial={...health};delete partial.trade_data_hold_count;
+ assert.equal(parseProcessingHealth(partial,"fixture"),null);
+ const ready={...healthFixture(),attempt_session:"2026-09-30",last_fully_resolved_session:"2026-09-30",
+  earliest_unresolved_session:"2026-10-01",trade_data_hold_count:0,evaluation_data_hold_count:0,
+  filled_trade_data_hold_count:0,unfilled_trade_data_hold_count:0,scope:"all_experiments_and_evaluations",pending_entry_due:2};
+ assert.equal(parseProcessingHealth(ready,"fixture"),ready);
+});
+test("stalled runtime is operational overdue without inventing a terminal job failure",()=>{
+ const health={...healthFixture(),status:"overdue",overdue:true,latest_job_status:"running",latest_job_phase:"job",
+  attempt_session:"2026-09-30",last_fully_resolved_session:"2026-09-30",earliest_unresolved_session:null,
+  trade_data_hold_count:0,evaluation_data_hold_count:0,filled_trade_data_hold_count:0,unfilled_trade_data_hold_count:0,
+  scope:"all_experiments_and_evaluations",runtime_heartbeat_at:"2026-09-30T12:00:00Z",runtime_stalled:true,
+  operational_failure_code:"heartbeat_stalled",latest_scanner_status:"succeeded",latest_publication_status:"skipped",
+  latest_paper_status:null,latest_job_run_id:"12345678901",latest_job_source_sha:"a".repeat(40),
+  watchdog:{enabled:true,last_checked_at:"2026-09-30T14:00:00Z",last_dispatch_at:null,last_dispatch_status:"skipped"}};
+ assert.equal(parseProcessingHealth(health,"fixture"),health);
+ assert.equal(health.latest_job_status,"running");
+ assert.equal(health.failure_code,null);
+ for(const change of [{status:"failed"},{status:"ready",overdue:false},{overdue:false},{runtime_stalled:"true"},
+  {runtime_heartbeat_at:null},{operational_failure_code:null},{runtime_stalled:false},{latest_paper_status:"success"},
+  {latest_job_run_id:"https://token.invalid"},{latest_job_source_sha:"not-a-sha"},{failure_code:"heartbeat_stalled"}])
+  assert.equal(parseProcessingHealth({...health,...change},"fixture"),null,JSON.stringify(change));
+ const partial={...health};delete partial.operational_failure_code;
+ assert.equal(parseProcessingHealth(partial,"fixture"),null);
+ const invalidFailed={...healthFixture("health-failed"),latest_job_status:"running"};
+ assert.equal(parseProcessingHealth(invalidFailed,"fixture"),null);
+ const overlap={...health,status:"ready",overdue:false,latest_job_status:"skipped",runtime_stalled:false,
+  runtime_heartbeat_at:null,operational_failure_code:null};
+ assert.equal(parseProcessingHealth(overlap,"fixture"),overlap);
+ const held={...health,status:"data_hold",data_hold_count:29,held_since_session:"2026-09-30",
+  last_fully_resolved_session:"2026-09-29",earliest_unresolved_session:"2026-09-30",
+  trade_data_hold_count:19,evaluation_data_hold_count:10,filled_trade_data_hold_count:7,
+  unfilled_trade_data_hold_count:12};
+ assert.equal(parseProcessingHealth(held,"fixture"),held);
+ const failed={...held,status:"failed",latest_job_status:"failed",failure_code:"paper_data_hold"};
+ assert.equal(parseProcessingHealth(failed,"fixture"),failed);
+ assert.equal(parseProcessingHealth({...failed,latest_job_status:"running"},"fixture"),null);
+});
 test("evaluation keeps denominator and unavailable counts separate",()=>{
  const data=evaluationFixture();
  assert.equal(data.strategies[0].cells.net_5.assessed,2);
@@ -140,6 +195,20 @@ test("paper detail is owner mode and model bound including audit event payload",
  assert.equal(parsePaperTradeDetail(detail,"live",paperId),null);
  assert.equal(parsePaperTradeDetail(detail,"fixture","other-id"),null);
  assert.equal(parsePaperTradeDetail({...detail,events:[{...detail.events[0],session_date:"2026-02-30"}]},"fixture",paperId),null);
+});
+
+test("paper detail keeps economic sessions separate from optional processing timestamps",()=>{
+ const detail=detailFixture();
+ detail.trade.processing={contract_version:1,entry_processed_at:"2026-10-02T11:00:00Z",last_processed_session:"2026-09-30",earliest_unresolved_session:null};
+ detail.events=detail.events.map(e=>({...e,recorded_at:"2026-10-02T11:00:00Z"}));
+ assert.equal(parsePaperTradeDetail(detail,"fixture",paperId),detail);
+ assert.equal(detail.trade.entry_session,"2026-09-29");
+ assert.equal(detail.events[0].session_date,"2026-09-29");
+ for(const processing of [{...detail.trade.processing,entry_processed_at:"2026-10-02"},
+  {...detail.trade.processing,contract_version:2},{...detail.trade.processing,last_processed_session:"2026-02-30"}]) {
+  assert.equal(parsePaperTradeDetail({...detail,trade:{...detail.trade,processing}},"fixture",paperId),null);
+ }
+ assert.equal(parsePaperTradeDetail({...detail,events:[{...detail.events[0],recorded_at:"not-a-time"}]},"fixture",paperId),null);
 });
 
 test("optional scanner coverage is distinct from journal completeness and remains backwards compatible",()=>{

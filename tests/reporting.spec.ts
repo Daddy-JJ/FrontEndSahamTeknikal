@@ -202,3 +202,84 @@ test("operations read failure is distinct from empty run history",async({page,re
  await expect(page.getByText("Belum ada snapshot run forward",{exact:false})).toBeVisible();
  await expect(page.locator(".journal-panel [role=alert]")).toHaveCount(0);
 });
+
+test("current persisted attempt still exposes unresolved data and full model scope without future scheduling promises",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"health-current-hold"}});
+ await page.goto("/operations");
+ const health=page.locator('[data-processing-health="failed"]');
+ await expect(health.getByRole("heading",{name:"Pemrosesan gagal",exact:true})).toBeVisible();
+ await expect(health).toContainText("Filter tabel tidak membatasi jumlah di panel ini");
+ for(const [label,value]of [["Sesi state terakhir tersimpan · bukan bukti seluruh data selesai","2026-10-12"],
+  ["Sesi terakhir seluruh objek selesai","2026-10-09"],["Sesi paling awal yang masih memerlukan data","2026-10-12"],
+  ["Trade dengan data tertahan","19"],["Trade sudah entry, evaluasi tertahan","7"],
+  ["Trade belum entry, data tertahan","12"],["Observasi sinyal dengan data tertahan","10"]]){
+  await expect(health.locator(".journal-facts > div").filter({has:page.getByText(label,{exact:true})}).locator("dd")).toHaveText(value);
+ }
+ await expect(health).toContainText("Waktu close untuk data yang diperlukan · bukan jadwal job");
+ await expect(page.getByText("Evaluasi berikutnya tersedia setelah close",{exact:true})).toHaveCount(0);
+ await health.getByText("Pemantauan cloud",{exact:true}).click();
+  await expect(health).toContainText("Nonaktif");
+ await page.reload();
+ await expect(page.locator('[data-processing-health="failed"]')).toContainText("Masih ada sesi wajib atau objek yang belum selesai");
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const {calls,mutations}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+ expect(mutations).toEqual([]);
+ expect(calls.filter((c:{path:string})=>c.path.endsWith("read_paper_processing_health_v1"))).toHaveLength(2);
+});
+
+test("detail keeps economic entry unchanged when backend processing is recorded later",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"detail-processing"}});
+ await page.goto("/journal/paper/paper-test-v1");
+ const facts=page.locator(".reporting-stack > section").first().locator(".journal-facts");
+ await expect(facts.locator("div").filter({has:page.getByText("Sesi entry ekonomi · tanggal rencana",{exact:true})}).locator("dd")).toHaveText("2026-09-29");
+ await expect(facts.locator("div").filter({has:page.getByText("Waktu fill entry dicatat oleh backend",{exact:true})}).locator("dd")).toContainText("2/10/2026");
+ await expect(page.locator(".reporting-events li").first()).toContainText("Sesi ekonomi 2026-09-29");
+ await expect(page.locator(".reporting-events li").first()).toContainText("2/10/2026");
+ await expect(facts).toContainText("Rp1.834.875");
+ await page.reload();
+ await expect(page.locator(".reporting-events strong")).toHaveText(["entry","pending_exit","exit"]);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("reporting authorization error never becomes zero statistics or an empty book",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"reporting-auth-error"}});
+ await page.goto("/analytics?tab=paper");
+ await expect(page.getByRole("heading",{name:"Reporting belum dapat dibaca",exact:true})).toBeVisible();
+ await expect(page.locator(".analytics-stat-card,.analytics-stat-card strong,.analytics-hero-stats")).toHaveCount(0);
+ await expect(page.getByText("Belum ada transaksi pada halaman ini",{exact:true})).toHaveCount(0);
+});
+
+test("stalled heartbeat remains separate from resolved economic sessions and recorded job status",async({page,request})=>{
+ await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"health-runtime-stalled"}});
+ await page.goto("/operations");
+ const health=page.locator('[data-processing-health="overdue"]');
+ await expect(health.getByRole("heading",{name:"Pemrosesan terlambat",exact:true})).toBeVisible();
+ for(const [label,value]of [["Status job terakhir","running · job"],["Sesi terakhir seluruh objek selesai","2026-09-30"],
+  ["Sesi paling awal yang masih memerlukan data","Tidak ada sesi tertahan yang dilaporkan"],
+  ["Tahap scanner · job yang sama","succeeded"],["Tahap publikasi · job yang sama","skipped"],["Tahap paper · job yang sama","Belum dicatat"]])
+  await expect(health.locator(".journal-facts > div").filter({has:page.getByText(label,{exact:true})}).locator("dd")).toHaveText(value);
+ await expect(health).toContainText("Heartbeat pemrosesan berhenti; pemulihan masih diperlukan");
+ await expect(health).toContainText("status job tetap sesuai event tersimpan");
+ await expect(health.getByText("Alasan kegagalan",{exact:true})).toHaveCount(0);
+ await health.getByText("Pemantauan cloud",{exact:true}).click();
+ await expect(health.locator("details")).toContainText("skipped");
+ await page.reload();
+ await expect(page.locator('[data-processing-health="overdue"]')).toContainText("Sesi ekonomi yang selesai tetap dipertahankan");
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const {calls,mutations}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
+ expect(mutations).toEqual([]);
+ expect(calls.filter((c:{path:string})=>c.path.endsWith("read_paper_processing_health_v1"))).toHaveLength(2);
+});
+
+test("stalled runtime preserves held data and actual recorded failure outcomes",async({page,request})=>{
+ for(const [scenario,status,job]of [["health-runtime-stalled-hold","data_hold","running"],["health-runtime-stalled-failed","failed","failed"]]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+  await page.goto("/operations");
+  const health=page.locator(`[data-processing-health="${status}"]`);
+  await expect(health).toBeVisible();
+  await expect(health).toContainText("Heartbeat pemrosesan berhenti");
+  await expect(health.locator(".journal-facts > div").filter({has:page.getByText("Status job terakhir",{exact:true})}).locator("dd")).toContainText(job);
+  await expect(health.locator(".journal-facts > div").filter({has:page.getByText("Total objek dengan data tertahan",{exact:true})}).locator("dd")).toContainText("29");
+  await expect(page.getByText("Status pemrosesan belum dapat dibaca",{exact:true})).toHaveCount(0);
+ }
+});

@@ -17,7 +17,11 @@ export type ScanCandidate = {
   rules?: { name: string; passed: boolean }[];
   level?: number | null; pivot_date?: string | null; available_session?: string | null;
 };
-export type ScanItem = { ticker: string; status: string; candidates: ScanCandidate[] };
+export type ScanDiagnostics = {
+  contract_version: 1; code: string; session: string | null;
+  missing_fields: string[]; recovery_status: string | null;
+};
+export type ScanItem = { ticker: string; status: string; candidates: ScanCandidate[]; diagnostics?: ScanDiagnostics | null };
 export type PublishedSignal = {
   id: string; namespace: string; data_mode: "live" | "fixture";
   ticker: string; strategy: string; session_date: string; planned_entry_session: string;
@@ -93,7 +97,16 @@ export function parseScanItem(value: unknown): ScanItem | null {
   const candidates = value.snapshot.candidates.map(candidate);
   if (candidates.some(c => c === null) || new Set(candidates.map(c => c?.strategy)).size !== candidates.length
     || (value.status !== "evaluated" && candidates.length !== 0)) return null;
-  return { ticker: value.ticker, status: value.status, candidates: candidates as ScanCandidate[] };
+  const diagnostics = value.snapshot.diagnostics;
+  const safeCode = (v: unknown) => typeof v === "string" && /^[a-z][a-z0-9_:-]{0,99}$/.test(v);
+  if (diagnostics != null && (!object(diagnostics) || diagnostics.contract_version !== 1 || !safeCode(diagnostics.code)
+    || (diagnostics.session !== null && !date(diagnostics.session))
+    || !Array.isArray(diagnostics.missing_fields) || diagnostics.missing_fields.length > 5
+    || diagnostics.missing_fields.some(field => typeof field !== "string" || !["open", "high", "low", "close", "volume"].includes(field.toLowerCase()))
+    || new Set(diagnostics.missing_fields.map(field => String(field).toLowerCase())).size !== diagnostics.missing_fields.length
+    || (diagnostics.recovery_status !== null && !safeCode(diagnostics.recovery_status)))) return null;
+  return { ticker: value.ticker, status: value.status, candidates: candidates as ScanCandidate[],
+    ...(diagnostics === undefined ? {} : { diagnostics: diagnostics as ScanDiagnostics | null }) };
 }
 export function parsePublishedSignal(value: unknown, run: ScanRun): PublishedSignal | null {
   if (!object(value) || !object(value.signals)) return null;
@@ -129,4 +142,8 @@ export const scanReasonLabels: Record<string, string> = {
   history_gap: "Gap histori", no_signal: "Aturan belum terpenuhi", eligible: "Memenuhi aturan",
   insufficient_history: "Histori belum mencukupi", cross_section_incomplete: "RS ditahan: cross-section belum lengkap",
   missing_stop: "Stop belum tersedia menurut backend", stop_invalid: "Stop tidak valid menurut backend", invalid_stop: "Stop tidak valid menurut backend",
+  missing_close: "Harga close hilang", missing_ohlcv_fields: "Field OHLCV belum lengkap", incomplete_ohlcv: "OHLCV tidak lengkap", target_bar_incomplete: "Candle sesi target tidak lengkap",
+  target_invalid: "Data sesi target tidak valid", history_invalid: "Histori tidak valid", transport_failed: "Pengambilan sumber gagal",
+  exhausted: "Batas percobaan tercapai", recovered: "Pulih dengan data terverifikasi", unresolved: "Data belum pulih", accepted: "Data recovery diterima",
+  not_needed: "Recovery tidak diperlukan", not_attempted: "Recovery belum dicoba", conflict: "Data sumber berbeda", rejected: "Data recovery ditolak",
 };
