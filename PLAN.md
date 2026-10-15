@@ -1,3 +1,12 @@
+## Chart V1 — owner-authorized release exception, 2026-10-15
+
+Action: release existing tested chart frontend after backend capability/canary. Owner explicitly permits
+skipping fresh full backup and populated restore rehearsal for this release, with no Supabase upgrade.
+Retain migration checksum, unchanged economic/reporting checks, owner ACL, cloud artifact and exact SHA
+deployment smoke. Backup/restore are SKIPPED_OWNER_WAIVER, not PASS; data recovery is not established.
+Proof: existing local gates remain documented; live release checks pending. Rollback uses previous
+verified frontend and disables chart job, preserving additive schema and journal data.
+
 ## Chart V1 — Tahap 6 authorized preparation, 2026-10-15
 
 Action: finish chart integration/regression and prepare backend-first rollout requested by the user.
