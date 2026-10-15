@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ChartPanel } from "@/components/chart-panel";
 import { chartIndicators } from "@/lib/chart-navigation";
 import { scannerDetailHref, resolveScannerSelection, scannerChartRequest, type ScannerSelection, type ScannerPanel } from "@/lib/scanner-detail";
@@ -78,6 +78,9 @@ function Detail({ selection, run }: { selection: Selection; run: ScanRun }) {
       <dt>Tanggal sinyal</dt><dd>{signal.session_date}</dd>
       <dt>Target Entry</dt><dd>{signal.planned_entry_session}</dd>
       <dt>Dipublikasikan (UTC)</dt><dd><time dateTime={signal.published_at}>{signal.published_at}</time></dd>
+    </dl>
+    <details className="terminal-source-audit"><summary>Audit snapshot sinyal</summary>
+    <dl className="terminal-audit">
       <dt>Provider / versi</dt><dd>{signal.provider} / {signal.provider_version ?? "Tidak tersedia"}</dd>
       <dt>Price basis</dt><dd>{signal.price_basis ?? "Tidak tersedia"}</dd>
       <dt>Universe / kalender</dt><dd>{signal.universe_version} / {signal.calendar_version}</dd>
@@ -85,6 +88,7 @@ function Detail({ selection, run }: { selection: Selection; run: ScanRun }) {
       <dt>Config hash</dt><dd>{signal.config_hash ?? "Tidak tersedia"}</dd>
       <dt>Input digest</dt><dd>{signal.input_digest ?? "Tidak tersedia"}</dd>
     </dl>
+    </details>
     <p className="terminal-muted">Pivot date berbeda dari waktu informasi tersedia. Metadata publikasi bukan bukti freshness input.</p>
     {signal.cohort === "forward" && <>
       <Link prefetch={false} className="terminal-action" href={"/journal?signal_id=" + signal.id}>Buat draft aktual</Link>
@@ -103,10 +107,37 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
   const lastPanel = useRef<ScannerPanel>(query.panel ?? "reasons");
   const drawer = useSyncExternalStore(subscribeDrawer, drawerSnapshot, () => false);
   const clientReady = useSyncExternalStore(subscribeClientReady, () => true, () => false);
+  const [expanded, setExpanded] = useState(false);
+  const [selectionOpen, setSelectionOpen] = useState(Boolean(selection));
+  // History may close the detail without invoking the close button.
+  if (selectionOpen !== Boolean(selection)) {
+    setSelectionOpen(Boolean(selection));
+    if (!selection) setExpanded(false);
+  }
   const dialog = useRef<HTMLDialogElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLButtonElement | null>(null);
   const terminal = useRef<HTMLDivElement>(null);
+  const workspace = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const target = workspace.current;
+    if (!target || !terminal.current) return;
+    let frame = 0;
+    const measure = () => {
+      const top = target.getBoundingClientRect().top + window.scrollY;
+      const height = Math.max(320, Math.floor(window.innerHeight - top - 16));
+      const value = `${height}px`;
+      if (target.style.getPropertyValue("--scanner-workspace-height") !== value) {
+        target.style.setProperty("--scanner-workspace-height", value);
+      }
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    const observer = new ResizeObserver(schedule);
+    observer.observe(terminal.current);
+    window.addEventListener("resize", schedule);
+    schedule();
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener("resize", schedule); };
+  }, []);
   const scrollKey = scannerScrollKey(run.id, section, run.data_mode, query);
   const rememberScroll = () => {
     const matrix = terminal.current?.querySelector<HTMLElement>(".terminal-matrix");
@@ -131,14 +162,24 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
   const storedWib = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "medium", timeStyle: "medium", hourCycle: "h23" }).format(new Date(run.stored_at));
   const close = useCallback(() => {
     dialog.current?.close();
+    setExpanded(false);
     window.history.replaceState(null, "", scannerDetailHref(run.id, section, query, null));
     opener.current?.focus();
   }, [run.id, section, query]);
   const selectionIdentity = selection?.kind === "quality" ? selection.item.ticker : selection?.signal.id;
+  const previousSelection = useRef<string | undefined>(undefined);
   useEffect(() => {
+    const changed = previousSelection.current !== selectionIdentity;
+    previousSelection.current = selectionIdentity;
     if (!selectionIdentity) { dialog.current?.close(); opener.current?.focus(); return; }
-    if (drawer) dialog.current?.showModal();
-    else { dialog.current?.close(); detailHeading.current?.focus(); }
+    const pane = dialog.current;
+    if (!pane) return;
+    if (changed) pane.querySelector('[role="tabpanel"]')?.scrollTo({ top: 0 });
+    // A single dialog stays mounted: show() is an in-grid desktop detail,
+    // showModal() gives native inert/focus behavior on smaller screens.
+    if (pane.open && pane.matches(":modal") !== drawer) pane.close();
+    if (!pane.open) { if (drawer) pane.showModal(); else pane.show(); }
+    detailHeading.current?.focus({ preventScroll: true });
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !drawer) close();
     };
@@ -153,6 +194,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
   };
   const selectPanel = (next: ScannerPanel) => {
     if (!selection) return;
+    dialog.current?.querySelector('[role="tabpanel"]')?.scrollTo({ top: 0 });
     lastPanel.current = next;
     window.history.replaceState(null, "", scannerDetailHref(run.id, section, query, selection, next));
   };
@@ -168,8 +210,11 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
   };
   const detailContent = selection && <>
     <div className="terminal-detail-heading">
-      <div><span className="terminal-kicker">SNAPSHOT BACKEND</span><h2 ref={drawer ? undefined : detailHeading} tabIndex={-1} id={drawer ? "scanner-drawer-title" : "scanner-pane-title"}>Detail {ticker}</h2></div>
-      <button type="button" onClick={close} aria-label={"Tutup detail " + ticker}>Tutup <span aria-hidden="true">×</span></button>
+      <div><span className="terminal-kicker">SNAPSHOT BACKEND</span><h2 ref={detailHeading} tabIndex={-1} id="scanner-pane-title">Detail {ticker}</h2></div>
+      <div className="terminal-detail-actions">
+        {!drawer && <button type="button" aria-pressed={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? "Kembali 50:50" : "Perbesar detail"}</button>}
+        <button type="button" onClick={close} aria-label={(drawer ? "Kembali ke daftar, tutup detail " : "Tutup detail ") + ticker}>{drawer ? "Kembali ke daftar" : "Tutup"} <span aria-hidden="true">×</span></button>
+      </div>
     </div>
     <div className="terminal-detail-tabs" role="tablist" aria-label="Isi detail emiten" onKeyDown={event => {
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
@@ -182,7 +227,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       {([["reasons", "Alasan sinyal"], ["chart", "Chart"], ["source", "Data & sumber"]] as const).map(([key, name]) =>
         <button key={key} role="tab" id={`scanner-tab-${key}`} aria-selected={panel === key} aria-controls={`scanner-panel-${key}`} tabIndex={panel === key ? 0 : -1} type="button" onClick={() => selectPanel(key)}>{name}</button>)}
     </div>
-    <div role="tabpanel" id={`scanner-panel-${panel}`} aria-labelledby={`scanner-tab-${panel}`}>
+    <div role="tabpanel" tabIndex={0} id={`scanner-panel-${panel}`} aria-labelledby={`scanner-tab-${panel}`}>
       {panel === "reasons" ? <Detail selection={selection} run={run} /> : panel === "source" ? <section>
         <h3>Sumber keputusan tersimpan</h3>
         <dl className="terminal-audit"><dt>Sesi run</dt><dd>{run.session_date}</dd><dt>Run</dt><dd>{run.id}</dd><dt>Run digest</dt><dd>{run.run_digest}</dd>
@@ -249,8 +294,8 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       Freshness input belum dapat diverifikasi.
     </p>
     {urlQuery.detail && !selection && <p className="terminal-notice" role="status">Detail yang dipilih tidak tersedia pada halaman ini. Pilih emiten pada daftar atau ubah halaman; chart tidak mengambil konteks lain sebagai pengganti.</p>}
-    <div className={"terminal-workspace " + (selection && !drawer ? "has-detail" + (panel === "chart" ? " has-chart" : "") : "")}>
-      <section className="terminal-results" aria-label="Hasil scanner">
+    <div ref={workspace} className={"terminal-workspace " + (selection && !drawer ? "has-detail" + (expanded ? " detail-expanded" : "") : "")}>
+      <section className="terminal-results" aria-label="Hasil scanner" hidden={Boolean(selection && !drawer && expanded)}>
         <div className="terminal-results-heading">
           <h2>{section === "quality" ? "Evaluasi Konstituen Universe" : "Sinyal Diterbitkan"}</h2>
           <span>{section === "quality" ? "Matriks kualitas & strategi" : signals.length + " sinyal pada halaman ini"}</span>
@@ -291,15 +336,14 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
           {hasMore && query.page < 40 && <Link prefetch={false} href={scannerHref(run.id, section, query.page + 1, query)}>Berikutnya →</Link>}
         </nav>
       </section>
-      {selection && !drawer && <aside id="scanner-detail" className="terminal-detail" aria-labelledby="scanner-pane-title">{detailContent}</aside>}
-    </div>
-    <dialog ref={dialog} id={drawer ? "scanner-detail" : undefined} className={"terminal-detail terminal-dialog" + (panel === "chart" ? " terminal-chart-dialog" : "")} aria-labelledby="scanner-drawer-title" onKeyDown={event => {
-      if (event.key !== "Tab") return;
+    <dialog ref={dialog} id="scanner-detail" className="terminal-detail terminal-dialog" aria-labelledby="scanner-pane-title" onKeyDown={event => {
+      if (!drawer || event.key !== "Tab") return;
       const elements = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]):not([tabindex="-1"]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],summary,[tabindex="0"]')).filter(element => element.getClientRects().length > 0);
       const first = elements[0], last = elements.at(-1);
       if (!first || !last) return;
       if (event.shiftKey && (document.activeElement === first || !event.currentTarget.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && (document.activeElement === last || !event.currentTarget.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
-    }} onCancel={event => { event.preventDefault(); close(); }}>{drawer && detailContent}</dialog>
+    }} onCancel={event => { event.preventDefault(); close(); }}>{detailContent}</dialog>
+    </div>
   </div>;
 }

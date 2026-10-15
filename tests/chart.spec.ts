@@ -16,6 +16,67 @@ const codes = [
   "UPSTREAM_ERROR",
   "INTERNAL_ERROR",
 ];
+test('manual zoom survives indicator toggles and container resizing', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/dev/chart?scenario=perf500');
+  await page.getByRole('button', { name: 'Buka chart', exact: true }).click();
+  const canvas = page.getByTestId('chart-canvas');
+  const range = page.getByLabel('Rentang waktu terlihat', { exact: true });
+  await expect(canvas).toBeVisible();
+  await expect(range).toContainText(/\d{4}-\d{2}-\d{2}/);
+  const initial = await range.textContent();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.6, box.y + 100);
+  await page.mouse.wheel(0, -300);
+  await expect.poll(() => range.textContent()).not.toBe(initial);
+  const zoomed = await range.textContent();
+  for (const label of ['SMA10', 'EMA200', 'MACD', 'MACD']) {
+    await page.getByLabel(label, { exact: true }).click();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await expect(range).toHaveText(zoomed!);
+  }
+  await page.locator('[aria-label="Chart ADRO"]').evaluate(el => { (el as HTMLElement).style.maxWidth = '700px'; });
+  await expect.poll(async () => (await canvas.boundingBox())!.width).toBeLessThan(720);
+  await expect(range).toHaveText(zoomed!);
+  expect(errors).toEqual([]);
+});
+test('chart controls group by purpose and canvas follows available height', async ({ page }) => {
+  let reads = 0;
+  await page.route('**/api/chart/ADRO?**', route => {
+    reads++;
+    return route.fulfill({ json: chartFixture() });
+  });
+  await page.goto('/dev/chart?scenario=http');
+  await page.getByRole('button', { name: 'Buka chart', exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Chart ADRO', exact: true });
+  await expect(panel.getByRole('group', { name: 'Aksi chart', exact: true })).toBeVisible();
+  await expect(panel.getByRole('group', { name: 'Rentang chart', exact: true })).toBeVisible();
+  await expect(panel.getByRole('group', { name: 'Indikator chart', exact: true })).toBeVisible();
+  await panel.evaluate(el => { (el as HTMLElement).style.maxWidth = '700px'; });
+  const groupRects = await panel.getByRole('group').evaluateAll(groups => groups.map(group => {
+    const { x, y, right, bottom } = group.getBoundingClientRect();
+    return { x, y, right, bottom };
+  }));
+  for (let i = 0; i < groupRects.length; i++) for (let j = i + 1; j < groupRects.length; j++) {
+    const a = groupRects[i], b = groupRects[j];
+    expect(a.right <= b.x + 1 || b.right <= a.x + 1 || a.bottom <= b.y + 1 || b.bottom <= a.y + 1).toBe(true);
+  }
+  await panel.evaluate(el => { (el as HTMLElement).style.maxWidth = '520px'; });
+  const groupPositions = await panel.getByRole('group').evaluateAll(groups => groups.map(group => group.getBoundingClientRect().x));
+  expect(Math.max(...groupPositions) - Math.min(...groupPositions)).toBeLessThanOrEqual(2);
+  for (const height of await panel.getByRole('button').evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().height)))
+    expect(height).toBeGreaterThanOrEqual(44);
+  const canvas = page.getByTestId('chart-canvas');
+  await panel.evaluate(el => (el as HTMLElement).style.setProperty('--chart-available-height', '600px'));
+  await expect.poll(async () => (await canvas.boundingBox())!.height).toBe(600);
+  await page.getByLabel('MACD', { exact: true }).check();
+  await expect.poll(async () => (await canvas.boundingBox())!.height).toBe(600);
+  await panel.evaluate(el => (el as HTMLElement).style.setProperty('--chart-available-height', '200px'));
+  await expect.poll(async () => (await canvas.boundingBox())!.height).toBe(440);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(reads).toBe(1);
+});
 test("explicit opening loads renderer concurrently with a pending price request", async ({ page, browser }) => {
   const warm = await browser.newContext();
   const warmPage = await warm.newPage();

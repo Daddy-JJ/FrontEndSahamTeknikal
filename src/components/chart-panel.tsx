@@ -383,20 +383,19 @@ export function ChartPanel({
       ) : (
         <>
           <div className={styles.toolbar}>
-            {fullPage && <Link prefetch={false} href={fullPage}>Perbesar chart ↗</Link>}
-            {(request.context === 'signal' || request.context === 'paper') && <div role="group" aria-label="Sumber waktu chart">
-              {(['snapshot', 'followup'] as const).map(view => <button key={view} type="button" aria-pressed={activeRequest.view === view} onClick={() => setChosenView({key: requestKey, view})}>{chartLabel(view)}</button>)}
-            </div>}
+            <div className={styles.toolbarGroup} role="group" aria-label="Aksi chart">
+            {fullPage && <Link prefetch={false} href={fullPage} title="Buka halaman chart terpisah">Perbesar chart ↗</Link>}
             <button type="button" onClick={closeChart}>
               Tutup chart
             </button>
-            <button
-              type="button"
-              onClick={() => void run()}
-              disabled={busy || cooldown}
-            >
+            <button type="button" onClick={() => void run()} disabled={busy || cooldown}>
               Muat ulang
             </button>
+            </div>
+            {(request.context === 'signal' || request.context === 'paper') && <div className={styles.toolbarGroup} role="group" aria-label="Sumber waktu chart">
+              {(['snapshot', 'followup'] as const).map(view => <button key={view} type="button" aria-pressed={activeRequest.view === view} onClick={() => setChosenView({key: requestKey, view})}>{chartLabel(view)}</button>)}
+            </div>}
+            <div className={styles.toolbarGroup} role="group" aria-label="Rentang chart">
             {([3, 6, 12] as const).map((n) => (
               <button
                 type="button"
@@ -410,6 +409,8 @@ export function ChartPanel({
             <button type="button" onClick={() => setReset((n) => n + 1)}>
               Reset zoom
             </button>
+            </div>
+            <div className={styles.toolbarGroup} role="group" aria-label="Indikator chart">
             {(
               [
                 ["SMA10", sma10, setSma10],
@@ -431,6 +432,7 @@ export function ChartPanel({
                 {label}
               </label>
             ); })}
+            </div>
           </div>
           {busy && <p role="status">Memuat data chart…</p>}
           {error && (

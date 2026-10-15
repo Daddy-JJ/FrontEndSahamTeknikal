@@ -13,6 +13,7 @@ import {
   type Time,
   type LineData,
   type SeriesMarker,
+  type LogicalRange,
 } from "lightweight-charts";
 import type { ChartData } from "@/lib/chart-contract";
 import {
@@ -24,6 +25,7 @@ import {
 } from "@/lib/chart-render";
 import styles from "./chart.module.css";
 import { chartLabel } from "@/lib/chart-presentation";
+import { chartPaneSizes } from "@/lib/chart-layout";
 type Props = {
   data: ChartData;
   sma10: boolean;
@@ -120,19 +122,18 @@ export default function ChartCanvas(props: Props) {
   const { data, onError } = props;
   const host = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const viewport = useRef<{ data: ChartData; range: LogicalRange } | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const [visibleDates, setVisibleDates] = useState('');
   useEffect(() => {
     if (!host.current) return;
     let chart: IChartApi | null = null;
     let resize: ResizeObserver | null = null;
     try {
-      const mobile = host.current.clientWidth < 768;
-      const priceHeight = mobile ? 260 : 320;
-      const volumeHeight = mobile ? 72 : 80;
-      const macdHeight = mobile ? 100 : 120;
+      const size = chartPaneSizes(host.current.clientHeight, props.macd);
       chart = createChart(host.current, {
         width: host.current.clientWidth,
-        height: priceHeight + volumeHeight + (props.macd ? macdHeight : 0) + 40,
+        height: size.height,
         layout: {
           background: { type: ColorType.Solid, color: "#101922" },
           textColor: "#b7c9db",
@@ -201,10 +202,10 @@ export default function ChartCanvas(props: Props) {
         }),
       );
       drawLines(chart, data, props);
-      chart.panes()[0].setHeight(priceHeight);
-      chart.panes()[1].setHeight(volumeHeight);
+      chart.panes()[0].setHeight(size.price);
+      chart.panes()[1].setHeight(size.volume);
       if (props.macd && chart.panes()[2])
-        chart.panes()[2].setHeight(macdHeight);
+        chart.panes()[2].setHeight(size.macd!);
       const markers: SeriesMarker<Time>[] = candleMarkers(data).map((m) => ({
         time: m.session,
         color:
@@ -226,11 +227,28 @@ export default function ChartCanvas(props: Props) {
       chart.subscribeCrosshairMove((event) =>
         setHover(event.time ? dateOf(event.time) : null),
       );
-      rangeChart(chart, data, props.range);
       const liveChart = chart;
+      const retained = viewport.current?.data === data ? viewport.current.range : null;
+      if (retained) chart.timeScale().setVisibleLogicalRange(retained);
+      else rangeChart(chart, data, props.range);
+      const rememberViewport = () => {
+        const range = liveChart.timeScale().getVisibleLogicalRange();
+        const dates = liveChart.timeScale().getVisibleRange();
+        if (range) viewport.current = { data, range };
+        if (dates) setVisibleDates(`${dateOf(dates.from)} – ${dateOf(dates.to)}`);
+      };
+      chart.timeScale().subscribeVisibleLogicalRangeChange(rememberViewport);
+      rememberViewport();
       resize = new ResizeObserver((entries) => {
-        const width = entries[0]?.contentRect.width;
-        if (width && width > 0) liveChart.applyOptions({ width });
+        const rect = entries[0]?.contentRect;
+        if (!rect || rect.width <= 0 || rect.height <= 0) return;
+        const range = liveChart.timeScale().getVisibleLogicalRange();
+        const next = chartPaneSizes(rect.height, props.macd);
+        liveChart.applyOptions({ width: Math.floor(rect.width), height: next.height });
+        liveChart.panes()[0].setHeight(next.price);
+        liveChart.panes()[1].setHeight(next.volume);
+        if (props.macd && liveChart.panes()[2]) liveChart.panes()[2].setHeight(next.macd!);
+        if (range) liveChart.timeScale().setVisibleLogicalRange(range);
       });
       resize.observe(host.current);
     } catch {
@@ -241,7 +259,7 @@ export default function ChartCanvas(props: Props) {
       chart?.remove();
       chartRef.current = null;
     };
-    // Range/reset have their own effect; changing render options recreates all primitives with disposal.
+    // Indicator reconstruction restores the same logical viewport; data/range/reset own explicit resets.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, props.sma10, props.ema200, props.macd, onError]);
   useEffect(() => {
@@ -269,12 +287,13 @@ export default function ChartCanvas(props: Props) {
       </div>
       <div
         ref={host}
-        className={styles.canvas}
+        className={`${styles.canvas}${props.macd ? ` ${styles.canvasWithMacd}` : ''}`}
         role="img"
         aria-label={`Chart harian ${data.ticker}. Data alternatif tersedia di tabel OHLC.`}
         data-testid="chart-canvas"
       />
       <p className={styles.caption}>
+        <span aria-label="Rentang waktu terlihat">{visibleDates}</span>{" · "}
         Harga · volume saham{props.macd ? " · MACD" : ""}. Tidak ada data
         intraday. Garis terputus pada data tertahan.
         {candleMarkers(data).length < data.overlays.markers.length &&

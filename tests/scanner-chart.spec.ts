@@ -103,7 +103,7 @@ test("quality chart is explicitly latest and invalid or off-page selection has n
   expect(chartRequests).toHaveLength(1);
   expect(chartRequests[0].searchParams.get("context")).toBe("latest");
   expect(chartRequests[0].searchParams.has("context_id")).toBe(false);
-  await detail.getByRole("button", { name: "Tutup detail TEST001", exact: true }).click();
+  await detail.getByRole("button", { name: /^(?:Tutup detail|Kembali ke daftar, tutup detail) TEST001$/ }).click();
   await expect(page.getByRole("button", { name: "Detail TEST001", exact: true })).toBeFocused();
   await page.goto(`/scanner?run=${runId}&section=quality&page=2&detail=TEST001&detail_kind=quality&panel=chart`);
   await expect(page.getByText(/Detail yang dipilih tidak tersedia pada halaman ini/)).toBeVisible();
@@ -194,7 +194,7 @@ test("integrated scanner canvas renders explicit synthetic prices and snapshot/f
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   // Capture the actual viewport after restoring the pane header. Full-page
   // capture expands a fixed native dialog and can conceal its real mobile UX.
-  await detail.evaluate((pane: HTMLElement) => { pane.scrollTop = 0; });
+  await detail.getByRole("tabpanel").evaluate((pane: HTMLElement) => { pane.scrollTop = 0; });
   await page.screenshot({ path: testInfo.outputPath(`scanner-chart-integrated-${testInfo.project.name}.png`), fullPage: false });
   if (testInfo.project.name !== "desktop") {
     await detail.getByTestId("chart-canvas").scrollIntoViewIfNeeded();
@@ -212,4 +212,169 @@ test("integrated scanner canvas renders explicit synthetic prices and snapshot/f
   await expect(detail).not.toBeVisible();
   await expect(ticker).toBeFocused();
   expect(errors).toEqual([]);
+});
+
+test("workspace keeps equal stable panes across tabs and explicit expand", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "Desktop geometry uses CSS viewport pixels");
+  let reads = 0;
+  await page.route("**/api/chart/**", route => {
+    reads++;
+    return route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify(chartFailure("BACKEND_NOT_READY", "layout-test")) });
+  });
+  for (const width of [1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/scanner?run=${runId}&section=signals&page=1`);
+    await page.getByRole("button", { name: "Detail TEST001", exact: true }).click();
+    const detail = page.locator("#scanner-detail");
+    const results = page.locator(".terminal-results");
+    const first = await results.boundingBox();
+    expect(first).not.toBeNull();
+    for (const name of ["Alasan sinyal", "Chart", "Data & sumber"]) {
+      await detail.getByRole("tab", { name, exact: true }).click();
+      const left = (await results.boundingBox())!, right = (await detail.boundingBox())!;
+      expect(Math.abs(left.width - right.width), `${width}px equal pane width on ${name}`).toBeLessThanOrEqual(2);
+      for (const box of [left, right]) {
+        expect(Math.abs(box.y - first!.y)).toBeLessThanOrEqual(2);
+        expect(Math.abs(box.height - first!.height)).toBeLessThanOrEqual(2);
+      }
+    }
+    const beforeExpand = reads;
+    await detail.getByRole("button", { name: "Perbesar detail", exact: true }).click();
+    await expect(results).not.toBeVisible();
+    await expect(detail.getByRole("tab", { name: "Data & sumber", exact: true })).toHaveAttribute("aria-selected", "true");
+    await detail.getByRole("button", { name: "Kembali 50:50", exact: true }).click();
+    await expect(results).toBeVisible();
+    expect(reads).toBe(beforeExpand);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});
+
+test("chart survives breakpoint and expand during an in-flight price request", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "One controlled desktop/mobile roundtrip");
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  let reads = 0, release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/api/chart/**", async route => {
+    reads++;
+    await gate;
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(syntheticScannerChart(new URL(route.request().url()))) });
+  });
+  try {
+    await page.goto(`/scanner?run=${runId}&section=signals&page=1`);
+    const ticker = page.getByRole("button", { name: "Detail TEST001", exact: true });
+    await ticker.click();
+    const detail = page.locator("#scanner-detail");
+    await detail.getByRole("tab", { name: "Chart", exact: true }).click();
+    await expect.poll(() => reads).toBe(1);
+    await detail.getByRole("button", { name: "Perbesar detail", exact: true }).click();
+    for (const width of [1279, 1280, 1279]) {
+      await page.setViewportSize({ width, height: 800 });
+      await expect(detail).toBeVisible();
+      await expect.poll(() => detail.evaluate(node => node.matches(":modal"))).toBe(width < 1280);
+    }
+    release();
+    await expect(detail.getByTestId("chart-canvas").locator("canvas").first()).toBeVisible();
+    expect(reads).toBe(1);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(detail.getByRole("button", { name: "Kembali 50:50", exact: true })).toBeVisible();
+    await expect(page.locator(".terminal-results")).not.toBeVisible();
+    await detail.getByRole("button", { name: "Kembali 50:50", exact: true }).click();
+    await expect(page.locator(".terminal-results")).toBeVisible();
+    expect(reads).toBe(1);
+    await page.keyboard.press("Escape");
+    await expect(detail).not.toBeVisible();
+    await expect(ticker).toBeFocused();
+    await ticker.click();
+    await expect(detail.getByRole("button", { name: "Perbesar detail", exact: true })).toBeVisible();
+    expect(errors).toEqual([]);
+  } finally { release(); }
+});
+
+test("split quality table keeps ticker visible and scrolls independently of details", async ({ page, request }, info) => {
+  test.skip(info.project.name !== "desktop", "Split-table geometry is desktop only");
+  await request.post("http://127.0.0.1:3053/__scenario", { data: { scenario: "scanner-failed" } });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/scanner?run=${runId}&section=quality&page=1`);
+  await page.getByRole("button", { name: "Detail TEST001", exact: true }).click();
+  const detail = page.locator("#scanner-detail");
+  await detail.getByRole("tab", { name: "Data & sumber", exact: true }).click();
+  const body = detail.getByRole("tabpanel");
+  const before = await body.evaluate(node => node.scrollTop);
+  const matrix = page.locator(".terminal-matrix");
+  await matrix.evaluate(node => { node.scrollLeft = 300; node.scrollTop = 100; });
+  expect(await matrix.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+  const firstCell = (await matrix.locator("tbody td").first().boundingBox())!;
+  const bounds = (await matrix.boundingBox())!;
+  expect(Math.abs(firstCell.x - bounds.x)).toBeLessThanOrEqual(2);
+  expect(await body.evaluate(node => node.scrollTop)).toBe(before);
+  await expect(page.getByRole("navigation", { name: "Halaman scanner", exact: true })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("mobile detail keeps a single full-screen frame and reachable tabs", async ({ page }, info) => {
+  test.skip(info.project.name === "desktop", "Touch/tablet modal frame");
+  await page.route("**/api/chart/**", route => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify(chartFailure("BACKEND_NOT_READY", "layout-mobile-test")) }));
+  await page.goto(`/scanner?run=${runId}&section=signals&page=1`);
+  const ticker = page.getByRole("button", { name: "Detail TEST001", exact: true });
+  await ticker.click();
+  const detail = page.locator("#scanner-detail");
+  const first = (await detail.boundingBox())!;
+  expect(first.width).toBe(page.viewportSize()!.width);
+  for (const name of ["Alasan sinyal", "Chart", "Data & sumber"]) {
+    await detail.getByRole("tab", { name, exact: true }).click();
+    const next = (await detail.boundingBox())!;
+    expect(next).toEqual(first);
+    await detail.getByRole("tabpanel").evaluate(node => { node.scrollTop = node.scrollHeight; });
+    await expect(detail.getByRole("tablist")).toBeInViewport();
+    await expect(detail.getByRole("button", { name: /^(?:Tutup detail|Kembali ke daftar, tutup detail) TEST001$/ })).toBeInViewport();
+  }
+  await expect(detail.getByRole("button", { name: "Perbesar detail", exact: true })).toHaveCount(0);
+  await detail.getByRole("tabpanel").focus();
+  await expect(detail.getByRole("tabpanel")).toBeFocused();
+  await detail.getByRole("tab", { name: "Data & sumber", exact: true }).focus();
+  await page.keyboard.press("Home");
+  await expect(detail.getByRole("tab", { name: "Alasan sinyal", exact: true })).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(detail.getByRole("tab", { name: "Data & sumber", exact: true })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(detail).not.toBeVisible();
+  await expect(ticker).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("detail body scroll resets for a new ticker without changing the selected tab", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "Select another ticker from the split list");
+  await page.setViewportSize({ width: 1440, height: 600 });
+  await page.goto(`/scanner?run=${runId}&section=signals&page=1`);
+  await page.getByRole("button", { name: "Detail TEST001", exact: true }).click();
+  const detail = page.locator("#scanner-detail");
+  const body = detail.getByRole("tabpanel");
+  await body.evaluate(node => { node.scrollTop = node.scrollHeight; });
+  expect(await body.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "Detail TEST002", exact: true }).click();
+  await expect(detail.getByRole("heading", { name: "Detail TEST002", exact: true })).toBeVisible();
+  await expect.poll(() => body.evaluate(node => node.scrollTop)).toBe(0);
+  await expect(detail.getByRole("tab", { name: "Alasan sinyal", exact: true })).toHaveAttribute("aria-selected", "true");
+});
+
+test("workspace remains usable at 200 percent CSS zoom on a short viewport", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "Explicit CSS zoom stress, not browser-chrome zoom");
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await page.route("**/api/chart/**", route => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify(chartFailure("BACKEND_NOT_READY", "zoom-layout-test")) }));
+  await page.goto(`/scanner?run=${runId}&section=signals&page=1`);
+  await page.getByRole("button", { name: "Detail TEST001", exact: true }).click();
+  await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+  const detail = page.locator("#scanner-detail");
+  for (const name of ["Alasan sinyal", "Chart", "Data & sumber"]) {
+    await detail.getByRole("tab", { name, exact: true }).click();
+    await expect(detail.getByRole("tab", { name, exact: true })).toBeInViewport();
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await detail.getByRole("tabpanel").focus();
+  await expect(detail.getByRole("tabpanel")).toBeFocused();
+  await detail.getByRole("button", { name: "Perbesar detail", exact: true }).click();
+  await expect(page.locator(".terminal-results")).not.toBeVisible();
+  await detail.getByRole("button", { name: "Kembali 50:50", exact: true }).click();
+  await expect(page.locator(".terminal-results")).toBeVisible();
 });

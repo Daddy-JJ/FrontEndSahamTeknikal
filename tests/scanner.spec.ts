@@ -40,7 +40,7 @@ test("failed diagnostics explain missing close and pinned refresh preserves the 
   await expect(detail).toContainText("Harga close hilang");
   await expect(detail).toContainText("Batas percobaan tercapai");
   await expect(detail.locator("dd").filter({hasText:/^close$/})).toHaveCount(1);
-  await page.getByRole("button",{name:"Tutup detail TEST001",exact:true}).click();
+  await page.getByRole("button",{name: /^(?:Tutup detail|Kembali ke daftar, tutup detail) TEST001$/}).click();
   await page.reload();
   await expect(page.getByRole("heading",{name:"Scan gagal",exact:true})).toBeVisible();
   await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario:"scanner-complete"}});
@@ -173,6 +173,7 @@ test("signal detail presents frozen rule and temporal provenance without recalcu
   await expect(detail.getByText("Pivot date", { exact: true })).toBeVisible();
   await expect(detail.getByText("Available-at session", { exact: true })).toBeVisible();
   await expect(detail.getByRole("list", { name: "Rule checklist backend" })).toContainText("close_above_fractal");
+  await detail.getByText("Audit snapshot sinyal", { exact: true }).click();
   await expect(detail.getByText("c".repeat(64), { exact: true })).toBeVisible();
   await expect(detail.getByText("d".repeat(64), { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -472,7 +473,7 @@ test("drawer restores its row opener after pointer activation without prior focu
     await expect(detail).toBeVisible();
     await expect(opener).not.toHaveAttribute("data-focus-observed", "true");
     if (method === "escape") await page.keyboard.press("Escape");
-    else await detail.getByRole("button", { name: "Tutup detail TEST002", exact: true }).click();
+    else await detail.getByRole("button", { name: /^(?:Tutup detail|Kembali ke daftar, tutup detail) TEST002$/ }).click();
     await expect(detail).not.toBeVisible();
     await expect(opener).toBeFocused();
   }

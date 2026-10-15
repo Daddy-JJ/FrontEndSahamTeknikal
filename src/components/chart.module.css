@@ -6,6 +6,7 @@
   padding: 12px;
   font-family: Arial, sans-serif;
   font-size: 13px;
+  container-type: inline-size;
 }
 .header,
 .toolbar,
@@ -25,6 +26,20 @@
 }
 .toolbar {
   margin: 10px 0;
+  align-items: stretch;
+  gap: 6px 12px;
+}
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.toolbarGroup a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 .panel button,
 .panel summary {
@@ -74,6 +89,11 @@
 .canvas {
   width: 100%;
   min-width: 0;
+  height: clamp(340px, var(--chart-available-height, calc(100dvh - 360px)), 640px);
+  overflow: hidden;
+}
+.canvasWithMacd {
+  min-height: 440px;
 }
 .caption {
   color: #b7c9db;
@@ -162,5 +182,24 @@
   .quote {
     gap: 8px;
     font-size: 11px;
+  }
+}
+@container (max-width: 760px) {
+  .source {
+    grid-template-columns: minmax(100px, 35%) minmax(0, 1fr);
+  }
+}
+@container (max-width: 560px) {
+  .toolbarGroup {
+    flex-basis: 100%;
+  }
+}
+@container (max-width: 420px) {
+  .toolbarGroup button {
+    flex: 1 1 auto;
+    padding: 7px 8px;
+  }
+  .source {
+    grid-template-columns: 1fr;
   }
 }
