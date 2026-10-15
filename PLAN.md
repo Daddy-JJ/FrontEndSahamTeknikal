@@ -4,7 +4,12 @@ Action: release existing tested chart frontend after backend capability/canary. 
 skipping fresh full backup and populated restore rehearsal for this release, with no Supabase upgrade.
 Retain migration checksum, unchanged economic/reporting checks, owner ACL, cloud artifact and exact SHA
 deployment smoke. Backup/restore are SKIPPED_OWNER_WAIVER, not PASS; data recovery is not established.
-Proof: existing local gates remain documented; live release checks pending. Rollback uses previous
+Proof: final77 unit tests PASS; existing typecheck/lint/build and full browser/performance gates remain
+documented. Hosted schema001–016,18 economic/config fingerprints, all canonical reporting and expanded
+chart ACL PASS. ADRO cloud artifact canary PASS; final bounded4-reader job measured24s vs43s serial.
+Full universe artifact build runs independently; unavailable/partial chart states remain explicit.
+Exact deployment and owner-evidence outcomes are maintained in workspace CODEX_HANDOFF/status;
+SQL-role/public HTTP evidence does not establish authenticated owner browser proof. Rollback uses prior
 verified frontend and disables chart job, preserving additive schema and journal data.
 
 ## Chart V1 — Tahap 6 authorized preparation, 2026-10-15
