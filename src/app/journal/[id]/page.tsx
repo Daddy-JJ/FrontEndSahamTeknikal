@@ -2,6 +2,8 @@ import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
 import { journalOwner, type ActualTrade } from "@/lib/journal-server";
 import { JournalForm } from "@/components/journal-form";
+import { ChartPanel } from "@/components/chart-panel";
+import { chartIndicators, safeChartReturn } from "@/lib/chart-navigation";
 import { journalEventPageSize, journalHistoryHref, journalHistorySelection,
   journalHistorySections, type JournalHistorySection } from "@/lib/journal-page";
 
@@ -23,15 +25,19 @@ type Tag={tag:string};
 const historyLabels:Record<JournalHistorySection,string>={fills:"Fill",corrections:"Koreksi",
   stops:"Stop",notes:"Catatan",tags:"Tag"};
 
-function HistoryPager({tradeId,section,page,hasMore}:{
-  tradeId:string;section:JournalHistorySection;page:number;hasMore:boolean;
+function HistoryPager({tradeId,section,page,hasMore,returnTo}:{
+  tradeId:string;section:JournalHistorySection;page:number;hasMore:boolean;returnTo?:string|null;
 }) {
   if(page===1 && !hasMore) return null;
   return <nav className="journal-pagination" aria-label={"Halaman "+historyLabels[section]}>
-    {page>1 && <Link href={journalHistoryHref(tradeId,section,page-1)}>← Lebih baru</Link>}
+    {page>1 && <Link href={detailHistoryHref(tradeId,section,page-1,returnTo)}>← Lebih baru</Link>}
     <span>Halaman {page}</span>
-    {hasMore && <Link href={journalHistoryHref(tradeId,section,page+1)}>Lebih lama →</Link>}
+    {hasMore && <Link href={detailHistoryHref(tradeId,section,page+1,returnTo)}>Lebih lama →</Link>}
   </nav>;
+}
+function detailHistoryHref(id:string,section:JournalHistorySection,page=1,returnTo?:string|null) {
+  const href=journalHistoryHref(id,section,page);
+  return href+(returnTo?(href.includes("?")?"&":"?")+"return_to="+encodeURIComponent(returnTo):"");
 }
 
 function Hidden({action,trade}: {action:string;trade:ActualTrade}) {
@@ -58,6 +64,7 @@ export default async function TradePage({params,searchParams}:{
 }) {
   const {id}=await params;
   const query=await searchParams;
+  const returnTo=typeof query.return_to==="string"?safeChartReturn(query.return_to):null;
   const selection=journalHistorySelection(query);
   const context=await journalOwner();
   if (context.kind!=="ready" || !uuid.test(id) || !selection) return <JournalShell mode={null} activePage="journal">
@@ -131,6 +138,7 @@ export default async function TradePage({params,searchParams}:{
       <span className="eyebrow">TRADE AKTUAL / {trade.primary_strategy.replaceAll("_"," ")}</span>
       <h1>{trade.ticker} <span className={"badge "+(trade.status==="closed"?"green":trade.status==="open"?"amber":"neutral")}>{trade.status}</span></h1>
       <p>Revisi {trade.revision} · {trade.exit_policy_snapshot?.version ?? "Versi exit tidak tersedia"} · {context.mode==="fixture"?"data uji development":"data live"}</p>
+      {returnTo && <Link className="journal-back" href={returnTo}>Kembali ke hasil</Link>}
     </div></section>
     {query.saved && <p role="status" className="journal-success">Perubahan tersimpan dan ledger dihitung ulang.</p>}
     {query.error && <p role="alert" className="journal-alert">Aksi belum tersimpan. Periksa data, status entry, jumlah tersisa, atau revisi trade. Muat ulang sebelum mencoba lagi.</p>}
@@ -142,8 +150,12 @@ export default async function TradePage({params,searchParams}:{
       <div><span>Realized R</span><strong>{ratio(trade.realized_r)}{trade.realized_r==null?"":"R"}</strong>
         <small>{trade.status==="closed"?"Closed trade":"Baru final saat closed"}</small></div>
     </section>
+    <ChartPanel key={context.ownerId+":"+trade.id} mode={context.mode} fixture={context.mode==="fixture"}
+      request={{ticker:trade.ticker,context:"actual",context_id:trade.id,view:"followup",timeframe:"1d",limit:250}}
+      returnTo={detailHistoryHref(id,section,page,returnTo)} initialIndicators={chartIndicators(trade.primary_strategy,
+        trade.exit_policy_snapshot?.mode === "ma_close" && trade.exit_policy_snapshot?.period === 10 && trade.exit_policy_snapshot?.ma_type === "SMA" ? "ma10" : trade.exit_policy_snapshot?.mode)} />
     <nav className="journal-history-tabs" aria-label="Jenis riwayat trade">
-      {journalHistorySections.map(item=><Link key={item} href={journalHistoryHref(id,item)}
+      {journalHistorySections.map(item=><Link key={item} href={detailHistoryHref(id,item,1,returnTo)}
         aria-current={section===item?"page":undefined}>{historyLabels[item]}</Link>)}
     </nav>
     <div className="journal-columns">
@@ -178,14 +190,14 @@ export default async function TradePage({params,searchParams}:{
             </details>
           </div>;
         })}</div>}
-        <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore}/></>}
+        <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore} returnTo={returnTo}/></>}
         {section==="corrections" && <><h3>Jejak koreksi</h3>
         {corrections.length===0?<p className="journal-help">{page===1?"Belum ada koreksi fill.":"Tidak ada koreksi pada halaman ini."}</p>:
           <div className="journal-history">{corrections.map(c=><p key={c.sequence}>
             Koreksi #{c.sequence} · fill {c.fill_id.slice(0,8)} · {new Date(c.filled_at).toLocaleString("id-ID",{timeZone:"Asia/Jakarta"})} WIB
             · {c.quantity} saham @ Rp{money(c.price_idr)} · fee Rp{money(c.fee_idr)} ({c.fee_status}) · {c.reason}
           </p>)}</div>}
-        <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore}/></>}
+        <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore} returnTo={returnTo}/></>}
         {section!=="fills" && section!=="corrections" && <p className="journal-help">Pilih Fill atau Koreksi di navigasi riwayat untuk melihat event ledger.</p>}
       </section>
       <section className="journal-panel"><div className="journal-panel-heading"><div>
@@ -222,7 +234,7 @@ export default async function TradePage({params,searchParams}:{
         </JournalForm>}
         {section==="stops" && <><div className="journal-history">{stops.map(s=><p key={s.id}>Rp{money(s.old_stop)} → Rp{money(s.new_stop)} · {s.reason}</p>)}</div>
           {stops.length===0 && <p className="journal-help">{page===1?"Belum ada perubahan stop.":"Tidak ada stop pada halaman ini."}</p>}
-          <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore}/></>}
+          <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore} returnTo={returnTo}/></>}
       </section>
       <section className="journal-panel"><span className="eyebrow">AUDIT</span><h2>Catatan & tag</h2>
         <JournalForm className="journal-form"><Hidden action="note" trade={trade}/>
@@ -230,13 +242,13 @@ export default async function TradePage({params,searchParams}:{
           <button className="journal-secondary" type="submit">Tambah catatan</button></JournalForm>
         {section==="notes" && <><div className="journal-history">{notes.map(n=><p key={n.id}>{n.body}</p>)}</div>
           {notes.length===0 && <p className="journal-help">{page===1?"Belum ada catatan.":"Tidak ada catatan pada halaman ini."}</p>}
-          <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore}/></>}
+          <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore} returnTo={returnTo}/></>}
         <JournalForm className="journal-form"><Hidden action="tag" trade={trade}/>
           <label>Tag sekunder<input name="tag" pattern="[A-Za-z0-9_-]{2,40}" required placeholder="breakout"/></label>
           <button className="journal-secondary" type="submit">Tambah tag</button></JournalForm>
         {section==="tags" && <><div className="journal-tags">{tags.map(t=><span className="badge neutral" key={t.tag}>{t.tag}</span>)}</div>
           {tags.length===0 && <p className="journal-help">{page===1?"Belum ada tag.":"Tidak ada tag pada halaman ini."}</p>}
-          <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore}/></>}
+          <HistoryPager tradeId={id} section={section} page={page} hasMore={hasMore} returnTo={returnTo}/></>}
         <p className="journal-help">Tag sekunder tidak menggandakan P&amp;L pada analytics. Seluruh aksi tersimpan dalam audit owner.</p>
       </section>
     </div>

@@ -1,0 +1,35 @@
+import { test, expect } from "@playwright/test";
+test("Workspace uses the reusable contract chart without live requests or eager canvas", async ({ page }) => {
+  const chartRequests: string[] = [], errors: string[] = [];
+  page.on("request", r => { if (r.url().includes("/api/chart/")) chartRequests.push(r.url()); });
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/");
+  await expect(page.getByText("Mode demo", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("chart-canvas")).toHaveCount(0);
+  await page.getByRole("button", { name: "Buka chart", exact: true }).click();
+  await expect(page.getByTestId("chart-canvas")).toBeVisible();
+  await expect(page.getByText("DATA SINTETIS", { exact: false }).first()).toBeVisible();
+  await page.getByLabel("Ticker chart").selectOption({ index: 1 });
+  await expect(page.getByTestId("chart-canvas")).toHaveCount(0);
+  await page.getByRole("button", { name: "Buka chart", exact: true }).click();
+  await expect(page.getByTestId("chart-canvas")).toBeVisible();
+  expect(chartRequests).toEqual([]);
+  expect(errors).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+test("Workspace signal snapshot chart stays synthetic and keeps review facts unchanged", async ({ page }) => {
+  const calls: string[] = [];
+  page.on("request", r => { if (r.url().includes("/api/chart/")) calls.push(r.url()); });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Lihat alasan" }).first().click();
+  const dialog = page.getByRole("dialog");
+  const facts = await dialog.locator(".detail-grid").innerText();
+  await expect(dialog.getByTestId("chart-canvas")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Buka chart", exact: true }).click();
+  await expect(dialog.getByTestId("chart-canvas")).toBeVisible();
+  expect(await dialog.locator(".detail-grid").innerText()).toBe(facts);
+  await expect(dialog.getByText("Data sintetis · fixture", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Tutup dialog" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(calls).toEqual([]);
+});

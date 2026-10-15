@@ -73,7 +73,11 @@ export default async function setup(config: FullConfig) {
       DATA_MODE: process.env.SMOKE_DATA_MODE ?? (kind === "scanner" ? "live" : "fixture"), ALLOW_FIXTURE_PREVIEW: production && kind === "scanner" ? "false" : "true",
       NEXT_TELEMETRY_DISABLED: "1",
     }));
-    const warmRoutes = kind === "workspace" ? ["/", "/login", "/auth/error"] : ["/login"];
+    // Warm anonymous route compilation outside functional deadlines. This does
+    // not authorize scanner/chart data reads or mount any chart renderer.
+    const warmRoutes = kind === "workspace" ? ["/", "/login", "/auth/error"]
+      : kind === "scanner" ? ["/login", "/scanner", "/chart/TEST001"]
+      : ["/login", "/analytics", "/journal", "/journal/paper/paper-test-v1", "/journal/11111111-1111-4111-8111-111111111111", "/chart/TEST"];
     for (const route of warmRoutes) await fetch(`http://127.0.0.1:${port}${route}`,
       { signal: AbortSignal.timeout(60000) });
     return cleanup;

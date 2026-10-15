@@ -1,3 +1,61 @@
+## Chart V1 — Tahap 6 authorized preparation, 2026-10-15
+
+Action: finish chart integration/regression and prepare backend-first rollout requested by the user.
+Proof: unit77/typecheck/lint/production Turbopack build PASS; Scanner81 plus final integrated3 PASS;
+journal69 PASS; reporting64 plus2 corrected-case retests PASS; Workspace27 PASS/3 explicit mode SKIP.
+Chart24 cases plus6 grouped backend-error cases PASS (webpack development; missing-chunk transport
+is separately distinguished from Turbopack development auto-reload). Tablet chart drawer960px is
+verified; closed reason/source panes retain their existing width. Prefetch occurs only on explicit open.
+Production webpack comparator: median Scanner LCP624→572ms, 500-slot render373.8ms, payload240833bytes,
+closed price requests/library chunks=0; five alternating fresh contexts and explicit synthetic transport.
+Runtime audit0. User approved a temporary recorded exception for the unpatched dev-only braces advisory
+on15Oct; do not represent it as patched or a clean full dependency audit. Frontend push/Production
+deployment still waits for backend capability. Owner browser not available.
+
+## Previous Chart V1 — Tahap 4–5 aktif, 2026-10-14
+
+Action: integrasi context canonical pada Scanner/jurnal/Analytics/Workspace, URL dan scroll restore,
+label Indonesia, identity/view/limit guards serta auth-expiry purge. Proof: unit 75/typecheck/lint/build
+PASS, Scanner 81 PASS; komponen chart 20 PASS + dua retest paging PASS. Reporting/journal/Workspace
+suite masih berlangsung. Desktop scroll regression menemukan loading shell yang salah dianggap
+auth denial: island kini tidak dimount pada shell loading, kasus mobile/tablet lulus; desktop perlu retest.
+Satu mobile reporting gagal membaca endpoint inspeksi HTTP double dengan ECONNRESET; retest terarah
+perlu diselesaikan, tidak mengubah ledger/CSV berdasarkan kegagalan transport lokal itu.
+
+Action: benchmark production source snapshots, lima LCP Scanner dan 500 slot/marker, payload/bundle.
+Proof pending. Preflight awal menolak template `.env.production.example`; archive kini memakai allowlist
+source yang sama dengan final snapshot tanpa env. Snapshot yang mendahului loading-shell/copy UI fixes
+tidak digunakan sebagai bukti source final. Receipt berada di ignored test-results; bukan hasil produksi.
+Berikutnya: tuntaskan seluruh gate lokal dan dokumentasi, tanpa menjalankan rilis Tahap 6.
+
+## Previous Chart V1 — Tahap 3 selesai lokal, 2026-10-14
+
+Action: pin Lightweight Charts 5.2.1; implement strict parser/reader/API, reusable lazy Panel/Canvas,
+standalone chart dan preview fixture khusus development. Integrasi Scanner/jurnal/Analytics masuk Tahap 4.
+Proof: unit 56 (chart 16), typecheck/lint/build PASS; browser 18 + targeted 2 PASS. Pure TS line coverage
+96.43–100% dan branch 86.67–97.56%; diff PASS. Canonical Python→SQL→FE fixture PASS. Source, race,
+paging, gap dan marker safeguards serta stress desktop/mobile diuji.
+Shared [verification](../docs/CHART_V1_LOCAL_VERIFICATION.md) mencatat batas bukti dan tindakan berikutnya.
+Security patch Next 16.3.8/source-map-js 1.2.2: runtime audit 0; advisory dev braces pada lima dependency
+masih dilacak. Berikutnya setelah instruksi: Tahap 4 integrasi dan URL restore, Tahap 5 regression/
+performance/security, Tahap 6 rilis setelah backend capability/artifact tersedia. Belum commit/push/deploy.
+
+## Previous Chart V1 — Tahap 1, 2026-10-14
+
+Status: SPECIFICATION ONLY; runtime/dependency belum diubah. Cakupan aktif hanya Tahap 1.
+Shared plan: [UX, Action/Proof dan acceptance C01–C18](../docs/CHART_V1_IMPLEMENTATION_PLAN.md).
+Contract: [ticker-chart-v1](../contracts/ticker-chart-v1.md). Root docs adalah sumber handoff lintas repo;
+pada Tahap 3 vendor kontrak yang sama beserta hash ke repo ini untuk independent CI.
+
+Action (Tahap 1): kunci Lightweight Charts client island, reusable scanner/journal/route chart, lazy load,
+URL/context, terminal desktop/mobile, states dan strict reader contract. Proof: source/contract review dan
+pemeriksaan dokumentasi; tidak ada klaim unit/build/browser/live untuk fitur yang belum diimplementasikan.
+
+Next Action (Tahap 3): contract parser/fixture RED tests, pin library+NOTICE, implement renderer dan
+lifecycle. Proof: C01/C11–C15; tanpa chart fetch/chunk ketika tertutup, no canonical math di UI.
+Tahap 4 memerlukan reader backend nyata; Tahap 5 regression/security/performance; Tahap 6 release terotorisasi.
+Source inspected: frontend11234b7; historical release evidence berikut tidak membuktikan chart sudah ada.
+
 ## Approved P6–P8 incident remediation — 2026-10-13
 
 Status: RELEASED AND PUBLIC-SMOKE VERIFIED under user-approved P1–P8 (`../docs/AUDIT_SCANNER_JOURNAL_20261013.md`), including commit/push/Production deployment and catch-up. Backend SQL012 must precede additive contract consumers. Routes, trading arithmetic, actual ledger/CSV, authentication and data requests remain canonical.

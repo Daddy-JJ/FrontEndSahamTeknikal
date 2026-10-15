@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { journalFilters, journalFilterParams } from "@/lib/journal-filters";
 import { journalPageNumber } from "@/lib/journal-page";
 import { ProcessingHealthNotice } from "@/components/processing-health";
+import { chartIndicators, chartPageHref } from "@/lib/chart-navigation";
 import {
   parseTradeReporting, parseSignalEvaluation, strategyLabels, reportingStrategies, evaluationKeys,
   type ReportingFilters, type TradeReporting, type SignalEvaluation, type ReportingCurvePoint, type ReportingTrade,
@@ -118,7 +119,20 @@ function FilterForm({ tab, f, view }: { tab: "paper" | "signals"; f: ReportingFi
 function Money({ value }: { value: number | string | null }) {
   return <span className="reporting-money">{reportMoney(value)}</span>;
 }
-export function TradeRows({ trades, mode }: { trades: ReportingTrade[]; mode: "paper" | "actual" }) {
+function SignalChartLink({ ticker, id, strategy, returnTo, label = "Saat sinyal" }: {
+  ticker: string; id: string; strategy: string; returnTo?: string; label?: string;
+}) {
+  const href = chartPageHref({ ticker, context: "signal", context_id: id, view: "snapshot", timeframe: "1d", limit: 250 }, returnTo, chartIndicators(strategy));
+  return href ? <Link prefetch={false} aria-label={"Chart " + ticker + " " + label} href={href}>{label}</Link> : null;
+}
+function TradeChartLinks({ trade: t, mode, returnTo, exitFamily }: {
+  trade: ReportingTrade; mode: "paper" | "actual"; returnTo?: string; exitFamily?: string | null;
+}) {
+  const href = chartPageHref({ ticker: t.ticker, context: mode, context_id: t.id, view: "followup", timeframe: "1d", limit: 250 }, returnTo, chartIndicators(t.strategy, exitFamily));
+  return <small>{href && <Link prefetch={false} aria-label={"Chart " + t.ticker} href={href}>Chart</Link>}
+    {t.signal_id && <>{href ? " · " : ""}<SignalChartLink ticker={t.ticker} id={t.signal_id} strategy={t.strategy} returnTo={returnTo} /></>}</small>;
+}
+export function TradeRows({ trades, mode, returnTo, exitFamily }: { trades: ReportingTrade[]; mode: "paper" | "actual"; returnTo?: string; exitFamily?: string | null }) {
   if (!trades.length) return <div className="journal-empty"><h3>Belum ada transaksi pada halaman ini</h3><p>Rencana paper baru tercatat otomatis dari sinyal valid setelah aktivasi model.</p></div>;
   return <div className="reporting-list"><table className="dense-table reporting-trades"><thead><tr>
     <th>Ticker / Strategi</th><th>Status</th><th>Entry / Sesi</th><th>Lot</th><th>SL awal</th><th>Risiko harga awal</th><th>Planned loss + fee</th><th>Exit / Sesi</th><th>Total fee</th><th>P&amp;L net / R</th><th>Rincian</th>
@@ -129,7 +143,9 @@ export function TradeRows({ trades, mode }: { trades: ReportingTrade[]; mode: "p
     <td data-label="Lot">{t.lots ?? "—"}</td><td data-label="SL awal"><Money value={t.initial_stop} /></td><td data-label="Risiko harga awal"><Money value={t.initial_price_risk_idr} /></td><td data-label="Planned loss + fee"><Money value={t.planned_loss_idr} /></td>
     <td data-label="Exit / Sesi"><Money value={t.exit_price} /><small>{t.exit_session ?? "—"}</small></td><td data-label="Total fee"><Money value={t.fee_total_idr} /></td>
     <td data-label="P&L net / R" className={Number(t.realized_pnl_idr) < 0 ? "negative" : "positive"}><Money value={t.realized_pnl_idr} /><small>{reportRatio(t.realized_r)} R</small></td>
-    <td data-label="Rincian"><small>{t.metric_eligible === undefined ? "Eligibility backend belum tersedia" : t.metric_eligible ? "Dinilai dalam statistik utama" : "Di luar statistik utama · " + (t.exclusion_reason ?? t.state)}</small><Link prefetch={false} href={mode === "paper" ? "/journal/paper/" + encodeURIComponent(t.id) : "/journal/" + encodeURIComponent(t.id)}>Lihat →</Link></td>
+    <td data-label="Rincian"><small>{t.metric_eligible === undefined ? "Eligibility backend belum tersedia" : t.metric_eligible ? "Dinilai dalam statistik utama" : "Di luar statistik utama · " + (t.exclusion_reason ?? t.state)}</small><Link prefetch={false} href={(mode === "paper" ? "/journal/paper/" : "/journal/") + encodeURIComponent(t.id) + (returnTo ? "?return_to=" + encodeURIComponent(returnTo) : "")}>Lihat →</Link>
+      <TradeChartLinks trade={t} mode={mode} returnTo={returnTo} exitFamily={exitFamily} />
+    </td>
   </tr>)}</tbody></table></div>;
 }
 export function TradeDashboard({ report, f, view = "analytics" }: { report: TradeReporting; f: ReportingFilters; view?: "analytics" | "journal" }) {
@@ -171,7 +187,7 @@ export function TradeDashboard({ report, f, view = "analytics" }: { report: Trad
     <section className="journal-panel" id="reporting-trades"><div className="journal-toolbar"><h2>{view === "journal" ? "Jurnal paper persisten" : "Transaksi dan eligibility statistik"}</h2><span className="muted small">Halaman {f.page} · 25 baris</span></div>
       <p className="panel-note">Hanya closed eligible dalam periode exit masuk statistik utama. Status belum exit berasal dari histori dengan filter strategi/exit yang sama.</p>
       {report.exclusions && <p className="panel-note">Closed dikecualikan: {report.exclusions.closed_excluded}{Object.entries(report.exclusions.reasons).map(([reason, total]) => " · " + reason + ": " + total).join("")}</p>}
-      <TradeRows trades={report.trades} mode={report.mode} />
+      <TradeRows trades={report.trades} mode={report.mode} returnTo={reportLink(base, report.mode, f)} exitFamily={report.mode === "paper" ? f.exitKey : f.exitSnapshotKey} />
       <nav className="journal-pagination" aria-label="Halaman reporting">{f.page > 1 && <Link prefetch={false} href={reportLink(base, report.mode, f, { page: f.page - 1 })}>← Sebelumnya</Link>}{report.paging.has_more && <Link prefetch={false} href={reportLink(base, report.mode, f, { page: f.page + 1 })}>Berikutnya →</Link>}</nav>
     </section>
     <p className="journal-footnote">{report.mode === "paper" ? "Entry simulasi memakai close hari sinyal pada sesi berikutnya. Planned loss pada SL maksimal Rp1 juta termasuk fee beli 0,15% dan jual pada SL 0,25%; lot dibulatkan turun. Fixed 2R dan SMA10 adalah eksperimen terpisah. " : ""}Realized R memakai initial price risk yang dibekukan. SMA10 memerlukan close terkonfirmasi di bawah SMA10, lalu exit next-open; SL awal tetap aktif.</p>
@@ -202,7 +218,7 @@ function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: Repor
     </section>
     <section className="journal-panel" id="signal-observations"><h2>Observasi sinyal pembentuk matriks</h2>
       {report.evaluations.length === 0 ? <div className="journal-empty"><p>Belum ada observasi sinyal pada halaman ini.</p></div> : <div className="reporting-list"><table className="dense-table"><thead><tr><th>Ticker / Sinyal</th><th>Entry referensi / SL</th><th>Sesi teramati</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead><tbody>{report.evaluations.map(e => <tr key={e.signal_id}>
-        <td data-label="Ticker / Sinyal">{e.ticker}<small>{strategyLabels[e.strategy]} · {e.signal_session}</small><details><summary>Sumber sinyal</summary><small className="mono">{e.signal_id}</small><small>Target 1R: {reportMoney(e.target_1r)}; 2R: {reportMoney(e.target_2r)}</small></details></td><td data-label="Entry referensi / SL">{reportMoney(e.entry_price)} / {reportMoney(e.initial_stop)}<small>Entry {e.entry_session}</small></td><td data-label="Sesi teramati">{e.observed_sessions}</td>{evaluationKeys.map(k => <td data-label={evaluationLabels[k]} key={k}>{({ won: "Berhasil", lost: "Gagal", pending: "Menunggu", ambiguous: "Ambigu", data_hold: "Data tertahan", excluded: "Dikecualikan" } as Record<string, string>)[e.results[k]]}</td>)}
+        <td data-label="Ticker / Sinyal">{e.ticker}<small>{strategyLabels[e.strategy]} · {e.signal_session}</small><SignalChartLink ticker={e.ticker} id={e.signal_id} strategy={e.strategy} returnTo={reportLink("/analytics", "signals", f)} label="Chart saat sinyal" /><details><summary>Sumber sinyal</summary><small className="mono">{e.signal_id}</small><small>Target 1R: {reportMoney(e.target_1r)}; 2R: {reportMoney(e.target_2r)}</small></details></td><td data-label="Entry referensi / SL">{reportMoney(e.entry_price)} / {reportMoney(e.initial_stop)}<small>Entry {e.entry_session}</small></td><td data-label="Sesi teramati">{e.observed_sessions}</td>{evaluationKeys.map(k => <td data-label={evaluationLabels[k]} key={k}>{({ won: "Berhasil", lost: "Gagal", pending: "Menunggu", ambiguous: "Ambigu", data_hold: "Data tertahan", excluded: "Dikecualikan" } as Record<string, string>)[e.results[k]]}</td>)}
       </tr>)}</tbody></table></div>}
       <nav className="journal-pagination" aria-label="Halaman observasi">{f.page > 1 && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page - 1 })}>← Sebelumnya</Link>}{report.paging.has_more && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page + 1 })}>Berikutnya →</Link>}</nav>
     </section>

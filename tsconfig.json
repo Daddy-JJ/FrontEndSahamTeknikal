@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -41,10 +42,15 @@
     ".next-scanner-smoke/types/**/*.ts",
     ".next-scanner-smoke/dev/types/**/*.ts",
     ".next-release-check/types/**/*.ts",
-    ".next-release-check/dev/types/**/*.ts"
+    ".next-release-check/dev/types/**/*.ts",
+    ".next-chart-smoke/types/**/*.ts",
+    ".next-chart-smoke/dev/types/**/*.ts",
+    ".next-chart-smoke/webpack/types/**/*.ts",
+    ".next-chart-smoke/webpack/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    ".next-*-smoke/**"
+    ".next-*-smoke/**",
+    "test-results/**"
   ]
 }

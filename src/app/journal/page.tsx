@@ -263,7 +263,7 @@ export default async function JournalPage({ searchParams }: {
                           return (
                             <tr key={t.id}>
                               <td className="text-left font-bold">
-                                <Link href={"/journal/" + t.id} style={{ color: "var(--ink)", textDecoration: "none" }}>
+                                <Link href={"/journal/" + t.id + '?return_to=' + encodeURIComponent(reportLink('/journal', 'actual', filters, {page}))} style={{ color: "var(--ink)", textDecoration: "none" }}>
                                   {t.ticker}
                                 </Link>
                               </td>
@@ -306,7 +306,7 @@ export default async function JournalPage({ searchParams }: {
                               </td>
                               <td className="text-center">
                                 <Link
-                                  href={"/journal/" + t.id}
+                                  href={"/journal/" + t.id + '?return_to=' + encodeURIComponent(reportLink('/journal', 'actual', filters, {page}))}
                                   style={{
                                     fontSize: "11px",
                                     padding: "4px 8px",

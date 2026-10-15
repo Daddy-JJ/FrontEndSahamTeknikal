@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, Command, Database, Filter, Layers3, LayoutDashboard, Moon, Search, ShieldCheck, SlidersHorizontal, Sparkles, Telescope, X } from "lucide-react";
 import { Modal } from "@/components/modal";
-import { PriceChart, Sparkline } from "@/components/price-chart";
+import { Sparkline } from "@/components/price-chart";
+import { WorkspaceChart } from "@/components/workspace-chart";
 import { dateLabel, fmt, strategies, type Signal, type Snapshot, type Strategy, type View } from "@/lib/types";
 
 const navigation: { id: View; label: string; icon: typeof Activity }[] = [
@@ -93,7 +94,7 @@ export function Workspace({ snapshot: s }: { snapshot: Snapshot }) {
         <section className="bento-grid">
           <article className="panel chart-panel"><div className="panel-heading"><div><div className="eyebrow">MARKET LENS · SINTETIS</div><h2>Harga & struktur tren</h2></div><label className="select-label"><span className="sr-only">Ticker chart</span><select value={chartTicker} onChange={e => setChartTicker(e.target.value)}>{Object.keys(s.charts).map(t => <option key={t}>{t}</option>)}</select></label></div>
             <div className="chart-summary"><strong>{fmt(last.close,2)}</strong><span className={change >= 0 ? "positive" : "negative"}>{change >= 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}{change >= 0 ? "+" : ""}{fmt(change,2)}%</span><span className="muted">close referensi</span><Badge tone="neutral">1D</Badge></div>
-            <PriceChart bars={chart} ticker={chartTicker} /><div className="chart-legend"><span><i className="legend-candle" />Harga sintetis</span><span><i className="legend-ma" />EMA20</span><span>60 sesi · volume di bawah</span></div>
+            <WorkspaceChart snapshot={s} ticker={chartTicker} /><p className="panel-note">Fixture sintetis · OHLC dan indikator tersedia berasal dari snapshot development. Chart dimuat setelah dibuka.</p>
           </article>
           <article className="panel strategy-panel"><div className="panel-heading"><div><div className="eyebrow">RULE ENGINE V1</div><h2>Empat sudut pandang</h2></div><ShieldCheck size={20} className="positive" /></div>
             {(Object.entries(strategies) as [Strategy, typeof strategies[Strategy]][]).map(([id,info],i) => <button className={`strategy-row ${strategy===id ? "chosen" : ""}`} key={id} onClick={() => { setStrategy(strategy===id ? "all" : id); setView("scanner"); }}>
@@ -147,7 +148,7 @@ export function Workspace({ snapshot: s }: { snapshot: Snapshot }) {
     </main>
     {notice && <div className="toast" role="status"><Check size={17} /><span>{notice}</span><button aria-label="Tutup notifikasi" onClick={() => setNotice("")}><X size={15} /></button></div>}
     {selected && <Modal title={`${selected.ticker} · ${strategies[selected.candidate.strategy].label}`} onClose={() => setSelected(null)}>
-      <Badge tone="amber">Data sintetis · fixture</Badge><PriceChart bars={s.charts[selected.ticker].filter(b => b.session <= selected.session)} ticker={selected.ticker} />
+      <Badge tone="amber">Data sintetis · fixture</Badge><WorkspaceChart snapshot={s} ticker={selected.ticker} signal={selected} />
       <div className="detail-grid"><div><span>Close referensi</span><strong>{fmt(selected.candidate.reference_close,2)}</strong></div><div><span>Initial SL kandidat</span><strong>{fmt(selected.candidate.stop,2)}</strong></div><div><span>Rencana sesi entry</span><strong>{dateLabel(selected.planned_entry_session)}</strong></div><div><span>Harga entry pada malam sinyal</span><strong>Belum tersedia</strong></div></div>
       <h3>Checklist aturan</h3><ul className="rule-list">{selected.candidate.rules.map(rule => <li key={rule.name}><Check size={15} /><span>{rule.name.replaceAll("_"," ")}</span><strong>{rule.passed ? "Lulus" : "Tidak"}</strong></li>)}</ul>
       {selected.candidate.available_session && <p className="info-note">Pivot: {dateLabel(selected.candidate.pivot_date!)} · Level baru tersedia: {dateLabel(selected.candidate.available_session)}. Chart tidak memundurkan waktu ketersediaan.</p>}

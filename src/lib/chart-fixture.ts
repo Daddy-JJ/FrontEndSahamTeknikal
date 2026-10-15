@@ -1,0 +1,120 @@
+import type { ChartEnvelope, ChartIndicator } from "./chart-contract";
+/** Synthetic development-only chart oracle; never a production fallback. */
+export function chartFixture(): ChartEnvelope {
+  const sessions = ["2026-10-08", "2026-10-09", "2026-10-12"];
+  const source = {
+    series_id: "00000000-0000-4000-8000-000000000001",
+    input_digest: "a".repeat(64),
+    resolved_input_digest: "a".repeat(64),
+    resolved_cutoff: "2026-10-12",
+    provider: "fixture",
+    provider_version: "fixture-v1",
+    price_basis: "fixture_ohlcv_v1",
+    scope: "fixture" as const,
+    fetched_at: "2026-10-12T11:00:00Z",
+    stored_at: "2026-10-12T11:00:00Z",
+    history_start: "2026-10-08",
+    last_market_session: "2026-10-12",
+  };
+  const ready = (values: (number | null)[]): ChartIndicator => ({
+    status: "ready",
+    reason: null,
+    definition_version: "fixture-v1",
+    artifact_digest: "b".repeat(64),
+    history_count: 600,
+    eligible_from: "2026-10-08",
+    points: sessions.map((session, index) => ({
+      session,
+      value: values[index],
+    })),
+  });
+  return {
+    contract_version: "ticker-chart-v1",
+    success: true,
+    error: null,
+    data: {
+      ticker: "ADRO",
+      data_mode: "fixture",
+      timeframe: "1d",
+      exchange: "XIDX",
+      timezone: "Asia/Jakarta",
+      currency: "IDR",
+      volume_unit: "shares",
+      context: {
+        kind: "latest",
+        id: null,
+        view: "followup",
+        signal_session: null,
+        snapshot_cutoff: null,
+        model_version: null,
+        experiment: null,
+        engine_source_revision: null,
+      },
+      revision: "fixture-chart-v1",
+      source,
+      signal_source: null,
+      quality: {
+        completeness: "partial",
+        freshness: "current",
+        expected_session: "2026-10-12",
+        reasons: ["missing_bar"],
+        warnings: [],
+      },
+      sessions,
+      bars: [
+        {
+          session: sessions[0],
+          open: "990",
+          high: "1020",
+          low: "980",
+          close: "1000",
+          volume: "120000",
+        },
+        {
+          session: sessions[2],
+          open: "1010",
+          high: "1040",
+          low: "995",
+          close: "1030",
+          volume: "150000",
+        },
+      ],
+      gaps: [{ session: sessions[1], reason: "missing_bar" }],
+      indicators: {
+        sma10: ready([995, null, 1005]),
+        ema200: ready([980, null, 982]),
+        macd: ready([2, null, 3]),
+        macd_signal: ready([1, null, 2]),
+        macd_histogram: ready([1, null, 1]),
+      },
+      overlays: {
+        status: "ready",
+        reason: null,
+        levels: [
+          {
+            id: "fixture-plan",
+            kind: "initial_stop",
+            price: "925",
+            starts_at: "2026-10-08",
+            ends_at: null,
+            available_session: "2026-10-08",
+            origin_session: null,
+            source_id: "fixture-context",
+            status: "effective",
+          },
+        ],
+        markers: [],
+        has_more: false,
+        next_cursor: null,
+      },
+      pagination: {
+        window_from: sessions[0],
+        window_to: sessions[2],
+        returned_slots: 3,
+        limit: 250,
+        has_more: false,
+        next_cursor: null,
+      },
+    },
+  };
+}

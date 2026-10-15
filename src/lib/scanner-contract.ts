@@ -3,7 +3,8 @@
 export const scannerPageSize = 25;
 export const scannerStrategies = ["MACD_EMA200_V1", "FRACTAL_BREAKOUT_V1", "RS_BREAKOUT_V1", "PULLBACK_RECLAIM_V1"] as const;
 export type ScannerQuery = { run?: string; section: "signals" | "quality" | "auto"; page: number;
-  date?: string; strategy?: typeof scannerStrategies[number] };
+  date?: string; strategy?: typeof scannerStrategies[number];
+  detail?: string; detail_kind?: "signal" | "quality"; panel?: "reasons" | "chart" | "source" };
 export type ScanRun = {
   id: string; namespace: "forward"; data_mode: "live" | "fixture";
   session_date: string; status: "complete" | "partial" | "failed";
@@ -45,14 +46,21 @@ const positive = (value: unknown): value is number => typeof value === "number" 
 
 export function scannerQuery(query: Record<string, string | string[] | undefined>): ScannerQuery | null {
   const page = query.page ?? "1", section = query.section ?? "auto";
+  const hasDetail = query.detail !== undefined || query.detail_kind !== undefined || query.panel !== undefined;
+  const validDetail = typeof query.detail === "string" && (query.detail_kind === "signal"
+    ? /^[a-f0-9]{64}$/.test(query.detail) && section !== "quality"
+    : query.detail_kind === "quality" && /^[A-Z][A-Z0-9]{0,11}$/.test(query.detail) && section !== "signals");
   if (typeof page !== "string" || !/^[1-9]\d?$/.test(page) || Number(page) > 40
     || (section !== "signals" && section !== "quality" && !(section === "auto" && query.section === undefined))
     || (query.run !== undefined && !uuid(query.run))
     || (query.date !== undefined && query.date !== "" && !date(query.date))
-    || (query.strategy !== undefined && query.strategy !== "" && !scannerStrategies.includes(query.strategy as typeof scannerStrategies[number]))) return null;
+    || (query.strategy !== undefined && query.strategy !== "" && !scannerStrategies.includes(query.strategy as typeof scannerStrategies[number]))
+    || (hasDetail && (!validDetail || (query.panel !== undefined && !["reasons", "chart", "source"].includes(String(query.panel)))
+      || (query.panel !== undefined && typeof query.panel !== "string")))) return null;
   return { run: query.run as string | undefined, section, page: Number(page),
     ...(query.date ? { date: query.date as string } : {}),
-    ...(query.strategy ? { strategy: query.strategy as typeof scannerStrategies[number] } : {}) };
+    ...(query.strategy ? { strategy: query.strategy as typeof scannerStrategies[number] } : {}),
+    ...(hasDetail ? { detail: query.detail as string, detail_kind: query.detail_kind as "signal" | "quality", panel: (query.panel ?? "reasons") as "reasons" | "chart" | "source" } : {}) };
 }
 export function scannerHref(run: string, section: ScannerQuery["section"], page = 1,
   filters: Pick<ScannerQuery, "date" | "strategy"> = {}) {

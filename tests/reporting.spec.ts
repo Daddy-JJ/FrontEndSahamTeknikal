@@ -53,7 +53,9 @@ test("actual IDR reporting preserves exact snapshot, CSV and detail route",async
  await expect(page.getByRole("heading",{name:"Kurva P&L net kumulatif"})).toBeVisible();
  await expect(page.locator(".analytics-stat-card").filter({hasText:"Drawdown closed-P&L"})).toContainText("Rp0");
  await expect(page.getByRole("link",{name:"Ekspor CSV cohort"})).toHaveAttribute("href",/exit_snapshot=fixed2r/);
- await expect(page.locator(".reporting-trades").getByRole("link",{name:"Lihat →"})).toHaveAttribute("href","/journal/11111111-1111-4111-8111-111111111111");
+ const detailHref=await page.locator(".reporting-trades").getByRole("link",{name:"Lihat →"}).getAttribute("href");
+ expect(new URL(detailHref!,"http://127.0.0.1").pathname).toBe("/journal/11111111-1111-4111-8111-111111111111");
+ expect(new URL(detailHref!,"http://127.0.0.1").searchParams.get("return_to")).toContain("exit_snapshot=fixed2r");
  await page.getByRole("link",{name:"RS Breakout",exact:true}).first().click();
  await expect(page).toHaveURL(/strategy=RS_BREAKOUT_V1/);
  expect(new URL(page.url()).searchParams.get("exit_snapshot")).toBe("fixed2r");

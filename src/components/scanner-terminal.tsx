@@ -1,18 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { ChartPanel } from "@/components/chart-panel";
+import { chartIndicators } from "@/lib/chart-navigation";
+import { scannerDetailHref, resolveScannerSelection, scannerChartRequest, type ScannerSelection, type ScannerPanel } from "@/lib/scanner-detail";
+import { scannerScrollKey, parseScannerScroll } from "@/lib/scanner-scroll";
 import {
-  scannerHref, scannerStrategies, scanReasonLabels,
+  scannerHref, scannerQuery, scannerStrategies, scanReasonLabels,
   type ScanRun, type ScanItem, type PublishedSignal, type ScanCandidate, type ScannerQuery,
 } from "@/lib/scanner-contract";
 
-type Selection = { kind: "quality"; item: ScanItem } | { kind: "signal"; signal: PublishedSignal };
+type Selection = ScannerSelection;
 type Props = {
   run: ScanRun; query: ScannerQuery; section: "quality" | "signals";
   items: ScanItem[]; signals: PublishedSignal[]; hasMore: boolean;
   entryWindow: "open" | "elapsed" | "unknown"; lastSuccessful: string | null;
 };
+const subscribeDrawer = (notify: () => void) => {
+  const media = window.matchMedia("(min-width: 1280px)");
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+};
+const drawerSnapshot = () => !window.matchMedia("(min-width: 1280px)").matches;
+const subscribeClientReady = () => () => {};
 const label = (reason: string) => scanReasonLabels[reason] ?? reason;
 const price = (value: number | null | undefined) => value == null ? "Belum tersedia" : "Rp" + new Intl.NumberFormat("id-ID").format(value);
 const strategyLabels: Record<string, string> = {
@@ -81,34 +93,68 @@ function Detail({ selection, run }: { selection: Selection; run: ScanRun }) {
   </>;
 }
 export function ScannerTerminal({ run, query, section, items, signals, hasMore, entryWindow, lastSuccessful }: Props) {
-  const [selection, setSelection] = useState<Selection | null>(null);
-  const [drawer, setDrawer] = useState(false);
+  const searchParams = useSearchParams();
+  const urlQuery = scannerQuery(Object.fromEntries(Array.from(new Set(searchParams.keys())).map(key => {
+    const values = searchParams.getAll(key);
+    return [key, values.length === 1 ? values[0] : values];
+  }))) ?? query;
+  const selection = resolveScannerSelection(urlQuery, items, signals);
+  const panel = urlQuery.panel ?? "reasons";
+  const lastPanel = useRef<ScannerPanel>(query.panel ?? "reasons");
+  const drawer = useSyncExternalStore(subscribeDrawer, drawerSnapshot, () => false);
+  const clientReady = useSyncExternalStore(subscribeClientReady, () => true, () => false);
   const dialog = useRef<HTMLDialogElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLButtonElement | null>(null);
+  const terminal = useRef<HTMLDivElement>(null);
+  const scrollKey = scannerScrollKey(run.id, section, run.data_mode, query);
+  const rememberScroll = () => {
+    const matrix = terminal.current?.querySelector<HTMLElement>(".terminal-matrix");
+    try {
+      window.sessionStorage.setItem(scrollKey, JSON.stringify({ windowY: window.scrollY,
+        matrixTop: matrix?.scrollTop ?? 0, matrixLeft: matrix?.scrollLeft ?? 0 }));
+    } catch { /* Browser storage may be disabled; navigation remains available. */ }
+  };
+  useEffect(() => {
+    let saved = null;
+    try { saved = parseScannerScroll(window.sessionStorage.getItem(scrollKey)); } catch { /* Optional UI state only. */ }
+    if (!saved) return;
+    const position = saved;
+    const frame = requestAnimationFrame(() => {
+      const matrix = terminal.current?.querySelector<HTMLElement>(".terminal-matrix");
+      matrix?.scrollTo({ top: position.matrixTop, left: position.matrixLeft });
+      window.scrollTo({ top: position.windowY });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [scrollKey]);
   const rsHeld = run.ranking_status !== "complete";
   const storedWib = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "medium", timeStyle: "medium", hourCycle: "h23" }).format(new Date(run.stored_at));
-  const close = () => { dialog.current?.close(); setSelection(null); opener.current?.focus(); };
+  const close = useCallback(() => {
+    dialog.current?.close();
+    window.history.replaceState(null, "", scannerDetailHref(run.id, section, query, null));
+    opener.current?.focus();
+  }, [run.id, section, query]);
+  const selectionIdentity = selection?.kind === "quality" ? selection.item.ticker : selection?.signal.id;
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 1280px)");
-    const change = () => setDrawer(!media.matches);
-    media.addEventListener("change", change);
-    return () => media.removeEventListener("change", change);
-  }, []);
-  useEffect(() => {
-    if (!selection) { dialog.current?.close(); return; }
+    if (!selectionIdentity) { dialog.current?.close(); opener.current?.focus(); return; }
     if (drawer) dialog.current?.showModal();
     else { dialog.current?.close(); detailHeading.current?.focus(); }
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !drawer) { setSelection(null); opener.current?.focus(); }
+      if (event.key === "Escape" && !drawer) close();
     };
     window.addEventListener("keydown", escape);
     return () => window.removeEventListener("keydown", escape);
-  }, [selection, drawer]);
+  // Selection is resolved from the immutable page rows; tab changes keep focus.
+  }, [selectionIdentity, drawer, close]);
   const select = (value: Selection, button: HTMLButtonElement) => {
     opener.current = button;
-    setDrawer(!window.matchMedia("(min-width: 1280px)").matches);
-    setSelection(value);
+    const nextPanel = selection ? panel : lastPanel.current;
+    window.history.pushState(null, "", scannerDetailHref(run.id, section, query, value, nextPanel));
+  };
+  const selectPanel = (next: ScannerPanel) => {
+    if (!selection) return;
+    lastPanel.current = next;
+    window.history.replaceState(null, "", scannerDetailHref(run.id, section, query, selection, next));
   };
   const ticker = selection?.kind === "quality" ? selection.item.ticker : selection?.signal.ticker;
   const selectedKey = selection?.kind === "quality" ? selection.item.ticker : selection?.signal.id;
@@ -125,9 +171,34 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       <div><span className="terminal-kicker">SNAPSHOT BACKEND</span><h2 ref={drawer ? undefined : detailHeading} tabIndex={-1} id={drawer ? "scanner-drawer-title" : "scanner-pane-title"}>Detail {ticker}</h2></div>
       <button type="button" onClick={close} aria-label={"Tutup detail " + ticker}>Tutup <span aria-hidden="true">×</span></button>
     </div>
-    <Detail selection={selection} run={run} />
+    <div className="terminal-detail-tabs" role="tablist" aria-label="Isi detail emiten" onKeyDown={event => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const tabs = ["reasons", "chart", "source"] as const;
+      const index = event.key === "Home" ? 0 : event.key === "End" ? 2 : (tabs.indexOf(panel) + (event.key === "ArrowRight" ? 1 : 2)) % 3;
+      selectPanel(tabs[index]);
+      event.currentTarget.querySelectorAll<HTMLButtonElement>("button")[index]?.focus();
+    }}>
+      {([["reasons", "Alasan sinyal"], ["chart", "Chart"], ["source", "Data & sumber"]] as const).map(([key, name]) =>
+        <button key={key} role="tab" id={`scanner-tab-${key}`} aria-selected={panel === key} aria-controls={`scanner-panel-${key}`} tabIndex={panel === key ? 0 : -1} type="button" onClick={() => selectPanel(key)}>{name}</button>)}
+    </div>
+    <div role="tabpanel" id={`scanner-panel-${panel}`} aria-labelledby={`scanner-tab-${panel}`}>
+      {panel === "reasons" ? <Detail selection={selection} run={run} /> : panel === "source" ? <section>
+        <h3>Sumber keputusan tersimpan</h3>
+        <dl className="terminal-audit"><dt>Sesi run</dt><dd>{run.session_date}</dd><dt>Run</dt><dd>{run.id}</dd><dt>Run digest</dt><dd>{run.run_digest}</dd>
+          {selection.kind === "signal" && <><dt>Signal ID</dt><dd>{selection.signal.id}</dd><dt>Provider / basis</dt><dd>{selection.signal.provider} / {selection.signal.price_basis ?? "Belum tersedia"}</dd><dt>Input digest</dt><dd>{selection.signal.input_digest ?? "Belum tersedia"}</dd><dt>Engine / source revision</dt><dd>{selection.signal.engine_version ?? "Belum tersedia"} / {selection.signal.source_revision ?? "Belum tersedia"}</dd></>}</dl>
+        <p>Metadata ini berasal dari snapshot keputusan run. Sumber harga chart ditampilkan terpisah di panel chart.</p>
+      </section> : <>
+        {selection.kind === "quality" && <p className="terminal-notice" role="status">Chart harga terbaru, bukan snapshot run terpilih. Status quality dan alasan run tetap berasal dari sesi {run.session_date}.</p>}
+        {clientReady ? <ChartPanel request={scannerChartRequest(selection)} mode={run.data_mode} fixture={run.data_mode === "fixture"}
+          initiallyOpen onClose={() => selectPanel("reasons")} initialIndicators={chartIndicators(selection.kind === "signal" ? selection.signal.strategy : null)}
+          returnTo={scannerDetailHref(run.id, section, query, selection, "chart")} /> : <p role="status">Menyiapkan panel chart…</p>}
+      </>}
+    </div>
   </>;
-  return <div className="scanner-terminal">
+  return <div ref={terminal} className="scanner-terminal" onClickCapture={event => {
+    if (event.target instanceof Element && event.target.closest('a[href^="/chart/"]')) rememberScroll();
+  }}>
     <section className="terminal-run" aria-label="Ringkasan run">
       <div className="terminal-run-line">
         <span className="terminal-kicker">SCANNER / EOD</span>
@@ -177,7 +248,8 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       {entryWindow === "elapsed" && "Publikasi forward berakhir. Rencana paper tetap diproses EOD. "}
       Freshness input belum dapat diverifikasi.
     </p>
-    <div className={"terminal-workspace " + (selection && !drawer ? "has-detail" : "")}>
+    {urlQuery.detail && !selection && <p className="terminal-notice" role="status">Detail yang dipilih tidak tersedia pada halaman ini. Pilih emiten pada daftar atau ubah halaman; chart tidak mengambil konteks lain sebagai pengganti.</p>}
+    <div className={"terminal-workspace " + (selection && !drawer ? "has-detail" + (panel === "chart" ? " has-chart" : "") : "")}>
       <section className="terminal-results" aria-label="Hasil scanner">
         <div className="terminal-results-heading">
           <h2>{section === "quality" ? "Evaluasi Konstituen Universe" : "Sinyal Diterbitkan"}</h2>
@@ -188,7 +260,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
             <table aria-label="Quality dan evaluasi ticker">
               <thead><tr><th>Ticker / detail</th><th>Status Data</th><th className="number">Ref Close</th>{scannerStrategies.map(strategy => <th key={strategy}>{strategyLabels[strategy]}</th>)}</tr></thead>
               <tbody>{items.map(item => <tr key={item.ticker} data-status={item.status} aria-selected={selectedKey === item.ticker}>
-                <td><button className="terminal-ticker" type="button" aria-label={"Detail " + item.ticker} aria-expanded={selectedKey === item.ticker} aria-controls="scanner-detail" onClick={event => select({ kind: "quality", item }, event.currentTarget)}>{item.ticker}<span aria-hidden="true"> ↗</span></button></td>
+                <td><button ref={button => { if (button && selectedKey === item.ticker) opener.current = button; }} className="terminal-ticker" type="button" aria-label={"Detail " + item.ticker} aria-expanded={selectedKey === item.ticker} aria-controls="scanner-detail" onClick={event => select({ kind: "quality", item }, event.currentTarget)}>{item.ticker}<span aria-hidden="true"> ↗</span></button></td>
                 <td><span className={item.status === "evaluated" ? "terminal-positive" : "terminal-hold"}>{label(item.status)}</span></td>
                 <td className="number">{item.candidates[0] ? price(item.candidates[0].reference_close) : "—"}</td>
                 {scannerStrategies.map(strategy => <td key={strategy}>{cell(item, strategy)}</td>)}
@@ -200,7 +272,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
         </> : signals.length ? <div className="terminal-matrix" tabIndex={0} role="region" aria-label="Matriks sinyal, geser untuk kolom lain">
           <table aria-label="Sinyal diterbitkan"><thead><tr><th>Ticker / detail</th><th>Strategi</th><th className="number">Reference close · bukan fill</th><th className="number">Plan Stop</th><th>Target Entry</th><th>Cohort</th><th>Keputusan</th></tr></thead>
             <tbody>{signals.map(signal => <tr key={signal.id} aria-selected={selectedKey === signal.id}>
-              <td><button type="button" className="terminal-ticker" aria-label={"Detail " + signal.ticker} aria-expanded={selectedKey === signal.id} aria-controls="scanner-detail" onClick={event => select({ kind: "signal", signal }, event.currentTarget)}>{signal.ticker}<span aria-hidden="true"> ↗</span></button></td>
+              <td><button ref={button => { if (button && selectedKey === signal.id) opener.current = button; }} type="button" className="terminal-ticker" aria-label={"Detail " + signal.ticker} aria-expanded={selectedKey === signal.id} aria-controls="scanner-detail" onClick={event => select({ kind: "signal", signal }, event.currentTarget)}>{signal.ticker}<span aria-hidden="true"> ↗</span></button></td>
               <td><span title={signal.strategy}>{strategyLabels[signal.strategy]}</span></td>
               <td className="number">{price(signal.candidate.reference_close)}</td><td className="number">{price(signal.candidate.stop)}</td>
               <td className="terminal-mono">{signal.planned_entry_session}</td>
@@ -221,9 +293,9 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       </section>
       {selection && !drawer && <aside id="scanner-detail" className="terminal-detail" aria-labelledby="scanner-pane-title">{detailContent}</aside>}
     </div>
-    <dialog ref={dialog} id={drawer ? "scanner-detail" : undefined} className="terminal-detail terminal-dialog" aria-labelledby="scanner-drawer-title" onKeyDown={event => {
+    <dialog ref={dialog} id={drawer ? "scanner-detail" : undefined} className={"terminal-detail terminal-dialog" + (panel === "chart" ? " terminal-chart-dialog" : "")} aria-labelledby="scanner-drawer-title" onKeyDown={event => {
       if (event.key !== "Tab") return;
-      const elements = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],summary,[tabindex="0"]')).filter(element => element.getClientRects().length > 0);
+      const elements = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]):not([tabindex="-1"]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],summary,[tabindex="0"]')).filter(element => element.getClientRects().length > 0);
       const first = elements[0], last = elements.at(-1);
       if (!first || !last) return;
       if (event.shiftKey && (document.activeElement === first || !event.currentTarget.contains(document.activeElement))) { event.preventDefault(); last.focus(); }

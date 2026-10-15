@@ -17,13 +17,15 @@
     "test:journal": "playwright test --config playwright.journal.config.ts",
     "test:scanner": "playwright test --config playwright.scanner.config.ts",
     "test:scanner:release": "node tests/support/scanner-release-smoke.mjs",
-    "test:reporting": "playwright test --config playwright.reporting.config.ts"
+    "test:reporting": "playwright test --config playwright.reporting.config.ts",
+    "test:chart": "playwright test --config playwright.chart.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
+    "lightweight-charts": "5.2.1",
     "lucide-react": "1.48.0",
-    "next": "16.3.6",
+    "next": "16.3.8",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
@@ -33,7 +35,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.3.8",
     "typescript": "5.9.3"
   }
 }

@@ -1,3 +1,21 @@
+## Chart V1 — Tahap 6 preparation, 2026-10-15
+
+Integrations and local checks complete: unit77, typecheck/lint/build, journal69, Scanner81+3,
+reporting64+2 follow-up, Workspace27 PASS/3 configured-mode SKIP, chart24+6 grouped error cases PASS.
+Synthetic production performance gates PASS: LCP624→572ms and500-slot render373.8ms, payload240833bytes;
+closed charts load no price request/heavy library. Runtime audit0; user approved a temporary dev-tool
+advisory exception15Oct; the advisory remains unpatched.
+User authorized commit/push/deploy. Backend history live001–012 requires populated rehearsal013–016 first.
+Frontend is not pushed/deployed yet; authenticated live owner browser is not available.
+
+## Previous Chart V1 — Tahap 3 local, 2026-10-14
+
+Lightweight Charts 5.2.1, reusable lazy chart, strict API parser, owner RPC adapter/route dan preview
+fixture development diimplementasikan lokal. Unit 56/typecheck/lint/build PASS; browser chart 18 dan
+empat retest terarah PASS. Pure TS coverage per-file >80%. Integrasi halaman existing masuk Tahap 4.
+[Shared evidence](../docs/CHART_V1_LOCAL_VERIFICATION.md). Patch Next 16.3.8: runtime audit 0;
+advisory dev braces masih dilacak. Belum dirilis ke produksi.
+
 ## Remediation release verified - 2026-10-10
 
 Action: completed the authorized release after the backup/restore gate; applied the additive backend migration before the compatible frontend and verified the released runtime's recovery and retry behavior.

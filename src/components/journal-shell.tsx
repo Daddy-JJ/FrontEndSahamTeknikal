@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { ChartReturnPosition } from "./chart-return-position";
 
 export function JournalShell({mode,children,variant="default",activePage,showMode=true}:{
   mode:"fixture"|"live"|null; children:React.ReactNode; variant?:"default"|"terminal"; activePage?:"scanner"|"journal"|"analytics"|"operations"|"account"; showMode?:boolean;
 }) {
   const content = <>
+    {/* A loading shell hides its mode; it is not evidence of an expired owner session. */}
+    {showMode && <Suspense fallback={null}><ChartReturnPosition mode={mode} /></Suspense>}
     <header className="journal-nav">
       <div className="journal-nav-inner">
         <Link className="journal-brand" href="/">IDX <span>Night Scanner</span></Link>
