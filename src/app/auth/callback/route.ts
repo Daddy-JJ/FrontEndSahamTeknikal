@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, publicSupabaseConfig } from "@/lib/supabase/server";
+import { passwordAuthConfig } from "@/lib/password-auth-server";
 
 function safeRedirect(path: string, origin: string) {
   const response = NextResponse.redirect(new URL(path, origin));
@@ -8,7 +9,8 @@ function safeRedirect(path: string, origin: string) {
   return response;
 }
 export async function GET(request: Request) {
-  const origin = new URL(request.url).origin;
+  // Keep PKCE cookies on the configured browser origin, even behind a host-rewriting proxy.
+  const origin = passwordAuthConfig()?.origin ?? new URL(request.url).origin;
   const code = new URL(request.url).searchParams.get("code");
   if (!publicSupabaseConfig()) return safeRedirect("/auth/error?reason=configuration", origin);
   if (!code) return safeRedirect("/auth/error?reason=callback", origin);
@@ -16,7 +18,8 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return safeRedirect("/auth/check", origin);
+    if (!error) return safeRedirect(new URL(request.url).searchParams.get("flow") === "recovery"
+      ? "/auth/password/update" : "/auth/check", origin);
     if (error.name === "AuthPKCECodeVerifierMissingError") {
       return safeRedirect("/auth/error?reason=verifier", origin);
     }

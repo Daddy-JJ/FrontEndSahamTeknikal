@@ -1,13 +1,59 @@
 # Frontend implementation status
 
-Documentation reconciled 2026-10-15. Release facts below come from recorded [workspace handoff](../CODEX_HANDOFF.md) and [chart verification](../docs/CHART_V1_LOCAL_VERIFICATION.md); no new tests, remote probes or deployment were run for this cleanup.
+## Active owner password release, 22 October 2026
 
-## Active work
+The owner approved implementation, cloud configuration and commit/push/deploy. [PLAN](PLAN.md) owns the release steps; [activation checklist](docs/LOGIN_PASSWORD_EXPLORATION.md) owns environment and rollback requirements.
 
-**Scanner relayout stages 1-4: IMPLEMENTED AND VERIFIED LOCALLY; not deployed.**
-Read [PLAN.md](PLAN.md) for the layout and [local verification](docs/SCANNER_RELAYOUT_VERIFICATION_20261015.md) for results and limits. Unit80, final Scanner followup21 plus zoom1, chart followup2, journal/Analytics15 and Workspace6 PASS; typecheck/lint/production build PASS. Earlier full Scanner failures and their disclosure correction are retained in verification. These stages are unrelated to the released chart baseline below.
+Before this release, a fresh GitHub deployment read confirmed Production 7092738529 / frontend main@513870f success. Earlier receipts below remain historical; they are not new verification of the password release.
 
-## Recorded released baseline
+### Local password feature and current release evidence
+
+
+- Source: frontend main@513870f plus uncommitted implementation; pre-existing Markdown retained.
+- Implemented: server alias mapping, same-owner checks, buffered SSR cookies, bounded JSON POST
+  and Origin validation, recent signed AMR, login/change/recovery UI, safe errors and logout.
+  Recovery readiness gates request and direct update. No backend/schema/dependency/financial change.
+- TDD: missing HTTP module RED then GREEN; disabled direct recovery update RED (200 vs 503) then GREEN.
+ 31 focused tests PASS; policy/core/HTTP 100% lines/functions and 99.20% branches. Adapter/UI
+ coverage is separate browser integration evidence, not part of that unit percentage.
+- Full unit 111/111 PASS; typecheck PASS; final post-review production build PASS; full ESLint PASS after
+  excluding only the new generated smoke build directory (same policy as other suites).
+- Browser integration 36/36 PASS: 14 password + 4 existing OAuth cases on each desktop/mobile Edge.
+  Covers same-owner login/refresh/logout, visibility/keyboard/touch/overflow, duplicate submit,
+  safe errors, no-cookie owner denial, origin/body/redirect checks, expiry refresh,
+  same-origin PKCE challenge/verifier matching, expired/reused codes, AMR and password-change/logout.
+  HTML 429 from the firewall receives a fixed safe message without rendering its body.
+  Test-only loopback Auth; no real email or production data written. Ports 3058/3061 closed and
+  generated next-env/tsconfig restored by teardown. Parent visually checked both login screenshots.
+  Selected desktop regressions PASS: reporting 3/3 (paper money/filter, actual CSV/detail,
+  denied reporting); journal 2/2 (anonymous/non-owner denial, refreshed-session reauthorization);
+  scanner 2/2 (outsider denial, partial coverage/RS hold). These are local HTTP fixtures.
+  Full financial/browser suites were not rerun; these selected regressions cover affected boundaries.
+- Independent source security/React/a11y review: no CRITICAL/HIGH. Nonblocking findings addressed:
+  native POST/no-JS guidance and cleared/locked fields with an Account link after saved-but-logout-failed.
+- Retained browser failures: first cold compile setup timeout, cold POST compile deadline,
+  initial full run 24 PASS/10 FAIL (8 fake-header/selector failures; 2 real callback origin failures).
+  Fixed fake API-version header/selectors; callback now uses validated APP_ORIGIN when password
+  configuration is enabled, preserving cookies behind a host-rewriting proxy. Full 34/34 then PASS.
+  Additional WAF HTML 429 test reproduced RED before the safe UI mapping; fresh full 36/36 PASS.
+  Initial receipt `test-results/password-initial-report.json`; WAF RED `password-waf-red-report.json`;
+  final `password-report.json`. Last fixture immutability cleanup received a focused PKCE check
+  and was included in the final full 36-case run. No failure receipt is relabelled as PASS.
+  A local Next dev aborted-RSC stream warning occurred on test context teardown; no browser
+  page/hydration error was observed. Do not report server logs as universally error-free.
+- Read-only owner preflight 21 October: same active confirmed nonanonymous owner; email/GitHub and
+  password already present. No password set by operator. Management Auth config GET 403.
+- Cloud WAF, server mapping, native Auth settings, recovery SMTP/PKCE and real owner/outsider
+  acceptance are NOT VERIFIED. Capability defaults disabled; GitHub remains available.
+  Owner authorized WAF/environment configuration and commit/push/deploy on 22 October.
+  Publication is in progress; production activation and owner acceptance are still pending.
+  Fresh read-only Supabase audit: existing owner UUID/email match and are confirmed;
+  email/GitHub providers enabled. Public signup remains enabled as before; RLS is unchanged.
+  Management Auth configuration still returns 403. No Auth user/password or journal was changed.
+
+
+## Historical released baseline (as recorded 15 October)
+
 
 | Item | Recorded evidence |
 | --- | --- |

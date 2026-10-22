@@ -9,8 +9,27 @@ import {
 import { readDevRevisionProbe, type RevisionProbe } from "@/lib/supabase/dev-revision-probe";
 import { signOut, verifyDevOwnerAction } from "./actions";
 import { JournalShell } from "@/components/journal-shell";
+import { PasswordAuthForm } from "@/components/password-auth-form";
+import { GithubLoginButton } from "@/app/login/github-login-button";
+import { passwordUpdateAccess } from "@/lib/password-auth-server";
 
 export const dynamic = "force-dynamic";
+
+async function PasswordSettings() {
+  const access = await passwordUpdateAccess("change");
+  return <section className="password-auth-settings" aria-labelledby="password-settings-title">
+    <hr className="password-auth-divider" />
+    <h2 id="password-settings-title">Password akun</h2>
+    {access.ready ? <>
+      <p>Username login: <strong>daddyjj</strong>. Tetapkan password Anda sendiri. Setelah tersimpan, sesi lama diakhiri dan Anda perlu masuk kembali.</p>
+      <PasswordAuthForm intent="change" />
+    </> : access.reason === "reauthenticate" ? <>
+      <p role="status">Untuk mengganti password, verifikasi ulang login Anda terlebih dahulu. Form tersedia selama 10 menit setelah autentikasi baru.</p>
+      <GithubLoginButton />
+      <p><Link href="/login?returnTo=%2Fauth%2Fcheck">Verifikasi dengan username dan password</Link></p>
+    </> : <p role="status">Pengaturan password belum tersedia untuk sesi ini. Login GitHub tetap dapat digunakan; tidak ada password yang diubah.</p>}
+  </section>;
+}
 
 export default async function AuthCheckPage({
   searchParams,
@@ -65,12 +84,12 @@ export default async function AuthCheckPage({
   }
 
   const probe = (await searchParams).probe;
-  return <JournalShell mode={null} activePage="account" showMode={false}><main className="configuration-page auth-page">
+  return <JournalShell mode={null} activePage="account" showMode={false}><section className="configuration-page auth-page">
     <span className="eyebrow">IDX NIGHT SCANNER · VERIFIKASI AKSES</span>
     <h1>{owner ? "Sesi owner terverifikasi" : "Akun belum memiliki akses owner"}</h1>
     {owner
       ? <p>Identitas Supabase Auth cocok dengan keanggotaan owner yang aktif. Permintaan data berikut berjalan dengan JWT pengguna dan RLS.</p>
-      : <p>{memberError ? "Pemeriksaan keanggotaan belum berhasil. Coba lagi nanti." : "Login GitHub berhasil, tetapi UID akun aplikasi ini belum tercatat sebagai owner pada app_members."}</p>}
+      : <p>{memberError ? "Pemeriksaan keanggotaan belum berhasil. Coba lagi nanti." : "Login berhasil, tetapi akun aplikasi ini belum memiliki keanggotaan owner yang aktif."}</p>}
     <div className="auth-facts">
       <div><span>UID akun aplikasi</span><strong>{user.id}</strong></div>
       <div><span>Keanggotaan</span><strong>{owner ? "Owner aktif" : "Belum terverifikasi"}</strong></div>
@@ -91,7 +110,8 @@ export default async function AuthCheckPage({
       <p className="auth-note">Menyimpan satu sinyal fixture sebagai watchlist, lalu mengulang request yang sama untuk menguji idempotensi. Tidak membuat trade atau fill.</p>
     </form>}
     {owner && isDevProject && actionExists && !actionVerified && <p className="auth-note">Sinyal fixture sudah memiliki aksi lain. Uji otomatis ditahan agar tidak menimpa data.</p>}
-    <form action={signOut}><button type="submit" className="primary-button">Keluar</button></form>
+    {owner && <PasswordSettings />}
+    <form action={signOut} className="password-auth-signout"><button type="submit" className="primary-button">Keluar</button></form>
     <p><Link href="/">Kembali ke beranda</Link></p>
-  </main></JournalShell>;
+  </section></JournalShell>;
 }

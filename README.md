@@ -7,7 +7,7 @@ Backend source, migrations, canonical financial arithmetic and market-data artif
 ## Read only what the task needs
 
 - [AGENTS.md](AGENTS.md): mandatory repository instructions, plus root instructions.
-- [PLAN.md](PLAN.md): the active Scanner relayout stages 1-4, currently PLANNED.
+- [PLAN.md](PLAN.md): active owner password login and release Action/Proof.
 - [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md): recorded release baseline and open evidence boundaries.
 - [SOT.md](SOT.md): canonical trading rules; synchronized copy of root SOT.
 - [Deployment checklist](docs/VERCEL_DEPLOYMENT_CHECKLIST.md): reusable release procedure.
@@ -35,6 +35,14 @@ Configure local environment using [.env.example](.env.example); keep real values
 
 Supabase GitHub OAuth uses `/login`, `/auth/callback` and `/auth/check`.
 Dashboard login is separate from application login. Access requires an enabled owner membership and matching deployment data mode.
+Owner password login also uses `/login`; `/auth/check` allows password setup/change after
+recent authentication. It preserves the same Auth UUID, owner membership and RLS. GitHub
+remains a fallback. Server-only alias/config and the cloud protection activation checklist
+are documented in [password login](docs/LOGIN_PASSWORD_EXPLORATION.md). Missing configuration
+disables password operations. Recovery stays disabled until verified SMTP/callback delivery.
+Run isolated local Auth browser coverage with
+`npx playwright test --config playwright.password.config.ts`; it uses loopback fake Auth,
+never a production password, email delivery or journal mutation.
 Production secrets, service-role keys, DB passwords and provider credentials never belong in this frontend.
 
 ## Commands

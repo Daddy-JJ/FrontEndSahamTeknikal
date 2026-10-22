@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./password-auth.css";
 
 export const metadata: Metadata = {
   title: "Ruang Sinyal · IDX Night Scanner",

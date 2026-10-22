@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     ] }, { source: "/auth/callback", headers: [
       { key: "Referrer-Policy", value: "no-referrer" },
       { key: "Cache-Control", value: "private, no-store" },
+    ] }, { source: "/auth/password/:path*", headers: [
+      { key: "Referrer-Policy", value: "no-referrer" },
+      { key: "Cache-Control", value: "private, no-store" },
     ] }];
   },
 };
