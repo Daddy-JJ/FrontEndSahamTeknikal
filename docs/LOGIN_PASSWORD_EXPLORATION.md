@@ -113,5 +113,6 @@ Release activation checklist (not performed by local implementation):
    or restore the last verified frontend deployment. Do not delete/reassign Auth users.
 
 No DB migration, dependency, financial arithmetic, RLS or backend change is required.
-**Hosted configuration, WAF enforcement, recovery delivery and real owner password login remain
-NOT VERIFIED.** Local evidence and current next actions are in PLAN/status.
+**Production mapping and WAF enforcement verified 22 October 2026.** Password form is live;
+recovery delivery, native advanced Auth settings and real owner password login remain
+NOT VERIFIED. [Status](../IMPLEMENTATION_STATUS.md) owns the receipt and owner acceptance steps.

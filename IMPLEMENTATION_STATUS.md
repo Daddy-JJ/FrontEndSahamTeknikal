@@ -1,76 +1,72 @@
 # Frontend implementation status
 
-## Active owner password release, 22 October 2026
+## Password login activated, 22 October 2026
 
-The owner approved implementation, cloud configuration and commit/push/deploy. [PLAN](PLAN.md) owns the release steps; [activation checklist](docs/LOGIN_PASSWORD_EXPLORATION.md) owns environment and rollback requirements.
+The approved feature uses `daddyjj`, the existing owner UUID, GitHub fallback and unchanged RLS.
+[PLAN](PLAN.md) owns current Action/Proof; [design/checklist](docs/LOGIN_PASSWORD_EXPLORATION.md)
+owns configuration. Earlier relayout/chart receipts below remain historical, not fresh proof
+of scanner feed quality or journal processing. Unrelated local documentation cleanup is retained.
 
-Before this release, a fresh GitHub deployment read confirmed Production 7092738529 / frontend main@513870f success. Earlier receipts below remain historical; they are not new verification of the password release.
+### Published source and Production activation
 
-### Local password feature and current release evidence
+- Feature source `9d477cc796a61dbd925ca3b10543a5e813c25760` committed/pushed; initial GitHub
+  Production deployment `7246831816` SUCCESS with capability deliberately disabled.
+- Activation source `a30bd797def3b3c84cb2ded2e8bdd0ab930a5eaf` redeployed from exact Git SHA
+  after cloud configuration. Vercel `dpl_nA6gQwK5j7Fe3bsR5rvWzJvr2j1z` READY; alias
+  https://sahamteknikal.vercel.app confirmed in deployment and current Production target.
+- Existing owner UUID/email are confirmed and match the private operator mapping; one active
+  owner membership. Email/GitHub providers enabled. No owner reassignment, signup, password,
+  Auth user, RLS, database, journal data or backend implementation change was performed.
+- Six server-only variables created as sensitive, Production-only: `APP_OWNER_USER_ID`,
+  `OWNER_LOGIN_USERNAME`, `OWNER_LOGIN_EMAIL`, `APP_ORIGIN`, `AUTH_PASSWORD_RECOVERY_READY`,
+  `AUTH_PASSWORD_PROTECTION`. Existing variables/targets preserved; protection flag written
+  last after fresh WAF proof. No password stored in environment. Runtime configuration is
+  cloud-hosted and does not require the operator laptop.
+- WAF active v2: exact POST `/auth/password`, fixed window 5 requests/60 seconds/source IP,
+  follow-up `rate_limit` returns429. Two independent HTTP clients: first5 requests503 while
+  feature was still disabled, requests6-8 returned429; ordinary GET `/login` remained200.
+  This proves the cloud rule across those requests, not a deliberately selected function-instance test.
+  Initial `deny` follow-up returned403 as documented; activation was held, then only that
+  action changed to429. Owned rule ID/other config preserved; failure receipt retained.
+- Public live smoke at08:25UTC: 10 routes/11 assets PASS; password form and GitHub fallback
+  present, stylesheet served; invalid body400. Anonymous chart/export401; callback307 with
+  no-store/no-referrer. Live guards: cross-origin403, unsupported format415, oversized body413,
+  disabled recovery503; no cookies, passwords or real email sent by these probes.
+- Public asset scans against actual private values and full privileged-token patterns PASS.
+  An initial bare `sb_secret_` literal was independently traced to Supabase SDK key-format
+  recognition; no secret exposure was confirmed and no rotation was necessary.
 
+### Local implementation proof retained
 
-- Source: frontend main@513870f plus uncommitted implementation; pre-existing Markdown retained.
-- Implemented: server alias mapping, same-owner checks, buffered SSR cookies, bounded JSON POST
-  and Origin validation, recent signed AMR, login/change/recovery UI, safe errors and logout.
-  Recovery readiness gates request and direct update. No backend/schema/dependency/financial change.
-- TDD: missing HTTP module RED then GREEN; disabled direct recovery update RED (200 vs 503) then GREEN.
- 31 focused tests PASS; policy/core/HTTP 100% lines/functions and 99.20% branches. Adapter/UI
- coverage is separate browser integration evidence, not part of that unit percentage.
-- Full unit 111/111 PASS; typecheck PASS; final post-review production build PASS; full ESLint PASS after
-  excluding only the new generated smoke build directory (same policy as other suites).
-- Browser integration 36/36 PASS: 14 password + 4 existing OAuth cases on each desktop/mobile Edge.
-  Covers same-owner login/refresh/logout, visibility/keyboard/touch/overflow, duplicate submit,
-  safe errors, no-cookie owner denial, origin/body/redirect checks, expiry refresh,
-  same-origin PKCE challenge/verifier matching, expired/reused codes, AMR and password-change/logout.
-  HTML 429 from the firewall receives a fixed safe message without rendering its body.
-  Test-only loopback Auth; no real email or production data written. Ports 3058/3061 closed and
-  generated next-env/tsconfig restored by teardown. Parent visually checked both login screenshots.
-  Selected desktop regressions PASS: reporting 3/3 (paper money/filter, actual CSV/detail,
-  denied reporting); journal 2/2 (anonymous/non-owner denial, refreshed-session reauthorization);
-  scanner 2/2 (outsider denial, partial coverage/RS hold). These are local HTTP fixtures.
-  Full financial/browser suites were not rerun; these selected regressions cover affected boundaries.
-- Independent source security/React/a11y review: no CRITICAL/HIGH. Nonblocking findings addressed:
-  native POST/no-JS guidance and cleared/locked fields with an Account link after saved-but-logout-failed.
-- Retained browser failures: first cold compile setup timeout, cold POST compile deadline,
-  initial full run 24 PASS/10 FAIL (8 fake-header/selector failures; 2 real callback origin failures).
-  Fixed fake API-version header/selectors; callback now uses validated APP_ORIGIN when password
-  configuration is enabled, preserving cookies behind a host-rewriting proxy. Full 34/34 then PASS.
-  Additional WAF HTML 429 test reproduced RED before the safe UI mapping; fresh full 36/36 PASS.
-  Initial receipt `test-results/password-initial-report.json`; WAF RED `password-waf-red-report.json`;
-  final `password-report.json`. Last fixture immutability cleanup received a focused PKCE check
-  and was included in the final full 36-case run. No failure receipt is relabelled as PASS.
-  A local Next dev aborted-RSC stream warning occurred on test context teardown; no browser
-  page/hydration error was observed. Do not report server logs as universally error-free.
-- Read-only owner preflight 21 October: same active confirmed nonanonymous owner; email/GitHub and
-  password already present. No password set by operator. Management Auth config GET 403.
-- Cloud WAF, server mapping, native Auth settings, recovery SMTP/PKCE and real owner/outsider
-  acceptance are NOT VERIFIED. Capability defaults disabled; GitHub remains available.
-  Owner authorized WAF/environment configuration and commit/push/deploy on 22 October.
-  Publication is in progress; production activation and owner acceptance are still pending.
-  Fresh read-only Supabase audit: existing owner UUID/email match and are confirmed;
-  email/GitHub providers enabled. Public signup remains enabled as before; RLS is unchanged.
-  Management Auth configuration still returns 403. No Auth user/password or journal was changed.
+- TDD policy/core/HTTP: missing module RED->GREEN, disabled recovery update RED->GREEN;
+  31 focused tests PASS; measured modules100% lines/functions,99.20% branches. Adapter/UI
+  coverage is separate. Full unit111/111, typecheck, ESLint and production build PASS.
+- Browser36/36 desktop/mobile Edge PASS using isolated loopback Auth, no real email or data.
+  Covers owner/cookie checks, login/refresh/logout, visibility/input/duplicate submit, errors,
+  PKCE, expired/reused codes, recent signed AMR, change/logout and HTML429 safe messaging.
+  Selected fixture regressions7/7 PASS: reporting3, journal2, scanner2. Full unrelated browser
+  financial suites were not rerun. Local fixtures do not establish hosted owner acceptance.
+- Initial cold-compile/test-mock failures and callback-origin failures retained; canonical
+  origin fix passed the final suite. WAF HTML429 UI case was RED before safe mapping then
+  GREEN. A teardown aborted-RSC warning occurred; no monitored browser hydration/page error.
+- Independent source security/React/a11y and cloud operator reviews: no HIGH/CRITICAL.
+  No app code changed after the final local test/build run; cloud activation used that source.
 
+### Remaining acceptance and rollback
 
-## Password source release, 22 October 2026
-
-- Source `9d477cc796a61dbd925ca3b10543a5e813c25760` committed and pushed to origin/main.
-  GitHub/Vercel Production deployment `7246831816` SUCCESS for that exact SHA.
-- Alias https://sahamteknikal.vercel.app: 10 public routes / 11 assets PASS; new password CSS
-  served. Anonymous export/chart returned 401; callback no-store/no-referrer verified.
-- Password activation remains PENDING: form absent and POST returns 503 `auth_unavailable`.
-  Vercel CLI has no available authenticated session yet; owner selected CLI login and is
-  completing that prerequisite. Do not set the protection flag before verifying real WAF.
-- Fresh read-only Supabase audit confirmed matching UUID/email, confirmed nonanonymous owner,
-  active owner membership, email/GitHub providers. Signup remains enabled as before;
-  Management Auth configuration GET 403 remains unresolved. No Auth user/password or journal change.
-- Initial asset smoke rejected a bare `sb_secret_` literal. Independent review identified
-  Supabase SDK key-format recognition; actual private-value and full-token scans PASS.
-  This was a diagnostic false positive, not a confirmed credential exposure or app failure.
-- Real owner/outsider browser login, cloud WAF/environment and native Auth advanced settings
-  remain NOT VERIFIED. Recovery stays disabled; SMTP/delivery is not assumed ready.
-- Prior verified source remains `513870f` / Production deployment `7092738529` for rollback.
-  Next: finish Vercel login, verify WAF and production mapping, redeploy, then owner acceptance.
+- Owner privately logs in afresh via GitHub, opens Akun `/auth/check`, sets password within
+  10minutes, then logs in as `daddyjj`. Real owner setup/login/data reads, real outsider JWT,
+  immutable-host comparison and later-session stability remain NOT VERIFIED.
+- Recovery remains disabled; SMTP delivery, recovery PKCE and advanced native Auth rate/
+  password reauthentication settings remain NOT VERIFIED. Management Auth config GET403;
+  public signup remains enabled as before. Direct Supabase Auth bypasses Vercel WAF;
+  app AMR/WAF does not replace native provider policy or data RLS.
+- On activation failure, disable the protection flag/password capability and redeploy while
+  keeping GitHub fallback, or restore the previously verified source `513870f` / GitHub
+  Production deployment `7092738529`. Never delete/reassign the owner or rerun journal reset.
+- Private ignored receipts: `test-results/password-release/` (WAF, environment metadata,
+  deployment, public smoke, guards, Auth audit); test suites in `test-results/`. Private
+  identity/credentials and raw runtime payloads are deliberately absent from published docs.
 
 ## Historical released baseline (as recorded 15 October)
 
