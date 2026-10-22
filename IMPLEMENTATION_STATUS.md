@@ -52,6 +52,26 @@ Before this release, a fresh GitHub deployment read confirmed Production 7092738
   Management Auth configuration still returns 403. No Auth user/password or journal was changed.
 
 
+## Password source release, 22 October 2026
+
+- Source `9d477cc796a61dbd925ca3b10543a5e813c25760` committed and pushed to origin/main.
+  GitHub/Vercel Production deployment `7246831816` SUCCESS for that exact SHA.
+- Alias https://sahamteknikal.vercel.app: 10 public routes / 11 assets PASS; new password CSS
+  served. Anonymous export/chart returned 401; callback no-store/no-referrer verified.
+- Password activation remains PENDING: form absent and POST returns 503 `auth_unavailable`.
+  Vercel CLI has no available authenticated session yet; owner selected CLI login and is
+  completing that prerequisite. Do not set the protection flag before verifying real WAF.
+- Fresh read-only Supabase audit confirmed matching UUID/email, confirmed nonanonymous owner,
+  active owner membership, email/GitHub providers. Signup remains enabled as before;
+  Management Auth configuration GET 403 remains unresolved. No Auth user/password or journal change.
+- Initial asset smoke rejected a bare `sb_secret_` literal. Independent review identified
+  Supabase SDK key-format recognition; actual private-value and full-token scans PASS.
+  This was a diagnostic false positive, not a confirmed credential exposure or app failure.
+- Real owner/outsider browser login, cloud WAF/environment and native Auth advanced settings
+  remain NOT VERIFIED. Recovery stays disabled; SMTP/delivery is not assumed ready.
+- Prior verified source remains `513870f` / Production deployment `7092738529` for rollback.
+  Next: finish Vercel login, verify WAF and production mapping, redeploy, then owner acceptance.
+
 ## Historical released baseline (as recorded 15 October)
 
 

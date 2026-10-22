@@ -22,4 +22,11 @@ progress; current Vercel CLI login is not yet available to the operator. Follow 
 checklist after access is verified. Keep recovery disabled until delivery is proven;
 do not rerun old reset/backfill operations. No backend implementation or migration is needed.
 
+## Release continuation
+
+Source `9d477cc` is deployed (Production `7246831816`); public smoke PASS.
+Password activation remains pending authenticated Vercel CLI access, WAF and environment.
+[Status](IMPLEMENTATION_STATUS.md) owns the dated receipts and proof limits.
+Next: finish cloud login, verify protection/mapping, redeploy and obtain owner acceptance.
+
 Previous completed Scanner relayout plan: [historical snapshot](docs/archive/PLAN_SCANNER_RELAYOUT_BEFORE_DOC_CLEANUP_20261021.md).
