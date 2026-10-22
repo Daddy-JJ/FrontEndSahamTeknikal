@@ -1,7 +1,7 @@
 # Plan gabungan UI Jurnal, Analytics, panduan Scanner dan overlay chart
 
-Tanggal: 22 Oktober 2026. Status: **A/B/C/D selesai dan teruji lokal; belum commit/push/deploy**.
-Scope frontend. B sudah selesai dan teruji lokal, belum commit/push/deploy.
+Tanggal: 22 Oktober 2026. Status: **A/B/C/D dirilis; public smoke PASS; owner-browser belum tersedia**.
+Scope frontend. Source fitur c2a0eaa; lihat status untuk deployment dan batas bukti.
 Plan ini menggabungkan permintaan A/B/C/D; tidak mengaktifkan kembali pekerjaan historis.
 
 ## Hasil yang dituju
@@ -232,6 +232,9 @@ bebas bug tanpa pengujian atau menyebut hasil fixture sebagai acceptance owner P
 - Owner mengizinkan commit/push/deploy paket UI ini pada 22 Oktober setelah QA. Gunakan bukti
   lokal yang sudah selesai; commit scoped, push, verifikasi SHA Vercel dan smoke live.
   Verifikasi owner-browser tetap terpisah bila tersedia; jangan mencampur cleanup Markdown lain.
+- Rilis source c2a0eaa sudah READY pada Vercel Production, alias sahamteknikal.vercel.app;
+  public smoke10 rute/17 aset/3 guards PASS. QA lokal tidak diulang. Receipt ini hanya Markdown;
+  source aplikasi tetap sama. Tidak ada implementasi A-D tersisa atau izin reset/backfill baru.
 - [Status](../IMPLEMENTATION_STATUS.md) memegang bukti B dan rilis sebelumnya; jangan menyebut
   hasil lokal sebagai live atau menjalankan ulang reset/backfill dari dokumen historis.
 - Batas yang ditemukan saat D: initial load dengan JavaScript dimatikan tetap menunjukkan

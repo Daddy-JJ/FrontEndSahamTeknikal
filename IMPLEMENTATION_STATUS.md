@@ -1,6 +1,6 @@
 # Frontend implementation status
 
-## A-D QA and release authorization, 22 October 2026
+## A-D release verified, 22 October 2026
 
 - Owner requested QA only where missing, then commit/push/Production deployment. Independent
   receipt/current-source/security audit PASS, no HIGH/CRITICAL; no completed suite rerun.
@@ -10,11 +10,19 @@
   Unrelated documentation cleanup and backend files remain outside this publication.
 - Baseline main/origin main: dcd847e. Current verified Production target before publication:
   dpl_J7yBpgrpxxdFURkEfuumhsjd6AyQ, READY, same Git SHA; this is the rollback target.
-- Release underway: exact candidate/deployment/alias and public smoke evidence will be recorded
-  after publication. No connected owner browser is currently available; hosted owner interaction
-  remains NOT VERIFIED and is not substituted by local fixtures or privileged credentials.
+- Feature commit c2a0eaaac46db581c53c6b06bc6fb2cdec77eacc pushed to origin/main. Vercel Git
+  Production deployment dpl_73eqrwqq7votyMLiWeiRCYoFDQQN READY with this exact SHA and alias
+  `https://sahamteknikal.vercel.app`. Rollback was not needed. This receipt follow-up changes
+  documentation only; reviewed application/test/config bytes remain identical to feature source.
+- Public smoke22October14:34UTC:10 routes,17 assets,3 guards PASS; new reporting stylesheet
+  marker served, asset privileged-token pattern scan PASS. Anonymous chart/export401 with
+  no-store; missing-code callback307. No password, email, QA trades or database writes used.
+- No connected owner browser is available; hosted owner interactions and genuine outsider-JWT
+  proof remain NOT VERIFIED. Public/fixture results are not owner acceptance or ongoing feed proof.
+  Private ignored receipts: `test-results/ui-release-{manifest,candidate,public-smoke}.json`.
+  Unrelated frontend Markdown cleanup and all backend changes remain uncommitted separately.
 
-## Reporting chart overlay D, 22 October 2026 - complete locally, not released
+## Reporting chart overlay D, 22 October 2026 - local proof before release
 
 - Owner authorized D after A/B/C. Paper journal and Analytics paper/actual/signal row links
   now open one native dialog via thin client links and one context host. Existing server
@@ -56,7 +64,8 @@
   ChartReturnPosition, JournalShell, row link factories and owner scope in the two list pages;
   new overlay browser tests/config plus preserved fullpage tests. No lib/API/dependency changes.
 - Private ignored receipts: `test-results/chart-overlay-*`. Frontend main@dcd847e plus local
-  A/B/C/D edits and unrelated retained Markdown cleanup. No commit/push/deploy authorized.
+  A/B/C/D edits and unrelated retained Markdown cleanup at local completion. Publication was
+  subsequently authorized and completed as recorded above; this section preserves local proof.
 
 ## Scanner strategy guide C, 22 October 2026 - complete locally, not released
 
