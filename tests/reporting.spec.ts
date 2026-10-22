@@ -21,13 +21,41 @@ test("paper dashboard canonical money, experiment filtering and responsive matri
  await expect(page).toHaveURL(/exit_key=ma10/);
  await expect(page.locator(".reporting-trades")).toContainText("ma_close");
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
+ expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>{const rect=n.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&(n.scrollWidth<=n.clientWidth||["auto","scroll"].includes(getComputedStyle(n).overflowX));}))).toBe(true);
  await page.screenshot({caret:"initial",path:"test-results/reporting-paper-"+info.project.name+".png",fullPage:true});
  expect(errors).toEqual([]);
  expect(hydration).toEqual([]);
  const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
  expect(calls.some((c:{path:string;body?:{p_exit_key?:string}})=>c.path.endsWith("read_trade_reporting_v1")&&c.body?.p_exit_key==="ma10")).toBe(true);
  expect(calls.some((c:{path:string})=>c.path.includes("actual_"))).toBe(false);
+});
+test("paper journal prioritizes results before processing diagnostics",async({page,request},info)=>{
+ for(const scenario of ["reporting-oracle","health-failed"]){
+  await request.post("http://127.0.0.1:3053/__scenario",{data:{scenario}});
+  await page.goto("/journal?tab=paper");
+  const health=page.locator("[data-processing-health]");
+  await expect(health).toHaveCount(1);
+  await expect(page.locator("#reporting-trades")).toBeVisible();
+  expect(await health.evaluate(node=>{
+   const stack=node.closest(".reporting-stack");
+   return stack?.lastElementChild===node && [".analytics-hero-stats","#reporting-trades",".journal-footnote"].every(selector=>{
+    const result=stack.querySelector(selector);
+    return result!==null && Boolean(result.compareDocumentPosition(node)&Node.DOCUMENT_POSITION_FOLLOWING);
+   });
+  })).toBe(true);
+  if(scenario==="health-failed"){
+   await expect(health).toHaveAttribute("role","alert");
+   await expect(health.getByRole("heading",{name:"Pemrosesan gagal",exact:true})).toBeVisible();
+  }else{
+   await expect(page.locator(".analytics-stat-card").first()).toContainText("Rp841.837,5");
+   await page.screenshot({path:"test-results/paper-journal-results-first-"+info.project.name+".png",fullPage:true});
+  }
+ }
+ await page.goto("/analytics?tab=paper");
+ expect(await page.locator("[data-processing-health]").evaluate(node=>{
+  const summary=node.closest(".reporting-stack")?.querySelector(".analytics-hero-stats");
+  return Boolean(summary && node.compareDocumentPosition(summary)&Node.DOCUMENT_POSITION_FOLLOWING);
+ })).toBe(true);
 });
 test("signal observation shows won/lost, denominators, holds and no time exit",async({page,request})=>{
  await page.goto("/analytics?tab=signals");
@@ -44,7 +72,7 @@ test("signal observation shows won/lost, denominators, holds and no time exit",a
  await expect(page.locator("#signal-observations details").first()).toContainText("Rp1.150");
  await expect(page.getByRole("combobox",{name:"Eksperimen exit"})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
+ expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>{const rect=n.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&(n.scrollWidth<=n.clientWidth||["auto","scroll"].includes(getComputedStyle(n).overflowX));}))).toBe(true);
  const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
  expect(calls.some((c:{path:string})=>c.path.endsWith("read_trade_reporting_v1"))).toBe(false);
 });
@@ -73,7 +101,7 @@ test("paper detail audit and SMA10 confirmed close semantics",async({page})=>{
  await expect(page.locator(".journal-facts")).toContainText("Rp993.037,5");
  await expect(page.getByText("pending_exit",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
+ expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>{const rect=n.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&(n.scrollWidth<=n.clientWidth||["auto","scroll"].includes(getComputedStyle(n).overflowX));}))).toBe(true);
  await page.reload();
  await expect(page.getByRole("heading",{name:"TEST · SMA10"})).toBeVisible();
 });
@@ -136,7 +164,7 @@ test("decimal money tokens stay on one line without overflowing journal and repo
   for(const width of [1440,1280,1200,1101,1100,901,390,320]){
    await page.setViewportSize({width,height:1000});
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-   expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth))).toBe(true);
+   expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>{const rect=n.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&(n.scrollWidth<=n.clientWidth||["auto","scroll"].includes(getComputedStyle(n).overflowX));}))).toBe(true);
    const layout=await token.evaluate(node=>{
     const range=document.createRange();range.selectNodeContents(node);
     const cell=node.closest("td")!,bounds=node.getBoundingClientRect(),cellBounds=cell.getBoundingClientRect();

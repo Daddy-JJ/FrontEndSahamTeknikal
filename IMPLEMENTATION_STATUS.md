@@ -1,5 +1,130 @@
 # Frontend implementation status
 
+## A-D QA and release authorization, 22 October 2026
+
+- Owner requested QA only where missing, then commit/push/Production deployment. Independent
+  receipt/current-source/security audit PASS, no HIGH/CRITICAL; no completed suite rerun.
+  All current A-D source files predate the final passing build. Existing limitations below
+  remain unchanged. No backend/database/auth configuration or trading-data operation required.
+- Scope: A-D frontend source/tests/configs, focused plan/archive and related status sections.
+  Unrelated documentation cleanup and backend files remain outside this publication.
+- Baseline main/origin main: dcd847e. Current verified Production target before publication:
+  dpl_J7yBpgrpxxdFURkEfuumhsjd6AyQ, READY, same Git SHA; this is the rollback target.
+- Release underway: exact candidate/deployment/alias and public smoke evidence will be recorded
+  after publication. No connected owner browser is currently available; hosted owner interaction
+  remains NOT VERIFIED and is not substituted by local fixtures or privileged credentials.
+
+## Reporting chart overlay D, 22 October 2026 - complete locally, not released
+
+- Owner authorized D after A/B/C. Paper journal and Analytics paper/actual/signal row links
+  now open one native dialog via thin client links and one context host. Existing server
+  children, RPCs, filters, financial values and canonical hrefs remain server-owned/unchanged.
+  No new ledger entry point, backend/schema/API/dependency/trading change or cloud operation.
+- ChartPanel mounts only after open; existing request/abort/generation/timer/renderer cleanup
+  and validated context/indicator choices are reused. Route/cohort/owner/mode changes reset
+  the host; an existing Auth client subscription closes on signout/account change. Native
+  modal/Escape/focus trap, 44px close, responsive header, one body scroll and original body
+  styles/page/table positions are restored. Fullpage records pre-open coordinates; generic
+  return capture ignores overlay triggers and overlay-owned navigation.
+- RED: original click navigated fullpage. Initial fixture used inconsistent signal/source
+  cutoffs, correctly rejected by unchanged parser; corrected fixture now validates itself.
+  First integration7 PASS/1 FAIL exposed an early-click hydration race in global effect
+  delegation. Replanned to synchronous context-backed Link handlers before Next navigation;
+  narrow reproduction PASS. Keep these failure receipts; do not relabel them as passing.
+- Current reviewed source: overlay + fullpage-return desktop/mobile24/24 PASS. Includes
+  lazy/exact paper/actual/signal contexts, dedupe, close/focus/scroll/backdrop, view/indicators,
+  refresh/history cleanup, late A response after B, auth channel signout/account switch,
+  429 cooldown/403/401 data clearing, disabled storage, long20-character ticker at320px,
+  narrow/short viewports. Unit111/111 PASS. Independent React/a11y/security-boundary review
+  has no HIGH/CRITICAL; long-title wrap and dialog announcement recommendations fixed.
+- Affected reporting/layout/CSV/inline-chart run:35 PASS/2 SKIPPED/1 FAIL. The failure was the
+  added initial-JS-off scenario, not ordinary overlay behavior; keep the receipt. Control on
+  unchanged `/journal/paper/paper-test-v1` (no overlay provider) confirms final facts attached
+  but hidden while global loading remains visible. Existing initial App Router streaming
+  without JS is unsupported locally; whole-app JS-off capability is NOT a PASS or a D fix.
+- Rendered canonical anchor with JS execution then disabled: PASS. Final fallback/keyboard/
+  read-count rechecks5 PASS/1 desktop-only-flow SKIP; dedicated native-fallback/control1 PASS.
+  Ctrl-click/new-tab PASS in the affected run. Original fullpage return proof retained and
+  extended to opening the modal OHLC disclosure before navigation. No extra reporting reads,
+  no return record on mere modal open, no page/hydration errors in the final opening checks.
+- Final opening/timing2/2 PASS. One local synthetic measurement: desktop622ms/mobile471ms
+  click-to-visible canvas, not a Production SLA. Desktop/mobile screenshots inspected.
+  Unit111/111, full ESLint + final test lint, final typecheck and local production build PASS.
+  Native browser-toolbar zoom and hosted owner acceptance remain NOT VERIFIED. Local loopback
+  fixtures are not live backend integration. No new coverage percentage claimed for JSX/CSS.
+- Changed D files: `src/components/chart-overlay.tsx` and `.module.css` (new), ChartPanel,
+  ChartReturnPosition, JournalShell, row link factories and owner scope in the two list pages;
+  new overlay browser tests/config plus preserved fullpage tests. No lib/API/dependency changes.
+- Private ignored receipts: `test-results/chart-overlay-*`. Frontend main@dcd847e plus local
+  A/B/C/D edits and unrelated retained Markdown cleanup. No commit/push/deploy authorized.
+
+## Scanner strategy guide C, 22 October 2026 - complete locally, not released
+
+- Owner authorized C only after A/B: four static baseline V1 cards under published Scanner
+  signals with entry, initial SL and Fixed2R/SMA10 exits. Source: SOT7/8/8A/8B/9; canonical
+  per-run snapshot remains authoritative. No backend/API/data/auth/trading-rule change.
+- Server-rendered guide passes through a ReactNode slot; no new client effects, indicators,
+  requests or dependencies. Guide follows the workspace in normal flow. Only no-detail
+  signals tables lose the desktop340px minimum; quality/split geometry is preserved.
+- RED reproduced absent guide. Initial dedicated browser6/6 PASS using isolated loopback
+  doubles (desktop/mobile): four cards, 4/2/1 columns at1440/1024/390/320, native disclosure
+  keyboard/44px target, compact one-row table, failed/partial/empty/filter/preparing states,
+  guide outside the split workspace, one bounded signals read and no additional reads/mutations.
+- Full Scanner/chart desktop/mobile regressions:68 PASS/6 SKIPPED, exit0. Skips are the existing
+  device-specific geometry cases (mobile frame on desktop; desktop split/expand/scroll/zoom
+  cases on mobile), not passed cases. Includes chart lazy loading/identity/canvas/return,
+  stable50:50 panes, quality scroll, filters/refresh/back, auth/contract/error/hold and linked drafts.
+- Independent source/React/a11y/security-boundary review: no HIGH/CRITICAL. One copy finding
+  resolved: each card explicitly labels Fixed2R/SMA10 as two separate experiments. Current-model
+  ambiguous results are explicitly excluded from main stats, with separate sensitivities.
+  Final dedicated browser6/6 PASS on reviewed copy; zero browser chart requests before open.
+- Unit111/111, full ESLint, final changed-file ESLint, typecheck and local production build PASS.
+  Desktop/mobile screenshots inspected locally; guide disclosures use native keyboard behavior.
+  No new unit coverage percentage is claimed for static JSX/CSS. No live backend/owner acceptance
+  or native browser-toolbar zoom proof is claimed; the existing CSS200% Scanner case passes.
+- Receipts: ignored `test-results/scanner-guide-{red,green,regressions,final,unit,lint,lint-final,typecheck,build}.log`;
+  final compact screenshots `scanner-guide-compact-{desktop,mobile}.png` and disclosure layout
+  `scanner-guide-{desktop,mobile}.png`. Frontend main@dcd847e plus local
+  A/B/C edits. No commit/push/deploy. D was subsequently authorized; see current status above.
+
+## Jurnal/Analytics presentation A+B, 22 October 2026 - local only
+
+- A is implemented locally: scoped reporting main/header/filter styles, consistent journal
+  actual/paper tabs, fullwidth panels and ledger, two-column curve/strategy on wide Analytics,
+  semantic tables at every size with keyboard-focusable local scrolling, and distinct
+  positive/negative/zero/null presentation. Existing GET fields/query/RPC/CSV/auth remain unchanged.
+- B remains intact: `/journal?tab=paper` processing diagnostics follow results/table/footnote;
+  Analytics processing order is unchanged. C was separately authorized afterward (see above);
+  D (chart overlay) was separately authorized and completed locally afterward (see above).
+  No backend/schema/data/trading change.
+- RED->GREEN: missing shared paper-journal mode navigation reproduced before A; review found
+  P&L colors overridden by generic table CSS, reproduced by computed-color test and fixed
+  with scoped rules. Focused initial layout run8/8 PASS, unit111/111 PASS.
+- Full desktop/mobile reporting+chart-return run:54 PASS/2 FAIL. The two new focus-bound checks
+  sampled coordinates before native scroll finished after viewport resize. Keep that receipt;
+  test now re-enters the table and waits for the same visibility bounds (no clipping allowed).
+  Recheck2/2 PASS; final keyboard/Tab/ArrowRight plus enlarged-viewport run4/4 PASS.
+  All56 original browser cases therefore have passing evidence across runs, not a relabelled
+  clean single full-suite run. Two added enlarged-viewport cases also PASS.
+- Selected actual-journal desktop regressions10/10 PASS: empty/denied access, ledger values,
+  partial position, fill form, CSV, exact snapshot, long histories, shared filters and drafts.
+  Total68 distinct affected browser cases have PASS evidence across the recorded runs.
+- Full ESLint PASS; final added-test lint, typecheck and local production build PASS.
+  Independent React/a11y/code reviews: no remaining HIGH/CRITICAL; color finding resolved.
+  Desktop/mobile screenshots inspected. Layout tested320/390/1024/1280/1440 CSS-pixel widths;
+  short viewport720x450 with density2 emulates 200% desktop geometry. Native browser-toolbar
+  zoom200% and exhaustive vertical sticky-header/Tab-order acceptance remain NOT VERIFIED.
+- A local Next dev `destination stream closed early` warning occurred during the passing
+  journal run; no failed assertion was attributed to it. Do not claim universally clean server
+  logs or hosted owner acceptance from fixture tests. Financial/parser modules were not changed;
+  no new unit coverage percentage is claimed for CSS/JSX based on browser results.
+- Private ignored receipts: `test-results/reporting-layout-green.log`, `reporting-colors-red.log`,
+  `reporting-a-regressions.log`, `reporting-keyboard-recheck.log`, `reporting-keyboard-zoom-final.log`,
+  `reporting-a-journal-regressions.log`, and `reporting-a-{unit,lint,typecheck,build}.log`.
+  New layout screenshots use `reporting-layout-*`. Earlier B-only proof remains in its plan section.
+- Source is frontend main@dcd847e plus local A/B edits; no commit, push, deploy or Production
+  mutation performed for this UI package. Unrelated Markdown cleanup remains untouched.
+
 ## Password login activated, 22 October 2026
 
 The approved feature uses `daddyjj`, the existing owner UUID, GitHub fallback and unchanged RLS.

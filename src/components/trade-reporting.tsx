@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChartOverlayLink } from "./chart-overlay";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { journalFilters, journalFilterParams } from "@/lib/journal-filters";
 import { journalPageNumber } from "@/lib/journal-page";
@@ -34,7 +35,7 @@ export function reportLink(base: "/analytics" | "/journal", tab: string, f: Repo
 }
 export function ActualCohortFilters({ f, view }: { f: ReportingFilters; view: "journal" | "analytics" }) {
   const action = view === "journal" ? "/journal" : "/analytics";
-  return <section className="journal-panel" aria-label="Filter cohort statistik"><form className="journal-form" action={action} method="get">
+  return <section className="journal-panel reporting-filter-panel" aria-label="Filter cohort statistik"><form className="journal-form reporting-filter" action={action} method="get">
     <input type="hidden" name="tab" value="actual" />
     <label>Dari sesi exit<input type="date" name="from" defaultValue={f.from ?? ""} /></label>
     <label>Sampai sesi exit<input type="date" name="to" defaultValue={f.to ?? ""} /></label>
@@ -45,6 +46,12 @@ export function ActualCohortFilters({ f, view }: { f: ReportingFilters; view: "j
     <label>Versi exit (opsional)<input name="exit_version" defaultValue={f.exitVersion ?? ""} maxLength={60} pattern="[A-Za-z0-9_-]{1,60}" /></label>
     <button className="primary-button" type="submit">Terapkan cohort</button><Link href={action + "?tab=actual"}>Hapus semua filter</Link>
   </form><p className="panel-note">Tanggal membatasi trade closed berdasarkan sesi exit. Posisi open dan draft ditampilkan sebagai status terpisah tanpa batas tanggal exit.</p></section>;
+}
+export function JournalTabs({ tab }: { tab: "paper" | "actual" }) {
+  return <nav className="journal-history-tabs" aria-label="Mode Jurnal">
+    <Link prefetch={false} href="/journal?tab=actual" aria-current={tab === "actual" ? "page" : undefined}>Jurnal Aktual (Riil)</Link>
+    <Link prefetch={false} href="/journal?tab=paper" aria-current={tab === "paper" ? "page" : undefined}>Paper Journal (Simulasi Sinyal)</Link>
+  </nav>;
 }
 export function ReportingTabs({ tab }: { tab: "paper" | "actual" | "signals" }) {
   return <nav className="journal-history-tabs" aria-label="Mode Analitik">
@@ -100,7 +107,7 @@ function Freshness({ report }: { report: TradeReporting | SignalEvaluation }) {
   </div>;
 }
 function FilterForm({ tab, f, view }: { tab: "paper" | "signals"; f: ReportingFilters; view: "analytics" | "journal" }) {
-  return <section className="journal-panel">
+  return <section className="journal-panel reporting-filter-panel" aria-label="Filter cohort statistik">
     <form className="journal-form reporting-filter" action={view === "journal" ? "/journal" : "/analytics"} method="get">
       <input type="hidden" name="tab" value={tab} />
       <label>Dari sesi {tab === "signals" ? "sinyal" : "exit"}<input type="date" name="from" defaultValue={f.from ?? ""} /></label>
@@ -123,26 +130,26 @@ function SignalChartLink({ ticker, id, strategy, returnTo, label = "Saat sinyal"
   ticker: string; id: string; strategy: string; returnTo?: string; label?: string;
 }) {
   const href = chartPageHref({ ticker, context: "signal", context_id: id, view: "snapshot", timeframe: "1d", limit: 250 }, returnTo, chartIndicators(strategy));
-  return href ? <Link prefetch={false} aria-label={"Chart " + ticker + " " + label} href={href}>{label}</Link> : null;
+  return href ? <ChartOverlayLink label={"Chart " + ticker + " " + label} href={href}>{label}</ChartOverlayLink> : null;
 }
 function TradeChartLinks({ trade: t, mode, returnTo, exitFamily }: {
   trade: ReportingTrade; mode: "paper" | "actual"; returnTo?: string; exitFamily?: string | null;
 }) {
   const href = chartPageHref({ ticker: t.ticker, context: mode, context_id: t.id, view: "followup", timeframe: "1d", limit: 250 }, returnTo, chartIndicators(t.strategy, exitFamily));
-  return <small>{href && <Link prefetch={false} aria-label={"Chart " + t.ticker} href={href}>Chart</Link>}
+  return <small>{href && <ChartOverlayLink label={"Chart " + t.ticker} href={href}>Chart</ChartOverlayLink>}
     {t.signal_id && <>{href ? " · " : ""}<SignalChartLink ticker={t.ticker} id={t.signal_id} strategy={t.strategy} returnTo={returnTo} /></>}</small>;
 }
 export function TradeRows({ trades, mode, returnTo, exitFamily }: { trades: ReportingTrade[]; mode: "paper" | "actual"; returnTo?: string; exitFamily?: string | null }) {
   if (!trades.length) return <div className="journal-empty"><h3>Belum ada transaksi pada halaman ini</h3><p>Rencana paper baru tercatat otomatis dari sinyal valid setelah aktivasi model.</p></div>;
-  return <div className="reporting-list"><table className="dense-table reporting-trades"><thead><tr>
-    <th>Ticker / Strategi</th><th>Status</th><th>Entry / Sesi</th><th>Lot</th><th>SL awal</th><th>Risiko harga awal</th><th>Planned loss + fee</th><th>Exit / Sesi</th><th>Total fee</th><th>P&amp;L net / R</th><th>Rincian</th>
+  return <div className="reporting-list reporting-table-region" role="region" tabIndex={0} aria-label="Tabel transaksi dan eligibility"><table className="dense-table reporting-trades"><thead><tr>
+    <th>Ticker / Strategi</th><th>Status</th><th className="reporting-numeric">Entry / Sesi</th><th className="reporting-numeric">Lot</th><th className="reporting-numeric">SL awal</th><th className="reporting-numeric">Risiko harga awal</th><th className="reporting-numeric">Planned loss + fee</th><th className="reporting-numeric">Exit / Sesi</th><th className="reporting-numeric">Total fee</th><th className="reporting-numeric">P&amp;L net / R</th><th>Rincian</th>
   </tr></thead><tbody>{trades.map(t => <tr key={t.id}>
     <td data-label="Ticker / Strategi"><strong>{t.ticker}</strong><small>{strategyLabels[t.strategy]}</small></td>
     <td data-label="Status"><span className={"badge " + (t.ambiguous || t.state === "data_hold" ? "amber" : "neutral")}>{t.ambiguous ? "Ambigu" : statusLabels[t.state] ?? t.state}</span><small>{t.reason}</small></td>
-    <td data-label="Entry / Sesi"><Money value={t.entry_price} /><small>{t.entry_session ?? "—"}</small></td>
-    <td data-label="Lot">{t.lots ?? "—"}</td><td data-label="SL awal"><Money value={t.initial_stop} /></td><td data-label="Risiko harga awal"><Money value={t.initial_price_risk_idr} /></td><td data-label="Planned loss + fee"><Money value={t.planned_loss_idr} /></td>
-    <td data-label="Exit / Sesi"><Money value={t.exit_price} /><small>{t.exit_session ?? "—"}</small></td><td data-label="Total fee"><Money value={t.fee_total_idr} /></td>
-    <td data-label="P&L net / R" className={Number(t.realized_pnl_idr) < 0 ? "negative" : "positive"}><Money value={t.realized_pnl_idr} /><small>{reportRatio(t.realized_r)} R</small></td>
+    <td data-label="Entry / Sesi" className="reporting-numeric"><Money value={t.entry_price} /><small>{t.entry_session ?? "—"}</small></td>
+    <td data-label="Lot" className="reporting-numeric">{t.lots ?? "—"}</td><td data-label="SL awal" className="reporting-numeric"><Money value={t.initial_stop} /></td><td data-label="Risiko harga awal" className="reporting-numeric"><Money value={t.initial_price_risk_idr} /></td><td data-label="Planned loss + fee" className="reporting-numeric"><Money value={t.planned_loss_idr} /></td>
+    <td data-label="Exit / Sesi" className="reporting-numeric"><Money value={t.exit_price} /><small>{t.exit_session ?? "—"}</small></td><td data-label="Total fee" className="reporting-numeric"><Money value={t.fee_total_idr} /></td>
+    <td data-label="P&L net / R" className={"reporting-numeric " + (t.realized_pnl_idr === null ? "reporting-null" : Number(t.realized_pnl_idr) < 0 ? "negative" : Number(t.realized_pnl_idr) > 0 ? "positive" : "neutral")}><Money value={t.realized_pnl_idr} /><small>{reportRatio(t.realized_r)} R</small></td>
     <td data-label="Rincian"><small>{t.metric_eligible === undefined ? "Eligibility backend belum tersedia" : t.metric_eligible ? "Dinilai dalam statistik utama" : "Di luar statistik utama · " + (t.exclusion_reason ?? t.state)}</small><Link prefetch={false} href={(mode === "paper" ? "/journal/paper/" : "/journal/") + encodeURIComponent(t.id) + (returnTo ? "?return_to=" + encodeURIComponent(returnTo) : "")}>Lihat →</Link>
       <TradeChartLinks trade={t} mode={mode} returnTo={returnTo} exitFamily={exitFamily} />
     </td>
@@ -153,7 +160,7 @@ export function TradeDashboard({ report, f, view = "analytics" }: { report: Trad
   const s = report.summary;
   return <div className="reporting-stack">
     <Freshness report={report} />
-    {report.mode === "paper" && <ProcessingHealthNotice health={report.processing_health} />}
+    {report.mode === "paper" && view !== "journal" && <ProcessingHealthNotice health={report.processing_health} />}
     <section className="analytics-hero-stats" aria-label="Ringkasan performa net">
       <div className="analytics-stat-card"><span>P&amp;L net closed</span><strong>{reportMoney(s.net_pnl_idr)}</strong><small>{s.closed} closed dinilai · sesudah fee</small></div>
       <div className="analytics-stat-card"><span>Win Rate (Closed)</span><strong>{percent(s.win_rate)}</strong><small>{s.wins} menang · {s.losses} kalah · {s.breakeven} BEP</small><small>{s.wins} / {s.closed} dinilai</small></div>
@@ -170,15 +177,17 @@ export function TradeDashboard({ report, f, view = "analytics" }: { report: Trad
       {Object.entries(report.statuses).map(([key, value]) => <div key={key}><span>{statusLabels[key]}</span><strong>{value}</strong></div>)}
     </section>
     {view === "analytics" && <>
+      <div className="reporting-analysis-grid">
       <section className="journal-panel"><span className="eyebrow">HASIL CLOSED · IDR</span><h2>Kurva P&amp;L net kumulatif</h2><PnlCurve points={report.curve} /><p className="panel-note">Urutan exit; posisi open dan hasil ambigu tidak masuk kurva utama. Ini bukan equity mark-to-market.</p></section>
       <section className="journal-panel"><span className="eyebrow">MENANG / DINILAI</span><h2>Performa per strategi</h2>
-        <div className="table-scroll"><table className="dense-table"><thead><tr><th>Strategi</th><th>Closed dinilai</th><th>Menang / Kalah / Impas</th><th>Win rate net</th><th>P&amp;L net</th><th>Expectancy net</th><th>Expectancy R</th></tr></thead>
+        <div className="table-scroll reporting-table-region" role="region" tabIndex={0} aria-label="Tabel performa per strategi"><table className="dense-table"><thead><tr><th>Strategi</th><th className="reporting-numeric">Closed dinilai</th><th className="reporting-numeric">Menang / Kalah / Impas</th><th className="reporting-numeric">Win rate net</th><th className="reporting-numeric">P&amp;L net</th><th className="reporting-numeric">Expectancy net</th><th className="reporting-numeric">Expectancy R</th></tr></thead>
           <tbody>{report.strategies.map(row => <tr key={row.strategy}>
             <td><Link prefetch={false} href={reportLink(base, report.mode, f, { strategy: row.strategy, page: 1 }) + "#reporting-trades"}>{strategyLabels[row.strategy]}</Link></td>
-            <td>{row.closed}</td><td>{row.wins} / {row.losses} / {row.breakeven}</td><td>{percent(row.win_rate)}<small>{row.wins} / {row.closed} dinilai</small></td>
-            <td>{reportMoney(row.net_pnl_idr)}</td><td>{reportMoney(row.expectancy_idr)}</td><td>{reportRatio(row.expectancy_r)} R</td>
+            <td className="reporting-numeric">{row.closed}</td><td className="reporting-numeric">{row.wins} / {row.losses} / {row.breakeven}</td><td className="reporting-numeric">{percent(row.win_rate)}<small>{row.wins} / {row.closed} dinilai</small></td>
+            <td className="reporting-numeric">{reportMoney(row.net_pnl_idr)}</td><td className="reporting-numeric">{reportMoney(row.expectancy_idr)}</td><td className="reporting-numeric">{reportRatio(row.expectancy_r)} R</td>
           </tr>)}</tbody></table></div>
       </section>
+      </div>
       {report.sensitivities && report.statuses.ambiguous > 0 && <details className="journal-panel"><summary>Sensitivitas hasil ambigu</summary><div className="reporting-sensitivity">
         {(["sl_first", "tp_first"] as const).map(k => <div key={k}><h3>{k === "sl_first" ? "SL-first" : "TP-first"}</h3><p>{reportMoney(report.sensitivities![k].net_pnl_idr)} · {percent(report.sensitivities![k].win_rate)}</p><small>{report.sensitivities![k].wins} menang / {report.sensitivities![k].closed} dinilai</small></div>)}
       </div><p className="panel-note">Skenario alternatif, bukan urutan intraday yang diketahui.</p></details>}
@@ -191,6 +200,7 @@ export function TradeDashboard({ report, f, view = "analytics" }: { report: Trad
       <nav className="journal-pagination" aria-label="Halaman reporting">{f.page > 1 && <Link prefetch={false} href={reportLink(base, report.mode, f, { page: f.page - 1 })}>← Sebelumnya</Link>}{report.paging.has_more && <Link prefetch={false} href={reportLink(base, report.mode, f, { page: f.page + 1 })}>Berikutnya →</Link>}</nav>
     </section>
     <p className="journal-footnote">{report.mode === "paper" ? "Entry simulasi memakai close hari sinyal pada sesi berikutnya. Planned loss pada SL maksimal Rp1 juta termasuk fee beli 0,15% dan jual pada SL 0,25%; lot dibulatkan turun. Fixed 2R dan SMA10 adalah eksperimen terpisah. " : ""}Realized R memakai initial price risk yang dibekukan. SMA10 memerlukan close terkonfirmasi di bawah SMA10, lalu exit next-open; SL awal tetap aktif.</p>
+    {report.mode === "paper" && view === "journal" && <ProcessingHealthNotice health={report.processing_health} />}
   </div>;
 }
 function ratioLabel(value: number | string | null, state: string) {
@@ -201,7 +211,7 @@ function ExperimentComparisonPanel({ report }: { report: TradeReporting }) {
   if (!c) return <section className="journal-panel"><h2>Perbandingan sampel eksperimen</h2><p>Kapabilitas perbandingan backend belum tersedia. Kedua eksperimen tetap ditampilkan terpisah.</p></section>;
   return <section className="journal-panel"><h2>Perbandingan sampel eksperimen</h2>
     <p className="panel-note">Basis periode exit dan posisi aktif. Sampel entry bersama: {c.common_entry_signal_ids.length}; hanya Fixed 2R: {c.fixed_only_entry_signal_ids.length}; hanya SMA10: {c.sma_only_entry_signal_ids.length}. Hasil kedua eksperimen tidak dijumlahkan menjadi profit portofolio.</p>
-    <div className="table-scroll"><table className="dense-table"><thead><tr><th>Eksperimen</th><th>Entry</th><th>Closed dinilai</th><th>Open</th><th>Menunggu entry</th><th>Dilewati</th><th>Dikecualikan</th><th>Rata-rata holding · sesi</th><th>Net IDR</th></tr></thead><tbody>{(["fixed2r", "ma10"] as const).map(key => <tr key={key}><td>{key === "fixed2r" ? "Fixed 2R" : "SMA10"}</td><td>{c[key].entered}</td><td>{c[key].closed_assessed}</td><td>{c[key].open}</td><td>{c[key].pending_entry}</td><td>{c[key].skipped}</td><td>{c[key].excluded}</td><td>{reportRatio(c[key].mean_holding_sessions)}</td><td>{reportMoney(c[key].summary.net_pnl_idr)}</td></tr>)}</tbody></table></div>
+    <div className="table-scroll reporting-table-region" role="region" tabIndex={0} aria-label="Tabel perbandingan eksperimen"><table className="dense-table"><thead><tr><th>Eksperimen</th><th className="reporting-numeric">Entry</th><th className="reporting-numeric">Closed dinilai</th><th className="reporting-numeric">Open</th><th className="reporting-numeric">Menunggu entry</th><th className="reporting-numeric">Dilewati</th><th className="reporting-numeric">Dikecualikan</th><th className="reporting-numeric">Rata-rata holding · sesi</th><th className="reporting-numeric">Net IDR</th></tr></thead><tbody>{(["fixed2r", "ma10"] as const).map(key => <tr key={key}><td>{key === "fixed2r" ? "Fixed 2R" : "SMA10"}</td><td className="reporting-numeric">{c[key].entered}</td><td className="reporting-numeric">{c[key].closed_assessed}</td><td className="reporting-numeric">{c[key].open}</td><td className="reporting-numeric">{c[key].pending_entry}</td><td className="reporting-numeric">{c[key].skipped}</td><td className="reporting-numeric">{c[key].excluded}</td><td className="reporting-numeric">{reportRatio(c[key].mean_holding_sessions)}</td><td className="reporting-numeric">{reportMoney(c[key].summary.net_pnl_idr)}</td></tr>)}</tbody></table></div>
     <details><summary>Entry bersama dan hasil masing-masing</summary>{c.paired.length === 0 ? <p>Belum ada entry bersama pada cohort ini.</p> : c.paired.map(p => <div key={p.signal_id} className="panel-note"><strong>{p.ticker} · {strategyLabels[p.strategy]}</strong>{(["fixed2r", "ma10"] as const).map(key => <p key={key}>{key === "fixed2r" ? "Fixed 2R" : "SMA10"}: <Link prefetch={false} href={"/journal/paper/" + encodeURIComponent(p[key].trade_id)}>{statusLabels[p[key].state] ?? p[key].state}</Link> · {p[key].metric_eligible ? reportMoney(p[key].pnl_idr) : "Belum dinilai dalam statistik utama"} · holding {p[key].holding_sessions ?? "—"} sesi</p>)}</div>)}</details>
   </section>;
 }
@@ -210,15 +220,15 @@ function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: Repor
   return <div className="reporting-stack"><Freshness report={report} /><ProcessingHealthNotice health={report.processing_health} />
     <section className="journal-panel"><span className="eyebrow">MENANG / DINILAI · OBSERVASI SINYAL</span><h2>Evaluasi per jenis sinyal</h2>
       <p className="panel-note">Checkpoint 5/10 sesi tidak menutup posisi. Evaluasi sinyal tetap berjalan terpisah dari exit jurnal Fixed 2R atau SMA10.</p>
-      <div className="table-scroll"><table className="dense-table evaluation-matrix"><thead><tr><th>Jenis sinyal</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead>
+      <div className="table-scroll reporting-table-region" role="region" tabIndex={0} aria-label="Tabel evaluasi per jenis sinyal"><table className="dense-table evaluation-matrix"><thead><tr><th>Jenis sinyal</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead>
         <tbody>{report.strategies.map(row => <tr key={row.strategy}><td><Link prefetch={false} href={reportLink("/analytics", "signals", f, { strategy: row.strategy, page: 1 }) + "#signal-observations"}>{strategyLabels[row.strategy]}</Link><small>{row.signals} kemunculan</small></td>
           {evaluationKeys.map(k => { const c = row.cells[k]; return <td key={k}><strong>{percent(c.win_rate)}</strong><span>{c.wins} / {c.assessed} dinilai</span><small>{c.pending} menunggu · {c.ambiguous} ambigu</small><small>{c.data_hold} data tertahan · {c.excluded} dikecualikan</small>
             {Object.keys(c.excluded_reasons).length > 0 && <details><summary>Alasan pengecualian</summary>{Object.entries(c.excluded_reasons).map(([reason, count]) => <small key={reason}>{reason}: {count}</small>)}</details>}</td>; })}
         </tr>)}</tbody></table></div>
     </section>
     <section className="journal-panel" id="signal-observations"><h2>Observasi sinyal pembentuk matriks</h2>
-      {report.evaluations.length === 0 ? <div className="journal-empty"><p>Belum ada observasi sinyal pada halaman ini.</p></div> : <div className="reporting-list"><table className="dense-table"><thead><tr><th>Ticker / Sinyal</th><th>Entry referensi / SL</th><th>Sesi teramati</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead><tbody>{report.evaluations.map(e => <tr key={e.signal_id}>
-        <td data-label="Ticker / Sinyal">{e.ticker}<small>{strategyLabels[e.strategy]} · {e.signal_session}</small><SignalChartLink ticker={e.ticker} id={e.signal_id} strategy={e.strategy} returnTo={reportLink("/analytics", "signals", f)} label="Chart saat sinyal" /><details><summary>Sumber sinyal</summary><small className="mono">{e.signal_id}</small><small>Target 1R: {reportMoney(e.target_1r)}; 2R: {reportMoney(e.target_2r)}</small></details></td><td data-label="Entry referensi / SL">{reportMoney(e.entry_price)} / {reportMoney(e.initial_stop)}<small>Entry {e.entry_session}</small></td><td data-label="Sesi teramati">{e.observed_sessions}</td>{evaluationKeys.map(k => <td data-label={evaluationLabels[k]} key={k}>{({ won: "Berhasil", lost: "Gagal", pending: "Menunggu", ambiguous: "Ambigu", data_hold: "Data tertahan", excluded: "Dikecualikan" } as Record<string, string>)[e.results[k]]}</td>)}
+      {report.evaluations.length === 0 ? <div className="journal-empty"><p>Belum ada observasi sinyal pada halaman ini.</p></div> : <div className="reporting-list reporting-table-region" role="region" tabIndex={0} aria-label="Tabel observasi sinyal"><table className="dense-table"><thead><tr><th>Ticker / Sinyal</th><th className="reporting-numeric">Entry referensi / SL</th><th className="reporting-numeric">Sesi teramati</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead><tbody>{report.evaluations.map(e => <tr key={e.signal_id}>
+        <td data-label="Ticker / Sinyal">{e.ticker}<small>{strategyLabels[e.strategy]} · {e.signal_session}</small><SignalChartLink ticker={e.ticker} id={e.signal_id} strategy={e.strategy} returnTo={reportLink("/analytics", "signals", f)} label="Chart saat sinyal" /><details><summary>Sumber sinyal</summary><small className="mono">{e.signal_id}</small><small>Target 1R: {reportMoney(e.target_1r)}; 2R: {reportMoney(e.target_2r)}</small></details></td><td data-label="Entry referensi / SL" className="reporting-numeric">{reportMoney(e.entry_price)} / {reportMoney(e.initial_stop)}<small>Entry {e.entry_session}</small></td><td data-label="Sesi teramati" className="reporting-numeric">{e.observed_sessions}</td>{evaluationKeys.map(k => <td data-label={evaluationLabels[k]} key={k}>{({ won: "Berhasil", lost: "Gagal", pending: "Menunggu", ambiguous: "Ambigu", data_hold: "Data tertahan", excluded: "Dikecualikan" } as Record<string, string>)[e.results[k]]}</td>)}
       </tr>)}</tbody></table></div>}
       <nav className="journal-pagination" aria-label="Halaman observasi">{f.page > 1 && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page - 1 })}>← Sebelumnya</Link>}{report.paging.has_more && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page + 1 })}>Berikutnya →</Link>}</nav>
     </section>

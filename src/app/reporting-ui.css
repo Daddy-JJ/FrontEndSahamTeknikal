@@ -1,0 +1,340 @@
+/* Journal/Analytics presentation only; draft forms and other routes retain their layout. */
+.site-terminal-shell .journal-reporting-page {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.site-terminal-shell .journal-reporting-page > *,
+.site-terminal-shell .journal-reporting-page .reporting-stack > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.site-terminal-shell .journal-reporting-page .journal-panel {
+  max-width: none;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 8px 0 12px;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-header > div {
+  min-width: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-header h1 {
+  font-size: clamp(20px, 2vw, 26px);
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-header p {
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.site-terminal-shell .journal-reporting-page .journal-history-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.site-terminal-shell .journal-reporting-page :is(.journal-history-tabs a, .journal-hero-actions a, .analytics-filter-row a, .journal-pagination a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter-panel {
+  width: 100%;
+  padding: 12px 14px;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter-panel .reporting-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter > label {
+  flex: 1 1 9rem;
+  min-width: 0;
+  gap: 5px;
+  line-height: 1.4;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter :is(input:not([type="hidden"]), select) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 10px;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter > :is(button, a) {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  max-width: 100%;
+  margin: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter > a {
+  padding: 8px 4px;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-filter-panel > .panel-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.site-terminal-shell .journal-reporting-page .analytics-filter-row {
+  gap: 6px 12px;
+  margin: 10px 0;
+  padding: 6px 10px;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-analysis-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-analysis-grid > * {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-curve {
+  max-width: 100%;
+  max-height: 250px;
+}
+
+.site-terminal-shell .journal-reporting-page :is(.journal-metrics, .analytics-hero-stats) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.site-terminal-shell .journal-reporting-page :is(.journal-metrics > div, .analytics-stat-card) {
+  min-width: 0;
+  padding: 12px;
+}
+
+.site-terminal-shell .journal-reporting-page :is(.journal-metrics strong, .analytics-stat-card strong) {
+  font-size: clamp(18px, 1.65vw, 23px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.site-terminal-shell .journal-reporting-page :is(.reporting-table-region, .reporting-list, .journal-table-scroll) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(36rem, 70vh);
+  overflow: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+  margin-inline: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Explicit table displays override the older <=1300px reporting card conversion. */
+.site-terminal-shell .journal-reporting-page .reporting-table-region .dense-table {
+  display: table;
+  table-layout: auto;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region thead {
+  display: table-header-group;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region tbody {
+  display: table-row-group;
+  width: auto;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region tr {
+  display: table-row;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region :is(th, td) {
+  display: table-cell;
+  max-width: 24rem;
+  padding: 9px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #182330;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region td {
+  border-bottom: 1px solid var(--line);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region td::before {
+  display: none;
+  content: none;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region :is(th, td):first-child {
+  min-width: 10rem;
+  max-width: 14rem;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-trades :is(th, td):last-child {
+  min-width: 13rem;
+  max-width: 18rem;
+}
+
+.site-terminal-shell .journal-reporting-page :is(.reporting-money, .reporting-numeric, .text-right) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region :is(.reporting-numeric, .text-right) {
+  text-align: right;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region .text-center {
+  text-align: center;
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-null {
+  color: var(--muted);
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region td.positive {
+  color: var(--green);
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region td.negative {
+  color: var(--red);
+}
+
+.site-terminal-shell .journal-reporting-page .reporting-table-region td.neutral {
+  color: var(--ink);
+}
+
+@media (min-width: 1100px) {
+  .site-terminal-shell .journal-reporting-page .reporting-analysis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .site-terminal-shell .journal-reporting-page .reporting-table-region :is(th, td):first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-table-region th:first-child {
+    z-index: 3;
+    background: #182330;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-table-region tbody tr:nth-child(even) > td:first-child {
+    background: #131e29;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-table-region tbody tr:hover > td:first-child {
+    background: #1b2d3d;
+  }
+}
+
+@media (max-width: 1000px) {
+  .site-terminal-shell .journal-reporting-page :is(.journal-metrics, .analytics-hero-stats) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .site-terminal-shell .journal-reporting-page .reporting-header {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-header .journal-hero-actions {
+    margin: 0;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-filter-panel {
+    padding: 12px;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-filter > label {
+    flex-basis: 100%;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-filter :is(input:not([type="hidden"]), select) {
+    font-size: 16px;
+  }
+
+  .site-terminal-shell .journal-reporting-page .reporting-filter > :is(button, a) {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .site-terminal-shell .journal-reporting-page :is(.journal-metrics, .analytics-hero-stats) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-terminal-shell .journal-reporting-page .journal-history-tabs a {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 600px), (pointer: coarse) {
+  .site-terminal-shell .journal-reporting-page .reporting-table-region :is(a, summary) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-block: 6px;
+  }
+}

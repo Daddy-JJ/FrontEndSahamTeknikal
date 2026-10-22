@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
 import { ScannerTerminal } from "@/components/scanner-terminal";
+import { ScannerStrategyGuide } from "@/components/scanner-strategy-guide";
 import { readScanner } from "@/lib/scanner-server";
 import { scannerQuery, scanWindow } from "@/lib/scanner-contract";
 
@@ -44,6 +45,7 @@ export async function ScannerDashboard({ searchParams }: {
     <ScannerTerminal key={[state.run.id, state.section, query.page, query.date, query.strategy].join(":")} run={state.run} query={query} section={state.section}
       items={state.items} signals={state.signals} hasMore={state.hasMore}
       entryWindow={scanWindow(state.run, state.checkedAt)}
+      strategyGuide={state.section === "signals" ? <ScannerStrategyGuide /> : undefined}
       lastSuccessful={state.lastSuccessful?.session_date ?? null} />
   </JournalShell>;
 }

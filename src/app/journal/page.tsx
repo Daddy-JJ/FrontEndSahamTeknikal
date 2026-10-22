@@ -5,7 +5,7 @@ import { JournalForm } from "@/components/journal-form";
 import { journalPageNumber } from "@/lib/journal-page";
 import { parseTradeReporting } from "@/lib/trade-reporting";
 import { journalFilterParams, journalStrategies } from "@/lib/journal-filters";
-import { ActualCohortFilters, PersistentReporting, reportLink, reportingFilters } from "@/components/trade-reporting";
+import { ActualCohortFilters, JournalTabs, PersistentReporting, reportLink, reportingFilters } from "@/components/trade-reporting";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +38,8 @@ export default async function JournalPage({ searchParams }: {
   const context = await journalOwner();
   if (context.kind !== "ready") {
     return (
-      <JournalShell mode={null} activePage="journal">
-        <section className="journal-hero">
+      <JournalShell mode={null} activePage="journal" reporting>
+        <section className="journal-hero reporting-header">
           <div>
             <span className="eyebrow">JURNAL TRANSAKSI</span>
             <h1>Jurnal belum dapat dibuka</h1>
@@ -61,16 +61,17 @@ export default async function JournalPage({ searchParams }: {
   const query = await searchParams;
   const tab = query.tab === "paper" ? "paper" : "actual";
   if (tab === "paper") return (
-    <JournalShell mode={context.mode} activePage="journal">
-      <section className="journal-hero"><h1>Paper journal</h1><Link href="/journal">Jurnal aktual</Link><Link href="/analytics?tab=paper">Analitik paper</Link></section>
+    <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="journal" reporting>
+      <section className="journal-hero reporting-header"><div><span className="eyebrow">JURNAL / PAPER / EOD</span><h1>Paper journal</h1></div><div className="journal-hero-actions"><Link href="/analytics?tab=paper">Analitik paper</Link></div></section>
+      <JournalTabs tab="paper" />
       <PersistentReporting supabase={context.supabase} mode={context.mode} query={query} view="journal" />
     </JournalShell>
   );
   const page = journalPageNumber(query.page);
   if (page === null) {
     return (
-      <JournalShell mode={context.mode} activePage="journal">
-        <section className="journal-hero">
+      <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="journal" reporting>
+        <section className="journal-hero reporting-header">
           <div>
             <span className="eyebrow">NAVIGASI RIWAYAT</span>
             <h1>Halaman riwayat tidak valid</h1>
@@ -84,7 +85,7 @@ export default async function JournalPage({ searchParams }: {
     );
   }
   const filters = reportingFilters(query);
-  if (!filters || query.tab !== undefined && query.tab !== "actual") return <JournalShell mode={context.mode} activePage="journal"><section className="journal-panel"><h1>Filter cohort tidak valid</h1><p>Periksa tanggal, strategi, halaman, dan konfigurasi exit. Cohort tidak diperluas ketika filter gagal.</p><Link href="/journal?tab=actual">Hapus filter</Link></section></JournalShell>;
+  if (!filters || query.tab !== undefined && query.tab !== "actual") return <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="journal" reporting><section className="journal-panel"><h1>Filter cohort tidak valid</h1><p>Periksa tanggal, strategi, halaman, dan konfigurasi exit. Cohort tidak diperluas ketika filter gagal.</p><Link href="/journal?tab=actual">Hapus filter</Link></section></JournalShell>;
 
   let linkedSignal: {id:string;ticker:string;strategy:string} | null = null;
   if (query.signal_id !== undefined) {
@@ -96,7 +97,7 @@ export default async function JournalPage({ searchParams }: {
     if (!signal || result?.error || signal.id !== query.signal_id || signal.data_mode !== context.mode
       || signal.namespace !== "forward" || !journalStrategies.includes(signal.strategy)
       || !/^[A-Z0-9]{2,12}$/.test(signal.ticker)) return (
-      <JournalShell mode={context.mode} activePage="journal">
+      <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="journal" reporting>
         <section className="journal-panel">
           <span className="eyebrow">DRAFT TRADE</span>
           <h1>Sinyal draft belum dapat diverifikasi</h1>
@@ -123,8 +124,8 @@ export default async function JournalPage({ searchParams }: {
   const error = typeof query.error === "string" ? query.error : null;
 
   return (
-    <JournalShell mode={context.mode} activePage="journal">
-      <section className="journal-hero">
+    <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="journal" reporting>
+      <section className="journal-hero reporting-header">
         <div>
           <span className="eyebrow">JURNAL / AKTUAL / EOD</span>
           <h1>Catatan transaksi, satu ledger finansial.</h1>
@@ -143,15 +144,7 @@ export default async function JournalPage({ searchParams }: {
       )}
       {error && <p className="journal-alert" role="alert">{errorCopy[error] ?? errorCopy.unavailable}</p>}
 
-      {/* Subtab Selector: Jurnal Aktual vs Paper Journal */}
-      <nav className="journal-history-tabs" aria-label="Pilih Mode Jurnal">
-        <Link prefetch={false} aria-current={tab === "actual" ? "page" : undefined} href="/journal?tab=actual">
-          Jurnal Aktual (Riil)
-        </Link>
-        <Link prefetch={false} aria-current={undefined} href="/journal?tab=paper">
-          Paper Journal (Simulasi Sinyal)
-        </Link>
-      </nav>
+      <JournalTabs tab="actual" />
       <ActualCohortFilters f={filters} view="journal" />
 
       <>
@@ -239,7 +232,7 @@ export default async function JournalPage({ searchParams }: {
                     </p>
                   </div>
                 ) : (
-                  <div className="table-scroll">
+                  <div className="table-scroll reporting-table-region" role="region" tabIndex={0} aria-label="Tabel transaksi aktual">
                     <table className="dense-table">
                       <thead>
                         <tr>

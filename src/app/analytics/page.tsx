@@ -11,22 +11,22 @@ export default async function AnalyticsPage({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const context = await journalOwner();
-  if (context.kind !== "ready") return <JournalShell mode={null} activePage="analytics">
-    <section className="journal-hero"><div><span className="eyebrow">ANALYTICS / PERFORMA</span><h1>Analitik belum dapat dibuka</h1>
+  if (context.kind !== "ready") return <JournalShell mode={null} activePage="analytics" reporting>
+    <section className="journal-hero reporting-header"><div><span className="eyebrow">ANALYTICS / PERFORMA</span><h1>Analitik belum dapat dibuka</h1>
       <p>{context.kind === "unconfigured" ? "Konfigurasi Supabase aplikasi belum tersedia."
         : context.kind === "unauthenticated" ? "Masuk dengan akun owner untuk melihat analisis performa."
         : context.kind === "forbidden" ? "Akun ini tidak memiliki keanggotaan owner aktif." : "Mode data proyek belum dapat diverifikasi."}</p>
     </div><div className="journal-hero-actions"><Link className="primary-button" href="/login">Masuk sebagai owner</Link></div></section>
   </JournalShell>;
   const query = await searchParams;
-  if (query.tab === "paper" || query.tab === "signals") return <JournalShell mode={context.mode} activePage="analytics">
-    <section className="journal-hero"><div><span className="eyebrow">ANALYTICS / PAPER / EOD</span><h1>{query.tab === "signals" ? "Kualitas sinyal, dengan sampel yang jelas." : "Performa paper, dari rencana sampai exit."}</h1><p>{query.tab === "signals" ? "Evaluasi sinyal terpisah dari hasil transaksi. Tidak ada auto-close pada sesi ke-5 atau ke-10." : "Fixed 2R dan SMA10 dilihat terpisah. Hasil net dihitung setelah kedua fee."}</p></div><Link href="/journal?tab=paper">Jurnal paper →</Link></section>
+  if (query.tab === "paper" || query.tab === "signals") return <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="analytics" reporting>
+    <section className="journal-hero reporting-header"><div><span className="eyebrow">ANALYTICS / PAPER / EOD</span><h1>{query.tab === "signals" ? "Kualitas sinyal, dengan sampel yang jelas." : "Performa paper, dari rencana sampai exit."}</h1><p>{query.tab === "signals" ? "Evaluasi sinyal terpisah dari hasil transaksi. Tidak ada auto-close pada sesi ke-5 atau ke-10." : "Fixed 2R dan SMA10 dilihat terpisah. Hasil net dihitung setelah kedua fee."}</p></div><div className="journal-hero-actions"><Link href="/journal?tab=paper">Jurnal paper →</Link></div></section>
     <ReportingTabs tab={query.tab} />
     <PersistentReporting supabase={context.supabase} mode={context.mode} query={query} tab={query.tab === "signals" ? "signals" : "paper"} />
   </JournalShell>;
   const filters = journalFilters(query);
   const f = reportingFilters(query);
-  if (!filters || !f || query.tab !== undefined && query.tab !== "actual") return <JournalShell mode={context.mode} activePage="analytics">
+  if (!filters || !f || query.tab !== undefined && query.tab !== "actual") return <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="analytics" reporting>
     <ReportingTabs tab="actual" /><section className="journal-panel"><span className="eyebrow">FILTER COHORT</span><h1>Filter cohort tidak valid</h1>
       <p>Tanggal, strategi, halaman, atau konfigurasi exit tidak valid. Statistik tidak dimuat agar cohort tidak berubah tanpa persetujuan.</p><div className="journal-actions"><Link href="/analytics">Hapus filter</Link></div>
     </section></JournalShell>;
@@ -37,14 +37,14 @@ export default async function AnalyticsPage({ searchParams }: {
   ]);
   const summary = legacy.error ? null : parseActualAnalytics(legacy.data, context.mode, filters);
   const report = reporting.error ? null : parseTradeReporting(reporting.data, context.mode, "actual", f);
-  if (!summary || !report) return <JournalShell mode={context.mode} activePage="analytics"><ReportingTabs tab="actual" />
+  if (!summary || !report) return <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="analytics" reporting><ReportingTabs tab="actual" />
     <section className="journal-panel" role="alert"><h1>Statistik belum dapat dibaca</h1>
       <p>Permintaan statistik gagal atau respons tidak cocok dengan mode dan cohort yang dipilih. Nilai performa tidak ditampilkan. Kontrak reporting versi baru memerlukan migrasi backend.</p>
       <Link prefetch={false} href={"/analytics?" + journalFilterParams(filters)}>Coba lagi</Link></section>
   </JournalShell>;
   const exportParams = journalFilterParams(filters).toString();
-  return <JournalShell mode={context.mode} activePage="analytics">
-    <section className="journal-hero"><div><span className="eyebrow">ANALYTICS / AKTUAL / EOD</span><h1>Ukur proses, baca hasil deterministik.</h1>
+  return <JournalShell chartOwnerId={context.ownerId} mode={context.mode} activePage="analytics" reporting>
+    <section className="journal-hero reporting-header"><div><span className="eyebrow">ANALYTICS / AKTUAL / EOD</span><h1>Ukur proses, baca hasil deterministik.</h1>
       <p>Performa trade closed berdasarkan tanggal exit Asia/Jakarta dan biaya pada ledger. Posisi open terpisah dari win rate.</p></div>
       <div className="journal-hero-actions"><Link href={"/journal?tab=actual&" + exportParams}>← Kembali ke Jurnal</Link><Link href={"/journal/export" + (exportParams ? "?" + exportParams : "")}>Ekspor CSV cohort</Link></div></section>
     {context.mode === "fixture" && <p className="journal-banner">DATA UJI DEVELOPMENT — bukan performa akun trading riil.</p>}

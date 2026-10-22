@@ -40,6 +40,7 @@ type Props = {
   initiallyOpen?: boolean;
   onClose?: () => void;
   returnTo?: string;
+  overlay?: boolean;
 };
 const fetchChart: Loader = async (request, cursor, signal) => {
   const response = await fetch(chartRequestUrl(request, cursor), {
@@ -195,6 +196,7 @@ export function ChartPanel({
   initiallyOpen = false,
   onClose,
   returnTo,
+  overlay = false,
 }: Props) {
   const requestKey = JSON.stringify(request);
   const [chosenView, setChosenView] = useState<{ key: string; view: ChartRequest['view'] } | null>(null);
@@ -355,7 +357,7 @@ export function ChartPanel({
       className={styles.panel}
       aria-label={`Chart ${request.ticker}`}
       onKeyDown={(event) => {
-        if (event.key === "Escape" && open) {
+        if (event.key === "Escape" && open && !overlay) {
           closeChart();
         }
       }}
@@ -384,7 +386,7 @@ export function ChartPanel({
         <>
           <div className={styles.toolbar}>
             <div className={styles.toolbarGroup} role="group" aria-label="Aksi chart">
-            {fullPage && <Link prefetch={false} href={fullPage} title="Buka halaman chart terpisah">Perbesar chart ↗</Link>}
+            {fullPage && <Link prefetch={false} href={fullPage} data-chart-overlay-fullpage={overlay ? "true" : undefined} title="Buka halaman chart terpisah">{overlay ? "Buka halaman penuh" : "Perbesar chart ↗"}</Link>}
             <button type="button" onClick={closeChart}>
               Tutup chart
             </button>

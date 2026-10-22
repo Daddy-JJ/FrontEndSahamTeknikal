@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChartReturnPosition } from "./chart-return-position";
+import { ReportingChartOverlay } from "./chart-overlay";
 
-export function JournalShell({mode,children,variant="default",activePage,showMode=true}:{
-  mode:"fixture"|"live"|null; children:React.ReactNode; variant?:"default"|"terminal"; activePage?:"scanner"|"journal"|"analytics"|"operations"|"account"; showMode?:boolean;
+export function JournalShell({mode,children,variant="default",activePage,showMode=true,reporting=false,chartOwnerId}:{
+  mode:"fixture"|"live"|null; children:React.ReactNode; variant?:"default"|"terminal"; activePage?:"scanner"|"journal"|"analytics"|"operations"|"account"; showMode?:boolean; reporting?:boolean;
+  chartOwnerId?: string;
 }) {
   const content = <>
     {/* A loading shell hides its mode; it is not evidence of an expired owner session. */}
@@ -23,7 +25,9 @@ export function JournalShell({mode,children,variant="default",activePage,showMod
         </span>}
       </div>
     </header>
-    <main className="journal-main">{children}</main>
+    <main className={"journal-main" + (reporting ? " journal-reporting-page" : "")}>{children}</main>
   </>;
-  return <div className={variant === "terminal" ? "scanner-terminal-shell" : "scanner-terminal-shell site-terminal-shell"}>{content}</div>;
+  return <div className={variant === "terminal" ? "scanner-terminal-shell" : "scanner-terminal-shell site-terminal-shell"}>
+    {reporting && mode && chartOwnerId ? <Suspense fallback={null}><ReportingChartOverlay mode={mode} ownerId={chartOwnerId}>{content}</ReportingChartOverlay></Suspense> : content}
+  </div>;
 }

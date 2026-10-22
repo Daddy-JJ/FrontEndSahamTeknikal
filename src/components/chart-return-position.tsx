@@ -30,6 +30,8 @@ export function ChartReturnPosition({ mode }: { mode: "live" | "fixture" | null 
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !returnPage(current)) return;
       const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
       if (!(anchor instanceof HTMLAnchorElement) || anchor.target === "_blank") return;
+      // Overlay fullpage persists the pre-lock coordinates itself; ordinary triggers stay local.
+      if (anchor.dataset.chartOverlay === "true" || anchor.closest("[data-chart-overlay-host]")) return;
       const destination = new URL(anchor.href);
       if (destination.origin !== location.origin || !/^\/(chart\/|journal\/(?:paper\/)?)/.test(destination.pathname)
           || returnPage(destination.searchParams.get("return_to") ?? "") !== returnPage(current)) return;

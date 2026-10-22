@@ -1,26 +1,33 @@
-# Password login - released, 22 October 2026
+# Active plan - Jurnal, Analytics, Scanner guide and chart overlay
 
-Owner approved implementation, cloud configuration and commit/push/deploy; username `daddyjj`.
-Keep the existing Supabase owner UUID, GitHub fallback and RLS. Pre-existing Markdown cleanup
-remains separate. Never rerun the completed journal reset/backfill for this task.
+Updated 22 October 2026. Owner requested a combined plan before further implementation.
+**A/B/C/D verified locally; owner authorized commit/push/Production deployment on 22 October.** This assignment supersedes completed
+password-login and documentation plans; it does not reopen reset/backfill or auth work.
 
-| Stage | Action | Proof / state |
+Read the [focused combined plan](docs/UI_JOURNAL_ANALYTICS_STRATEGY_GUIDE_PLAN_20261022.md)
+for exact layout, strategy copy, [chart overlay D](docs/UI_JOURNAL_ANALYTICS_STRATEGY_GUIDE_PLAN_20261022.md#d-overlay-chart-dari-daftar-jurnal-dan-analytics), responsive behavior and acceptance.
+
+| Scope | Action | Proof / state |
 | --- | --- | --- |
-| A1 | Verify existing owner, alias and cloud protection | Fresh 22 October read-only owner/email/membership checks PASS; same UUID. Native Auth advanced config GET 403 remains NOT VERIFIED |
-| A2 | TDD policy/core, SSR adapter and owner setup/login | Complete: 31 focused and 111 full unit PASS; focused modules 100% lines/functions, 99.20% branches. Browser proof is separate |
-| A3 | Protected recovery, safe errors and cloud attempt limit | Complete with recovery disabled. Active Vercel WAF v2: exact POST `/auth/password`, 5/60 seconds/source IP; requests 6-8 returned 429 across two clients; GET login 200. No in-memory limiter |
-| A4 | Review, checks, publish, configure Production and verify live | Source `9d477cc` published. Activation SHA `a30bd79`, Vercel `dpl_nA6gQwK5j7Fe3bsR5rvWzJvr2j1z` READY, Production alias verified. 10 routes/11 assets and four live guards PASS. Prior local 36 browser + 7 selected regressions, typecheck/lint/build PASS; independent security review no HIGH/CRITICAL |
+| A | Compact header/tabs/filters; fullwidth readable ledger; curve+strategy beside each other on desktop; local table scrolling on mobile | COMPLETE LOCALLY, not committed/deployed. RED->GREEN navigation and P&L colors; affected browser cases all have PASS across recorded runs; unit 111/111, full lint, typecheck and production build PASS. See status for exact receipts/limits |
+| B | Put processing diagnostics after results/table/footnote on paper journal | COMPLETE LOCALLY, not committed/deployed. RED->GREEN, desktop/mobile 6/6, unit 111/111, typecheck/lint/build PASS; review no HIGH/CRITICAL |
+| C | Four baseline V1 strategy cards below published Scanner signals, including entry, initial SL and both exit methods | COMPLETE LOCALLY, not committed/deployed. RED->GREEN; dedicated final desktop/mobile6/6 PASS; full Scanner/chart68 PASS/6 viewport skips; unit111/111, lint/typecheck/build PASS; source/React/a11y review no HIGH/CRITICAL. No new data request/calculation |
+| D | Existing row Chart/Saat sinyal links open one responsive modal using ChartPanel; preserve context, focus/scroll, canonical fullpage fallback | COMPLETE LOCALLY. Overlay/fullpage24/24 PASS; affected reporting/layout/CSV35 PASS with subsequent scoped fallback/keyboard/read-count rechecks. Unit111/111, lint/typecheck/build PASS; no HIGH/CRITICAL. Original failures and existing initial-JS-off streaming limitation retained in status. No server reads moved client |
+| Verification | Review and targeted journal/reporting/scanner/chart-return/overlay regression plus build checks | Run when A/C/D implementation changes the affected surfaces; prior B proof is dated local evidence |
 
-Production password form and server-only mapping are active. No backend/schema/dependency,
-financial data, Auth user or password was changed. Owner sets their own password via Akun
-after fresh GitHub login, then signs in using `daddyjj`; never send the password to an agent.
+Frontend only: preserve backend/RPC, auth/RLS, routes/query, ledger/CSV, financial values,
+trading rules, historical snapshots and unrelated Markdown cleanup. Publication of this UI
+package is authorized; backend/database/auth configuration and data mutations remain out of scope.
 
-[Status](IMPLEMENTATION_STATUS.md) owns the release receipt and limits;
-[design/checklist](docs/LOGIN_PASSWORD_EXPLORATION.md) owns architecture and configuration.
-Remaining owner acceptance: real password setup/login, authenticated data reads and genuine
-outsider JWT denial are NOT VERIFIED. Recovery stays off until delivery/PKCE is proven;
-native Supabase advanced limits/reauth settings are NOT VERIFIED (management GET 403).
-These gaps do not authorize operator-created passwords, real email or new Auth users.
-New configuration resides in Vercel Production; the laptop is not required at runtime.
+Release Action: reuse completed QA receipts; scoped frontend commit/push; verify the exact SHA
+in Vercel Production, alias/public routes/assets and auth boundaries. Restore the recorded
+previous deployment if live smoke fails. Owner-browser proof remains separate when unavailable.
+Release Proof: independent current-source receipt/security audit PASS, no HIGH/CRITICAL;
+remote main matches local baseline dcd847e. Prior Production rollback target recorded privately.
+Initial app loading with JavaScript disabled is an existing streaming limitation, separate
+from the tested native fallback of a rendered chart link. No completed local suite is repeated.
+Do not reimplement B. [Status](IMPLEMENTATION_STATUS.md) owns dated local/live evidence;
+its password section retains native Auth/recovery/owner-acceptance limits.
 
-Previous completed Scanner relayout plan: [historical snapshot](docs/archive/PLAN_SCANNER_RELAYOUT_BEFORE_DOC_CLEANUP_20261021.md).
+[Previous completed plans](docs/archive/PLAN_BEFORE_JOURNAL_ANALYTICS_STRATEGY_GUIDE_20261022.md)
+are archived with their existing limitations and links, not a task queue.

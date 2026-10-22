@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ChartPanel } from "@/components/chart-panel";
 import { chartIndicators } from "@/lib/chart-navigation";
 import { scannerDetailHref, resolveScannerSelection, scannerChartRequest, type ScannerSelection, type ScannerPanel } from "@/lib/scanner-detail";
@@ -17,6 +17,7 @@ type Props = {
   run: ScanRun; query: ScannerQuery; section: "quality" | "signals";
   items: ScanItem[]; signals: PublishedSignal[]; hasMore: boolean;
   entryWindow: "open" | "elapsed" | "unknown"; lastSuccessful: string | null;
+  strategyGuide?: ReactNode;
 };
 const subscribeDrawer = (notify: () => void) => {
   const media = window.matchMedia("(min-width: 1280px)");
@@ -96,7 +97,7 @@ function Detail({ selection, run }: { selection: Selection; run: ScanRun }) {
     </>}
   </>;
 }
-export function ScannerTerminal({ run, query, section, items, signals, hasMore, entryWindow, lastSuccessful }: Props) {
+export function ScannerTerminal({ run, query, section, items, signals, hasMore, entryWindow, lastSuccessful, strategyGuide }: Props) {
   const searchParams = useSearchParams();
   const urlQuery = scannerQuery(Object.fromEntries(Array.from(new Set(searchParams.keys())).map(key => {
     const values = searchParams.getAll(key);
@@ -294,7 +295,7 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       Freshness input belum dapat diverifikasi.
     </p>
     {urlQuery.detail && !selection && <p className="terminal-notice" role="status">Detail yang dipilih tidak tersedia pada halaman ini. Pilih emiten pada daftar atau ubah halaman; chart tidak mengambil konteks lain sebagai pengganti.</p>}
-    <div ref={workspace} className={"terminal-workspace " + (selection && !drawer ? "has-detail" + (expanded ? " detail-expanded" : "") : "")}>
+    <div ref={workspace} className={"terminal-workspace " + (section === "signals" ? "signals-workspace " : "") + (selection && !drawer ? "has-detail" + (expanded ? " detail-expanded" : "") : "")}>
       <section className="terminal-results" aria-label="Hasil scanner" hidden={Boolean(selection && !drawer && expanded)}>
         <div className="terminal-results-heading">
           <h2>{section === "quality" ? "Evaluasi Konstituen Universe" : "Sinyal Diterbitkan"}</h2>
@@ -345,5 +346,6 @@ export function ScannerTerminal({ run, query, section, items, signals, hasMore, 
       else if (!event.shiftKey && (document.activeElement === last || !event.currentTarget.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
     }} onCancel={event => { event.preventDefault(); close(); }}>{detailContent}</dialog>
     </div>
+    {strategyGuide}
   </div>;
 }

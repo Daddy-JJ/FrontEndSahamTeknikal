@@ -99,6 +99,10 @@ test("analytics chart roundtrip restores the exact cohort and UI scroll once", a
   });
   await chartLink.click();
   await expect(page.getByTestId("chart-canvas")).toBeVisible();
+  await page.getByText("Tabel OHLC & indikator — alternatif canvas", { exact: true }).click();
+  await page.getByRole("link", { name: "Buka halaman penuh", exact: true }).click();
+  await expect(page).toHaveURL(/\/chart\/TEST\?/);
+  await expect(page.getByTestId("chart-canvas")).toBeVisible();
   const saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem("chart-return-ui-v1:fixture") ?? "null"));
   expect(saved).not.toBeNull();
   expect(saved.y).toBeGreaterThan(0);
@@ -125,6 +129,9 @@ test("disabled position storage is benign and navigation remains usable", async 
   await page.goto("/analytics?tab=actual&exit_snapshot=fixed2r");
   await expect(page.locator(".analytics-stat-card").first()).toContainText("Rp1.000");
   await page.locator(".reporting-trades").getByRole("link", { name: "Chart TEST", exact: true }).click();
+  await expect(page.getByText("Backend chart belum siap.", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Buka halaman penuh", exact: true }).click();
+  await expect(page).toHaveURL(/\/chart\/TEST\?/);
   await expect(page.getByText("Backend chart belum siap.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "← Kembali ke daftar asal", exact: true }).click();
   await expect(page).toHaveURL(/exit_snapshot=fixed2r/);
