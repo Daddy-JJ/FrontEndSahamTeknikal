@@ -221,18 +221,33 @@ const evaluationLabels = { target_1r: "1R sebelum SL", target_2r: "2R sebelum SL
 type StrategyEvaluationRow = SignalEvaluation["strategies"][number];
 
 function getStrategyScorecardMetrics(row: StrategyEvaluationRow) {
+  // Primary benchmark for signal distribution bar: Target 1R sebelum SL
+  const primary = row.cells.target_1r;
+  const signalAssessed = primary.assessed;
+  const signalWins = primary.wins;
+  const signalLosses = Math.max(0, primary.assessed - primary.wins);
+  const signalPending = primary.pending;
+  const signalAmbiguous = primary.ambiguous;
+  const signalDataHold = primary.data_hold;
+  const signalExcluded = primary.excluded;
+  const signalTotal = row.signals;
+
+  // Composite calculation across all cells for overall strategy sorting
   const cellsList = evaluationKeys.map(k => row.cells[k]);
-  const assessed = cellsList.reduce((sum, c) => sum + c.assessed, 0);
-  const wins = cellsList.reduce((sum, c) => sum + c.wins, 0);
-  const losses = Math.max(0, assessed - wins);
-  const pending = cellsList.reduce((sum, c) => sum + c.pending, 0);
-  const ambiguous = cellsList.reduce((sum, c) => sum + c.ambiguous, 0);
-  const dataHold = cellsList.reduce((sum, c) => sum + c.data_hold, 0);
-  const excluded = cellsList.reduce((sum, c) => sum + c.excluded, 0);
-  const total = assessed + pending + ambiguous + dataHold + excluded;
-  const winRate = assessed > 0 ? wins / assessed : null;
+  const totalAssessed = cellsList.reduce((sum, c) => sum + c.assessed, 0);
+  const totalWins = cellsList.reduce((sum, c) => sum + c.wins, 0);
+
+  // Win rate for badge & sort: prefer primary if assessed, else composite if any checkpoint assessed
+  const primaryWinRate = signalAssessed > 0 ? signalWins / signalAssessed : null;
+  const compositeWinRate = totalAssessed > 0 ? totalWins / totalAssessed : null;
+  const winRate = primaryWinRate !== null ? primaryWinRate : compositeWinRate;
   const sortScore = winRate !== null ? winRate : -1;
-  return { assessed, wins, losses, pending, ambiguous, dataHold, excluded, total, winRate, sortScore };
+
+  return {
+    signalAssessed, signalWins, signalLosses, signalPending,
+    signalAmbiguous, signalDataHold, signalExcluded, signalTotal,
+    totalAssessed, totalWins, winRate, sortScore,
+  };
 }
 
 function ScorecardMetricItem({ label, cell }: { label: string; cell: EvaluationCell }) {
@@ -273,10 +288,10 @@ function ScorecardMetricItem({ label, cell }: { label: string; cell: EvaluationC
 
 function StrategyScorecard({ row, f }: { row: StrategyEvaluationRow; f: ReportingFilters }) {
   const m = getStrategyScorecardMetrics(row);
-  const wonPct = m.total > 0 ? (m.wins / m.total) * 100 : 0;
-  const lostPct = m.total > 0 ? (m.losses / m.total) * 100 : 0;
-  const pendingPct = m.total > 0 ? (m.pending / m.total) * 100 : 0;
-  const holdExcludedPct = m.total > 0 ? ((m.dataHold + m.excluded + m.ambiguous) / m.total) * 100 : 0;
+  const wonPct = m.signalTotal > 0 ? (m.signalWins / m.signalTotal) * 100 : 0;
+  const lostPct = m.signalTotal > 0 ? (m.signalLosses / m.signalTotal) * 100 : 0;
+  const pendingPct = m.signalTotal > 0 ? (m.signalPending / m.signalTotal) * 100 : 0;
+  const holdExcludedPct = m.signalTotal > 0 ? ((m.signalDataHold + m.signalExcluded + m.signalAmbiguous) / m.signalTotal) * 100 : 0;
 
   return (
     <div className="strategy-scorecard">
@@ -296,9 +311,9 @@ function StrategyScorecard({ row, f }: { row: StrategyEvaluationRow; f: Reportin
             {m.winRate !== null
               ? m.winRate === 1
                 ? "100% win rate pada sampel teruji"
-                : m.wins > 0
-                ? `${percent(m.winRate)} win rate (${m.wins} menang / ${m.assessed} dinilai)`
-                : `0% win rate (${m.assessed} sampel dinilai)`
+                : m.signalWins > 0 || m.totalWins > 0
+                ? `${percent(m.winRate)} win rate (${m.signalAssessed > 0 ? m.signalWins + " menang / " + m.signalAssessed + " dinilai" : m.totalWins + " menang / " + m.totalAssessed + " dinilai"})`
+                : `0% win rate (${m.signalAssessed > 0 ? m.signalAssessed : m.totalAssessed} sampel dinilai)`
               : "Semua sampel dalam observasi aktif"}
           </span>
         </div>
@@ -328,22 +343,22 @@ function StrategyScorecard({ row, f }: { row: StrategyEvaluationRow; f: Reportin
 
       <div className="scorecard-distribution-section">
         <div className="scorecard-distribution-header">
-          <span>Distribusi Observasi:</span>
-          <strong>{m.assessed} Selesai / {m.pending} Menunggu</strong>
+          <span>Distribusi Sinyal (Target 1R):</span>
+          <strong>{m.signalAssessed} Selesai / {m.signalPending} Menunggu</strong>
         </div>
-        <div className="scorecard-bar-track" role="progressbar" aria-valuenow={m.assessed} aria-valuemax={m.total}>
-          {wonPct > 0 && <div className="scorecard-segment segment-won" style={{ width: `${wonPct}%` }} title={`${m.wins} Menang (${percent(wonPct / 100)})`} />}
-          {lostPct > 0 && <div className="scorecard-segment segment-lost" style={{ width: `${lostPct}%` }} title={`${m.losses} Kalah (${percent(lostPct / 100)})`} />}
-          {pendingPct > 0 && <div className="scorecard-segment segment-pending" style={{ width: `${pendingPct}%` }} title={`${m.pending} Menunggu (${percent(pendingPct / 100)})`} />}
-          {holdExcludedPct > 0 && <div className="scorecard-segment segment-hold" style={{ width: `${holdExcludedPct}%` }} title={`${m.dataHold + m.excluded + m.ambiguous} Tertahan/Dikecualikan`} />}
+        <div className="scorecard-bar-track" role="progressbar" aria-valuenow={m.signalAssessed} aria-valuemax={m.signalTotal}>
+          {wonPct > 0 && <div className="scorecard-segment segment-won" style={{ width: `${wonPct}%` }} title={`${m.signalWins} Menang (${percent(wonPct / 100)})`} />}
+          {lostPct > 0 && <div className="scorecard-segment segment-lost" style={{ width: `${lostPct}%` }} title={`${m.signalLosses} Kalah (${percent(lostPct / 100)})`} />}
+          {pendingPct > 0 && <div className="scorecard-segment segment-pending" style={{ width: `${pendingPct}%` }} title={`${m.signalPending} Menunggu (${percent(pendingPct / 100)})`} />}
+          {holdExcludedPct > 0 && <div className="scorecard-segment segment-hold" style={{ width: `${holdExcludedPct}%` }} title={`${m.signalDataHold + m.signalExcluded + m.signalAmbiguous} Tertahan/Dikecualikan`} />}
         </div>
         <div className="scorecard-legend">
-          <span className="legend-chip"><span className="legend-dot dot-won" /> {m.wins} Menang</span>
-          <span className="legend-chip"><span className="legend-dot dot-lost" /> {m.losses} Kalah</span>
-          <span className="legend-chip"><span className="legend-dot dot-pending" /> {m.pending} Menunggu</span>
-          {m.dataHold > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.dataHold} Data tertahan</span>}
-          {m.excluded > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.excluded} Dikecualikan</span>}
-          {m.ambiguous > 0 && <span className="legend-chip"><span className="legend-dot dot-ambiguous" /> {m.ambiguous} Ambigu</span>}
+          <span className="legend-chip"><span className="legend-dot dot-won" /> {m.signalWins} Menang</span>
+          <span className="legend-chip"><span className="legend-dot dot-lost" /> {m.signalLosses} Kalah</span>
+          <span className="legend-chip"><span className="legend-dot dot-pending" /> {m.signalPending} Menunggu</span>
+          {m.signalDataHold > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.signalDataHold} Data tertahan</span>}
+          {m.signalExcluded > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.signalExcluded} Dikecualikan</span>}
+          {m.signalAmbiguous > 0 && <span className="legend-chip"><span className="legend-dot dot-ambiguous" /> {m.signalAmbiguous} Ambigu</span>}
         </div>
       </div>
     </div>
@@ -355,7 +370,7 @@ function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: Repor
     const ma = getStrategyScorecardMetrics(a);
     const mb = getStrategyScorecardMetrics(b);
     if (mb.sortScore !== ma.sortScore) return mb.sortScore - ma.sortScore;
-    if (mb.wins !== ma.wins) return mb.wins - ma.wins;
+    if (mb.totalWins !== ma.totalWins) return mb.totalWins - ma.totalWins;
     if (b.signals !== a.signals) return b.signals - a.signals;
     return a.strategy.localeCompare(b.strategy);
   });
