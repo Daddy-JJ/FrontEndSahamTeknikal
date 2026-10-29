@@ -8,6 +8,7 @@ import { chartIndicators, chartPageHref } from "@/lib/chart-navigation";
 import {
   parseTradeReporting, parseSignalEvaluation, strategyLabels, reportingStrategies, evaluationKeys,
   type ReportingFilters, type TradeReporting, type SignalEvaluation, type ReportingCurvePoint, type ReportingTrade,
+  type EvaluationCell,
 } from "@/lib/trade-reporting";
 
 type Query = Record<string, string | string[] | undefined>;
@@ -216,15 +217,157 @@ function ExperimentComparisonPanel({ report }: { report: TradeReporting }) {
   </section>;
 }
 const evaluationLabels = { target_1r: "1R sebelum SL", target_2r: "2R sebelum SL", net_5: "Profit net tanpa SL · 5 sesi", net_10: "Profit net tanpa SL · 10 sesi" };
+
+type StrategyEvaluationRow = SignalEvaluation["strategies"][number];
+
+function getStrategyScorecardMetrics(row: StrategyEvaluationRow) {
+  const cellsList = evaluationKeys.map(k => row.cells[k]);
+  const assessed = cellsList.reduce((sum, c) => sum + c.assessed, 0);
+  const wins = cellsList.reduce((sum, c) => sum + c.wins, 0);
+  const losses = Math.max(0, assessed - wins);
+  const pending = cellsList.reduce((sum, c) => sum + c.pending, 0);
+  const ambiguous = cellsList.reduce((sum, c) => sum + c.ambiguous, 0);
+  const dataHold = cellsList.reduce((sum, c) => sum + c.data_hold, 0);
+  const excluded = cellsList.reduce((sum, c) => sum + c.excluded, 0);
+  const total = assessed + pending + ambiguous + dataHold + excluded;
+  const winRate = assessed > 0 ? wins / assessed : null;
+  const sortScore = winRate !== null ? winRate : -1;
+  return { assessed, wins, losses, pending, ambiguous, dataHold, excluded, total, winRate, sortScore };
+}
+
+function ScorecardMetricItem({ label, cell }: { label: string; cell: EvaluationCell }) {
+  const isAssessed = cell.assessed > 0;
+  const winRateNum = cell.win_rate !== null ? Number(cell.win_rate) : null;
+  const chipClass = !isAssessed
+    ? "chip-amber"
+    : winRateNum !== null && winRateNum >= 0.5
+    ? "chip-green"
+    : "chip-red";
+
+  return (
+    <div className="scorecard-metric-item">
+      <div className="scorecard-metric-header">
+        <span className="scorecard-metric-label">{label}</span>
+        <span className={`scorecard-metric-badge ${chipClass}`}>
+          {isAssessed ? `${percent(cell.win_rate)} (${cell.wins}/${cell.assessed})` : `${cell.pending} Menunggu`}
+        </span>
+      </div>
+      <div className="scorecard-metric-sub">
+        <span>{cell.wins} / {cell.assessed} dinilai</span>
+        {cell.pending > 0 && <span> · {cell.pending} menunggu</span>}
+        {cell.ambiguous > 0 && <span> · {cell.ambiguous} ambigu</span>}
+        {cell.data_hold > 0 && <span> · {cell.data_hold} data tertahan</span>}
+        {cell.excluded > 0 && <span> · {cell.excluded} dikecualikan</span>}
+      </div>
+      {Object.keys(cell.excluded_reasons).length > 0 && (
+        <details className="scorecard-metric-details">
+          <summary>Alasan pengecualian</summary>
+          {Object.entries(cell.excluded_reasons).map(([reason, count]) => (
+            <small key={reason}>{reason}: {count}</small>
+          ))}
+        </details>
+      )}
+    </div>
+  );
+}
+
+function StrategyScorecard({ row, f }: { row: StrategyEvaluationRow; f: ReportingFilters }) {
+  const m = getStrategyScorecardMetrics(row);
+  const wonPct = m.total > 0 ? (m.wins / m.total) * 100 : 0;
+  const lostPct = m.total > 0 ? (m.losses / m.total) * 100 : 0;
+  const pendingPct = m.total > 0 ? (m.pending / m.total) * 100 : 0;
+  const holdExcludedPct = m.total > 0 ? ((m.dataHold + m.excluded + m.ambiguous) / m.total) * 100 : 0;
+
+  return (
+    <div className="strategy-scorecard">
+      <div className="scorecard-header">
+        <div className="scorecard-header-left">
+          <div className="scorecard-title-row">
+            <Link
+              prefetch={false}
+              href={reportLink("/analytics", "signals", f, { strategy: row.strategy, page: 1 }) + "#signal-observations"}
+              className="scorecard-strategy-link"
+            >
+              {strategyLabels[row.strategy]}
+            </Link>
+            <span className="scorecard-signal-count">{row.signals} sinyal</span>
+          </div>
+          <span className="scorecard-subtitle">
+            {m.winRate !== null
+              ? m.winRate === 1
+                ? "100% win rate pada sampel teruji"
+                : m.wins > 0
+                ? `${percent(m.winRate)} win rate (${m.wins} menang / ${m.assessed} dinilai)`
+                : `0% win rate (${m.assessed} sampel dinilai)`
+              : "Semua sampel dalam observasi aktif"}
+          </span>
+        </div>
+        <div>
+          {m.winRate !== null ? (
+            <span className={`scorecard-pill ${m.winRate >= 0.5 ? "pill-won" : "pill-lost"}`}>
+              {percent(m.winRate)} Win
+            </span>
+          ) : (
+            <span className="scorecard-pill pill-neutral">Sedang Diobservasi</span>
+          )}
+        </div>
+      </div>
+
+      <div className="scorecard-panels-grid">
+        <div className="scorecard-subpanel">
+          <span className="scorecard-panel-label">Target Profit R</span>
+          <ScorecardMetricItem label="1R sebelum SL" cell={row.cells.target_1r} />
+          <ScorecardMetricItem label="2R sebelum SL" cell={row.cells.target_2r} />
+        </div>
+        <div className="scorecard-subpanel">
+          <span className="scorecard-panel-label">Checkpoint Forward</span>
+          <ScorecardMetricItem label="Profit net tanpa SL · 5 sesi" cell={row.cells.net_5} />
+          <ScorecardMetricItem label="Profit net tanpa SL · 10 sesi" cell={row.cells.net_10} />
+        </div>
+      </div>
+
+      <div className="scorecard-distribution-section">
+        <div className="scorecard-distribution-header">
+          <span>Distribusi Observasi:</span>
+          <strong>{m.assessed} Selesai / {m.pending} Menunggu</strong>
+        </div>
+        <div className="scorecard-bar-track" role="progressbar" aria-valuenow={m.assessed} aria-valuemax={m.total}>
+          {wonPct > 0 && <div className="scorecard-segment segment-won" style={{ width: `${wonPct}%` }} title={`${m.wins} Menang (${percent(wonPct / 100)})`} />}
+          {lostPct > 0 && <div className="scorecard-segment segment-lost" style={{ width: `${lostPct}%` }} title={`${m.losses} Kalah (${percent(lostPct / 100)})`} />}
+          {pendingPct > 0 && <div className="scorecard-segment segment-pending" style={{ width: `${pendingPct}%` }} title={`${m.pending} Menunggu (${percent(pendingPct / 100)})`} />}
+          {holdExcludedPct > 0 && <div className="scorecard-segment segment-hold" style={{ width: `${holdExcludedPct}%` }} title={`${m.dataHold + m.excluded + m.ambiguous} Tertahan/Dikecualikan`} />}
+        </div>
+        <div className="scorecard-legend">
+          <span className="legend-chip"><span className="legend-dot dot-won" /> {m.wins} Menang</span>
+          <span className="legend-chip"><span className="legend-dot dot-lost" /> {m.losses} Kalah</span>
+          <span className="legend-chip"><span className="legend-dot dot-pending" /> {m.pending} Menunggu</span>
+          {m.dataHold > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.dataHold} Data tertahan</span>}
+          {m.excluded > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.excluded} Dikecualikan</span>}
+          {m.ambiguous > 0 && <span className="legend-chip"><span className="legend-dot dot-ambiguous" /> {m.ambiguous} Ambigu</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: ReportingFilters }) {
+  const sortedStrategies = [...report.strategies].sort((a, b) => {
+    const ma = getStrategyScorecardMetrics(a);
+    const mb = getStrategyScorecardMetrics(b);
+    if (mb.sortScore !== ma.sortScore) return mb.sortScore - ma.sortScore;
+    if (mb.wins !== ma.wins) return mb.wins - ma.wins;
+    if (b.signals !== a.signals) return b.signals - a.signals;
+    return a.strategy.localeCompare(b.strategy);
+  });
+
   return <div className="reporting-stack"><Freshness report={report} />
     <section className="journal-panel"><span className="eyebrow">MENANG / DINILAI · OBSERVASI SINYAL</span><h2>Evaluasi per jenis sinyal</h2>
       <p className="panel-note">Checkpoint 5/10 sesi tidak menutup posisi. Evaluasi sinyal tetap berjalan terpisah dari exit jurnal Fixed 2R atau SMA10.</p>
-      <div className="table-scroll reporting-table-region" role="region" tabIndex={0} aria-label="Tabel evaluasi per jenis sinyal"><table className="dense-table evaluation-matrix"><thead><tr><th>Jenis sinyal</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead>
-        <tbody>{report.strategies.map(row => <tr key={row.strategy}><td><Link prefetch={false} href={reportLink("/analytics", "signals", f, { strategy: row.strategy, page: 1 }) + "#signal-observations"}>{strategyLabels[row.strategy]}</Link><small>{row.signals} kemunculan</small></td>
-          {evaluationKeys.map(k => { const c = row.cells[k]; return <td key={k}><strong>{percent(c.win_rate)}</strong><span>{c.wins} / {c.assessed} dinilai</span><small>{c.pending} menunggu · {c.ambiguous} ambigu</small><small>{c.data_hold} data tertahan · {c.excluded} dikecualikan</small>
-            {Object.keys(c.excluded_reasons).length > 0 && <details><summary>Alasan pengecualian</summary>{Object.entries(c.excluded_reasons).map(([reason, count]) => <small key={reason}>{reason}: {count}</small>)}</details>}</td>; })}
-        </tr>)}</tbody></table></div>
+      <div className="evaluation-matrix evaluation-scorecard-grid">
+        {sortedStrategies.map(row => (
+          <StrategyScorecard key={row.strategy} row={row} f={f} />
+        ))}
+      </div>
     </section>
     <section className="journal-panel" id="signal-observations"><h2>Observasi sinyal pembentuk matriks</h2>
       {report.evaluations.length === 0 ? <div className="journal-empty"><p>Belum ada observasi sinyal pada halaman ini.</p></div> : <div className="reporting-list reporting-table-region" role="region" tabIndex={0} aria-label="Tabel observasi sinyal"><table className="dense-table"><thead><tr><th>Ticker / Sinyal</th><th className="reporting-numeric">Entry referensi / SL</th><th className="reporting-numeric">Sesi teramati</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead><tbody>{report.evaluations.map(e => <tr key={e.signal_id}>

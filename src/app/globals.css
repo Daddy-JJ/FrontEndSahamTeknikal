@@ -550,3 +550,312 @@
 .site-terminal-shell .chart-grid{stroke:#293644}.site-terminal-shell .chart-label{fill:#9aaaba}.site-terminal-shell .candle-up{color:#7ed5b5}.site-terminal-shell .candle-down{color:#f58e85}.site-terminal-shell .legend-candle{background:#7ed5b5}.site-terminal-shell .legend-ma{background:#eab56b}
 
 .site-terminal-shell .watch-button{background:#17222e;border-color:#354656;color:#9bdcf0}.site-terminal-shell .watch-button[aria-pressed=true]{background:#11332e;border-color:#285149;color:#7ed5b5}
+
+
+/* Strategy Scorecards (Alternatif 1) */
+.evaluation-matrix.evaluation-scorecard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .evaluation-matrix.evaluation-scorecard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.strategy-scorecard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.strategy-scorecard:hover {
+  border-color: rgba(107, 213, 237, 0.4);
+}
+
+.scorecard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.scorecard-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scorecard-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scorecard-strategy-link {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.scorecard-strategy-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.scorecard-signal-count {
+  font-size: 10px;
+  padding: 2px 7px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.scorecard-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.scorecard-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.scorecard-pill.pill-won {
+  background: rgba(126, 213, 181, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(126, 213, 181, 0.3);
+}
+
+.scorecard-pill.pill-lost {
+  background: rgba(245, 142, 133, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(245, 142, 133, 0.3);
+}
+
+.scorecard-pill.pill-neutral {
+  background: var(--surface-raised);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.scorecard-panels-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 540px) {
+  .scorecard-panels-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scorecard-subpanel {
+  background: var(--surface-raised);
+  border: 1px solid rgba(41, 54, 68, 0.6);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scorecard-panel-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.scorecard-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scorecard-metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.scorecard-metric-label {
+  font-size: 12px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.scorecard-metric-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.scorecard-metric-badge.chip-green {
+  background: rgba(126, 213, 181, 0.15);
+  color: var(--green);
+}
+
+.scorecard-metric-badge.chip-red {
+  background: rgba(245, 142, 133, 0.15);
+  color: var(--red);
+}
+
+.scorecard-metric-badge.chip-amber {
+  background: rgba(234, 181, 107, 0.15);
+  color: var(--amber);
+}
+
+.scorecard-metric-badge.chip-neutral {
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.scorecard-metric-sub {
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.scorecard-metric-sub span {
+  display: inline;
+}
+
+.scorecard-metric-details {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.scorecard-metric-details summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.scorecard-metric-details small {
+  display: block;
+  margin-top: 2px;
+  padding-left: 6px;
+  border-left: 2px solid var(--line);
+}
+
+.scorecard-distribution-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(41, 54, 68, 0.4);
+}
+
+.scorecard-distribution-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.scorecard-distribution-header strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.scorecard-bar-track {
+  height: 8px;
+  width: 100%;
+  background: var(--surface-raised);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+}
+
+.scorecard-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.scorecard-segment.segment-won {
+  background: var(--green);
+}
+
+.scorecard-segment.segment-lost {
+  background: var(--red);
+}
+
+.scorecard-segment.segment-pending {
+  background: var(--amber);
+}
+
+.scorecard-segment.segment-ambiguous {
+  background: #d4a373;
+}
+
+.scorecard-segment.segment-hold {
+  background: #506173;
+}
+
+.scorecard-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.dot-won {
+  background: var(--green);
+}
+
+.legend-dot.dot-lost {
+  background: var(--red);
+}
+
+.legend-dot.dot-pending {
+  background: var(--amber);
+}
+
+.legend-dot.dot-ambiguous {
+  background: #d4a373;
+}
+
+.legend-dot.dot-hold {
+  background: #506173;
+}
