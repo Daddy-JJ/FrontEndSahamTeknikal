@@ -264,12 +264,12 @@ function ScorecardMetricItem({ label, cell }: { label: string; cell: EvaluationC
       <div className="scorecard-metric-header">
         <span className="scorecard-metric-label">{label}</span>
         <span className={`scorecard-metric-badge ${chipClass}`}>
-          {isAssessed ? `${percent(cell.win_rate)} (${cell.wins}/${cell.assessed})` : `${cell.pending} Menunggu`}
+          {isAssessed ? `${percent(cell.win_rate)} (${cell.wins}/${cell.assessed})` : `${cell.pending} Running`}
         </span>
       </div>
       <div className="scorecard-metric-sub">
         <span>{cell.wins} / {cell.assessed} dinilai</span>
-        {cell.pending > 0 && <span> · {cell.pending} menunggu</span>}
+        {cell.pending > 0 && <span> · {cell.pending} running</span>}
         {cell.ambiguous > 0 && <span> · {cell.ambiguous} ambigu</span>}
         {cell.data_hold > 0 && <span> · {cell.data_hold} data tertahan</span>}
         {cell.excluded > 0 && <span> · {cell.excluded} dikecualikan</span>}
@@ -314,7 +314,7 @@ function StrategyScorecard({ row, f }: { row: StrategyEvaluationRow; f: Reportin
                 : m.signalWins > 0 || m.totalWins > 0
                 ? `${percent(m.winRate)} win rate (${m.signalAssessed > 0 ? m.signalWins + " menang / " + m.signalAssessed + " dinilai" : m.totalWins + " menang / " + m.totalAssessed + " dinilai"})`
                 : `0% win rate (${m.signalAssessed > 0 ? m.signalAssessed : m.totalAssessed} sampel dinilai)`
-              : "Semua sampel dalam observasi aktif"}
+              : "Semua sampel sedang running"}
           </span>
         </div>
         <div>
@@ -344,18 +344,18 @@ function StrategyScorecard({ row, f }: { row: StrategyEvaluationRow; f: Reportin
       <div className="scorecard-distribution-section">
         <div className="scorecard-distribution-header">
           <span>Distribusi Sinyal (Target 1R):</span>
-          <strong>{m.signalAssessed} Selesai / {m.signalPending} Menunggu</strong>
+          <strong>{m.signalAssessed} Selesai / {m.signalPending} Running</strong>
         </div>
         <div className="scorecard-bar-track" role="progressbar" aria-valuenow={m.signalAssessed} aria-valuemax={m.signalTotal}>
           {wonPct > 0 && <div className="scorecard-segment segment-won" style={{ width: `${wonPct}%` }} title={`${m.signalWins} Menang (${percent(wonPct / 100)})`} />}
           {lostPct > 0 && <div className="scorecard-segment segment-lost" style={{ width: `${lostPct}%` }} title={`${m.signalLosses} Kalah (${percent(lostPct / 100)})`} />}
-          {pendingPct > 0 && <div className="scorecard-segment segment-pending" style={{ width: `${pendingPct}%` }} title={`${m.signalPending} Menunggu (${percent(pendingPct / 100)})`} />}
+          {pendingPct > 0 && <div className="scorecard-segment segment-pending" style={{ width: `${pendingPct}%` }} title={`${m.signalPending} Running (${percent(pendingPct / 100)})`} />}
           {holdExcludedPct > 0 && <div className="scorecard-segment segment-hold" style={{ width: `${holdExcludedPct}%` }} title={`${m.signalDataHold + m.signalExcluded + m.signalAmbiguous} Tertahan/Dikecualikan`} />}
         </div>
         <div className="scorecard-legend">
           <span className="legend-chip"><span className="legend-dot dot-won" /> {m.signalWins} Menang</span>
           <span className="legend-chip"><span className="legend-dot dot-lost" /> {m.signalLosses} Kalah</span>
-          <span className="legend-chip"><span className="legend-dot dot-pending" /> {m.signalPending} Menunggu</span>
+          <span className="legend-chip"><span className="legend-dot dot-pending" /> {m.signalPending} Running</span>
           {m.signalDataHold > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.signalDataHold} Data tertahan</span>}
           {m.signalExcluded > 0 && <span className="legend-chip"><span className="legend-dot dot-hold" /> {m.signalExcluded} Dikecualikan</span>}
           {m.signalAmbiguous > 0 && <span className="legend-chip"><span className="legend-dot dot-ambiguous" /> {m.signalAmbiguous} Ambigu</span>}
@@ -386,7 +386,7 @@ function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: Repor
     </section>
     <section className="journal-panel" id="signal-observations"><h2>Observasi sinyal pembentuk matriks</h2>
       {report.evaluations.length === 0 ? <div className="journal-empty"><p>Belum ada observasi sinyal pada halaman ini.</p></div> : <div className="reporting-list reporting-table-region" role="region" tabIndex={0} aria-label="Tabel observasi sinyal"><table className="dense-table"><thead><tr><th>Ticker / Sinyal</th><th className="reporting-numeric">Entry referensi / SL</th><th className="reporting-numeric">Sesi teramati</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead><tbody>{report.evaluations.map(e => <tr key={e.signal_id}>
-        <td data-label="Ticker / Sinyal">{e.ticker}<small>{strategyLabels[e.strategy]} · {e.signal_session}</small><SignalChartLink ticker={e.ticker} id={e.signal_id} strategy={e.strategy} returnTo={reportLink("/analytics", "signals", f)} label="Chart saat sinyal" /><details><summary>Sumber sinyal</summary><small className="mono">{e.signal_id}</small><small>Target 1R: {reportMoney(e.target_1r)}; 2R: {reportMoney(e.target_2r)}</small></details></td><td data-label="Entry referensi / SL" className="reporting-numeric">{reportMoney(e.entry_price)} / {reportMoney(e.initial_stop)}<small>Entry {e.entry_session}</small></td><td data-label="Sesi teramati" className="reporting-numeric">{e.observed_sessions}</td>{evaluationKeys.map(k => <td data-label={evaluationLabels[k]} key={k}>{({ won: "Berhasil", lost: "Gagal", pending: "Menunggu", ambiguous: "Ambigu", data_hold: "Data tertahan", excluded: "Dikecualikan" } as Record<string, string>)[e.results[k]]}</td>)}
+        <td data-label="Ticker / Sinyal">{e.ticker}<small>{strategyLabels[e.strategy]} · {e.signal_session}</small><SignalChartLink ticker={e.ticker} id={e.signal_id} strategy={e.strategy} returnTo={reportLink("/analytics", "signals", f)} label="Chart saat sinyal" /><details><summary>Sumber sinyal</summary><small className="mono">{e.signal_id}</small><small>Target 1R: {reportMoney(e.target_1r)}; 2R: {reportMoney(e.target_2r)}</small></details></td><td data-label="Entry referensi / SL" className="reporting-numeric">{reportMoney(e.entry_price)} / {reportMoney(e.initial_stop)}<small>Entry {e.entry_session}</small></td><td data-label="Sesi teramati" className="reporting-numeric">{e.observed_sessions}</td>{evaluationKeys.map(k => <td data-label={evaluationLabels[k]} key={k}>{({ won: "Berhasil", lost: "Gagal", pending: "Running", ambiguous: "Ambigu", data_hold: "Data tertahan", excluded: "Dikecualikan" } as Record<string, string>)[e.results[k]]}</td>)}
       </tr>)}</tbody></table></div>}
       <nav className="journal-pagination" aria-label="Halaman observasi">{f.page > 1 && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page - 1 })}>← Sebelumnya</Link>}{report.paging.has_more && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page + 1 })}>Berikutnya →</Link>}</nav>
     </section>

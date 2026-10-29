@@ -65,7 +65,7 @@ test("signal observation shows won/lost, denominators, holds and no time exit",a
  await expect(page.locator(".evaluation-matrix")).toContainText("1 data tertahan");
  await expect(page.locator("#signal-observations")).toContainText("Berhasil");
  await expect(page.locator("#signal-observations")).toContainText("Gagal");
- await expect(page.locator("#signal-observations")).toContainText("Menunggu");
+ await expect(page.locator("#signal-observations")).toContainText("Running");
  await page.locator("#signal-observations summary").first().click();
  await expect(page.getByText("a".repeat(64),{exact:true})).toBeVisible();
  await expect(page.locator("#signal-observations details").first()).toContainText("Rp1.075");
