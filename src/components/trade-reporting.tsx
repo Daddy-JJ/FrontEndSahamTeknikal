@@ -217,7 +217,7 @@ function ExperimentComparisonPanel({ report }: { report: TradeReporting }) {
 }
 const evaluationLabels = { target_1r: "1R sebelum SL", target_2r: "2R sebelum SL", net_5: "Profit net tanpa SL · 5 sesi", net_10: "Profit net tanpa SL · 10 sesi" };
 function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: ReportingFilters }) {
-  return <div className="reporting-stack"><Freshness report={report} /><ProcessingHealthNotice health={report.processing_health} />
+  return <div className="reporting-stack"><Freshness report={report} />
     <section className="journal-panel"><span className="eyebrow">MENANG / DINILAI · OBSERVASI SINYAL</span><h2>Evaluasi per jenis sinyal</h2>
       <p className="panel-note">Checkpoint 5/10 sesi tidak menutup posisi. Evaluasi sinyal tetap berjalan terpisah dari exit jurnal Fixed 2R atau SMA10.</p>
       <div className="table-scroll reporting-table-region" role="region" tabIndex={0} aria-label="Tabel evaluasi per jenis sinyal"><table className="dense-table evaluation-matrix"><thead><tr><th>Jenis sinyal</th>{evaluationKeys.map(k => <th key={k}>{evaluationLabels[k]}</th>)}</tr></thead>
@@ -232,6 +232,7 @@ function EvaluationDashboard({ report, f }: { report: SignalEvaluation; f: Repor
       </tr>)}</tbody></table></div>}
       <nav className="journal-pagination" aria-label="Halaman observasi">{f.page > 1 && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page - 1 })}>← Sebelumnya</Link>}{report.paging.has_more && <Link prefetch={false} href={reportLink("/analytics", "signals", f, { page: f.page + 1 })}>Berikutnya →</Link>}</nav>
     </section>
+    <ProcessingHealthNotice health={report.processing_health} />
   </div>;
 }
 export async function PersistentReporting({ supabase, mode, query, view = "analytics", tab = "paper" }: {

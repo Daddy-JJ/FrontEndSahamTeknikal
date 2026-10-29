@@ -71,6 +71,10 @@ test("signal observation shows won/lost, denominators, holds and no time exit",a
  await expect(page.locator("#signal-observations details").first()).toContainText("Rp1.075");
  await expect(page.locator("#signal-observations details").first()).toContainText("Rp1.150");
  await expect(page.getByRole("combobox",{name:"Eksperimen exit"})).toHaveCount(0);
+ expect(await page.locator("[data-processing-health]").evaluate(node=>{
+  const obs=node.closest(".reporting-stack")?.querySelector("#signal-observations");
+  return Boolean(obs && obs.compareDocumentPosition(node)&Node.DOCUMENT_POSITION_FOLLOWING);
+ })).toBe(true);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  expect(await page.locator(".reporting-list").evaluateAll(nodes=>nodes.every(n=>{const rect=n.getBoundingClientRect();return rect.left>=-1&&rect.right<=innerWidth+1&&(n.scrollWidth<=n.clientWidth||["auto","scroll"].includes(getComputedStyle(n).overflowX));}))).toBe(true);
  const {calls}=await(await request.get("http://127.0.0.1:3053/__calls")).json();
