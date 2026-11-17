@@ -6,8 +6,9 @@ Backend source, migrations, canonical financial arithmetic and market-data artif
 
 ## Read only what the task needs
 
-- [AGENTS.md](AGENTS.md): mandatory repository instructions, plus root instructions.
-- [PLAN.md](PLAN.md): active owner password login and release Action/Proof.
+- [AGENTS.md](AGENTS.md): mandatory local instructions; shared workspace context is optional.
+- [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md): portable product, stack and repository boundaries.
+- [PLAN.md](PLAN.md): authorized active work and Action/Proof; completed plans are archived.
 - [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md): recorded release baseline and open evidence boundaries.
 - [SOT.md](SOT.md): canonical trading rules; synchronized copy of root SOT.
 - [Deployment checklist](docs/VERCEL_DEPLOYMENT_CHECKLIST.md): reusable release procedure.
@@ -35,6 +36,7 @@ Configure local environment using [.env.example](.env.example); keep real values
 
 Supabase GitHub OAuth uses `/login`, `/auth/callback` and `/auth/check`.
 Dashboard login is separate from application login. Access requires an enabled owner membership and matching deployment data mode.
+
 Owner password login also uses `/login`; `/auth/check` allows password setup/change after
 recent authentication. It preserves the same Auth UUID, owner membership and RLS. GitHub
 remains a fallback. Server-only alias/config and the cloud protection activation checklist

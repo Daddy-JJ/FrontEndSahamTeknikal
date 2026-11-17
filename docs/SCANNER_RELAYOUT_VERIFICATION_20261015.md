@@ -1,9 +1,9 @@
 # Scanner relayout - local verification, 15 October 2026
 
-Status: IMPLEMENTED AND VERIFIED LOCALLY. These checks precede commit/push delivery;
-consult the shared handoff for delivery evidence. No Production deployment verification,
-backend runtime change or migration is established by these local checks.
-The dated released chart baseline in IMPLEMENTATION_STATUS is a different source state.
+Status: IMPLEMENTED AND VERIFIED LOCALLY at the 15 October test checkpoint. These checks
+preceded commit/push and Production verification. Later delivery/deployment receipts are
+recorded in [current status](../IMPLEMENTATION_STATUS.md), separately from this local proof.
+No backend runtime change or migration is established by these local checks.
 
 ## Action / Proof
 
@@ -44,7 +44,9 @@ to format backend values; actual ledger/CSV and paper/evaluation rules remain ca
 No price request is added by layout-only resize/expand. Context/view/reload still follow
 the existing fetch contract. Fixtures are explicit test/dev data, never production fallback.
 
-This source has not been deployed or tested through an authenticated Production owner
-browser. Native browser-chrome zoom200%, real outsider JWT and future market/job stability
-are not established by these local UI tests. Follow the applicable release authorization
-and [deployment checklist](VERCEL_DEPLOYMENT_CHECKLIST.md) before claiming live acceptance.
+At this local test checkpoint, this source had not yet been deployed. The later recorded
+15 October Production success/public smoke is linked from [status](../IMPLEMENTATION_STATUS.md);
+it is not a new verification on 21 October. Authenticated Production owner-browser, native
+browser-chrome zoom200%, real outsider JWT and future market/job stability are not established
+by these local UI tests. Follow the applicable release authorization and
+[deployment checklist](VERCEL_DEPLOYMENT_CHECKLIST.md) before claiming live acceptance.

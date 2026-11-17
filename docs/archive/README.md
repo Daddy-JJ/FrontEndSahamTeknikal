@@ -20,8 +20,14 @@ Preserved existing tracked documentation only; no private operator receipts were
 | `docs/SCANNER_ADAPTER_AUDIT.md` | 194 | 12632 | [snapshot](SCANNER_ADAPTER_AUDIT.md) |
 | `docs/UI_TERMINAL_ROLLOUT_PLAN.md` | 87 | 11680 | [snapshot](UI_TERMINAL_ROLLOUT_PLAN.md) |
 
-Earlier PLAN history: [snapshot](PLAN_HISTORY_BEFORE_SCANNER_RELAYOUT_20261015.md). The active relayout plan is not archived by this cleanup.
+Earlier PLAN history: [snapshot](PLAN_HISTORY_BEFORE_SCANNER_RELAYOUT_20261015.md).
+Completed relayout PLAN at 513870f: [snapshot archived 21 October](PLAN_SCANNER_RELAYOUT_BEFORE_DOC_CLEANUP_20261021.md).
+Its pre-release/source-before-change statements are historical, not current work.
 
 Unresolved evidence boundaries remain in current status and the original-path audit stubs. Archiving is not resolution of a finding.
 
-Routing-only AGENTS snapshot: [original guide](AGENTS_BEFORE_DOC_CLEANUP_20261015.md).
+Earlier routing-only AGENTS snapshot: [original guide](AGENTS_BEFORE_DOC_CLEANUP_20261015.md).
+Operating guide before 21 October consolidation: [preserved original](AGENTS_BEFORE_CONTEXT_CLEANUP_20261021.md).
+The 21 October operating-guide consolidation and rule mapping are indexed in
+[rule traceability](../AGENT_RULE_TRACEABILITY_20261021.md).
+All archive wrappers explicitly mark historical status and route unresolved gaps to current status.

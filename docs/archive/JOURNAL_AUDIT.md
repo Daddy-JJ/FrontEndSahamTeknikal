@@ -1,3 +1,8 @@
+> HISTORICAL / NOT AN ACTIVE TASK / NOT AUTHORIZATION
+> Source snapshot retained at 15 October 2026; original event dates and limits remain in the body. Wrapper clarified 21 October 2026.
+> Reason: historical documentation/operating or release evidence; superseded for active work by [PLAN](../../PLAN.md) and [AGENTS](../../AGENTS.md).
+> Unresolved gaps remain in [current status](../../IMPLEMENTATION_STATUS.md); original approvals/waivers are scoped to their original task.
+
 > Historical snapshot preserved during documentation cleanup, 2026-10-15.
 > Read [current status](../../IMPLEMENTATION_STATUS.md) and [active plan](../../PLAN.md) first. Older release/readiness statements below are dated evidence, not current instructions.
 

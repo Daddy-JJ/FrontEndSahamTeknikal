@@ -202,42 +202,88 @@ of scanner feed quality or journal processing. Unrelated local documentation cle
   deployment, public smoke, guards, Auth audit); test suites in `test-results/`. Private
   identity/credentials and raw runtime payloads are deliberately absent from published docs.
 
-## Historical released baseline (as recorded 15 October)
+## Recorded released baseline
 
-
-| Item | Recorded evidence |
+| Item | Recorded evidence, 15 October 2026 |
 | --- | --- |
-| Frontend application | Chart-integrated source `9164d00a24ec3a69b08b2c33b1e12b21351803db` |
-| Released frontend SHA | `92705f9e47c4bedb6872e350ea4093a6fd472761`, docs-only followups above the application source |
-| Vercel Production | Deployment `7085991505`, SUCCESS; alias `https://sahamteknikal.vercel.app` |
-| Backend capability | Supabase migrations 001-016 recorded applied; full chart cloud run `38695021871` SUCCESS |
-| Chart artifacts | 100/100 latest tickers; 288 immutable artifacts, current/complete through 14 October at verification |
-| Public smoke | 8 routes / 14 assets PASS; anonymous chart/export denied, strict failure envelope and no-store verified |
+| Latest recorded frontend SHA | 513870f6020983ddb20ba022c946eaffd223fce6, Scanner relayout and documentation |
+| Delivery | Commit/push to origin/main recorded complete; local/remote SHA matched and frontend tree was clean after delivery |
+| Vercel Production | Deployment 7092738529 SUCCESS; verified 15 October 20:01 WIB; alias https://sahamteknikal.vercel.app |
+| Public relayout smoke | 8 routes / 14 assets PASS; expected 50:50/expand CSS markers served by alias; anonymous chart/export returned 401 |
+| Owner acceptance / immutable comparison | Authenticated Production owner-browser and immutable-to-alias asset-byte comparison NOT VERIFIED; immutable URL redirected to Vercel login |
+| Backend | Documentation follow-up 719bc8c7f4deff2f945a0825cc92f6685cf48661; relayout changed no backend runtime/API/schema/financial rules |
 
-These are dated release facts, not a fresh statement about today's remote HEAD, feed or processing checkpoint.
-Application chart is accessible from Scanner detail tabs, journal/Analytics links and `/chart/[ticker]`.
-Cloud scheduler/watchdog/chart jobs use cloud secrets; the operator laptop is not a runtime dependency.
+Provenance: sanitized transcription of shared workspace CODEX_HANDOFF.md and
+IMPLEMENTATION_STATUS.md, recorded 15 October (root is local shared documentation, not
+part of this clone). Ignored private receipts are in backend/data/production-release-evidence/
+chart016-release-waiver-20261015/frontend-*-relayout-513870f.json in the separate backend
+checkout; not imported here. This local status is the standalone summary; receipt access
+and any fresh verification must be labelled separately.
+
+### Earlier chart release checkpoint
+
+Chart application source 9164d00a24ec3a69b08b2c33b1e12b21351803db and docs release
+92705f9e47c4bedb6872e350ea4093a6fd472761 preceded relayout. Recorded Production deployment
+7085991505 succeeded; 8 routes / 14 assets, anonymous denial, strict failure envelope and
+no-store checks passed at that checkpoint. Supabase migrations 001-016 were recorded applied;
+chart cloud run 38695021871 succeeded with 100/100 latest tickers and 288 immutable artifacts,
+current/complete through 14 October at verification. Cloud scheduler/watchdog/chart jobs
+use cloud secrets; the operator laptop is not a runtime dependency.
+Application chart entrypoints remain Scanner detail tabs, journal/Analytics links and /chart/[ticker].
 
 ## Recorded verification
 
-- Frontend: 77 unit checks, typecheck, lint and build PASS. Dedicated browser evidence: journal 69; Scanner 81 plus 3 followups; reporting 64 plus 2; Workspace 27 PASS / 3 explicitly unconfigured SKIP; chart 24 plus 6 grouped failure cases.
-- Performance: local synthetic production LCP 624 to 572 ms; 500-slot chart render 373.8 ms and payload 240833 bytes. Closed chart loads no price request/heavy chart library. These are local observations, not a hosted SLA.
-- Hosted chart SQL-owner payloads passed the actual frontend parser across 15 latest/signal/paper contexts and one existing actual context. SQL-role evidence is distinct from a genuine owner browser or outsider JWT.
-- Runtime audit 0 was recorded. The owner-approved temporary dev-only braces advisory exception remains unresolved; it is not a patched dependency.
+- Relayout local proof: unit 80; final Scanner followup 21 plus CSS zoom 1; chart followup 2;
+  journal/Analytics 15; Workspace 6; typecheck/lint/production build PASS. The initial full
+  Scanner run was 86 PASS / 7 SKIP / 3 FAIL; the three assertions were corrected to open
+  the approved audit disclosure and still check exact metadata hashes. Retests and limits
+  remain in [local verification](docs/SCANNER_RELAYOUT_VERIFICATION_20261015.md).
+- Earlier chart checkpoint: 77 unit checks, typecheck, lint and build PASS. Dedicated browser
+  evidence: journal 69; Scanner 81 plus 3 followups; reporting 64 plus 2; Workspace 27 PASS / 3
+  explicitly unconfigured SKIP; chart 24 plus 6 grouped failure cases. Do not sum overlapping
+  runs as independent coverage.
+- Local synthetic performance: production LCP 624 to 572 ms; 500-slot chart render 373.8 ms,
+  payload 240833 bytes. Closed chart made no price request/heavy-library load; not a hosted SLA.
+- Hosted chart SQL-owner payloads passed the frontend parser across 15 latest/signal/paper
+  contexts and one existing actual context; SQL-role proof is distinct from genuine JWT/browser proof.
+- Runtime audit 0 was recorded; the owner-approved temporary dev-only braces advisory
+  exception remains unresolved and is not a patched dependency.
 
-Full scope, failures/retests and limitations: [chart evidence](../docs/CHART_V1_LOCAL_VERIFICATION.md). Do not rerun completed release work merely because an archived document says pending.
+The detailed chart receipt lives in shared root docs/CHART_V1_LOCAL_VERIFICATION.md
+(as of 15 October 2026, optional outside this clone). Local historical receipts remain in the
+[archive index](docs/archive/README.md). Missing external evidence is not a reason to infer PASS.
 
 ## Open evidence boundaries
 
-- Authenticated owner-browser on the exact latest Production release and genuine outsider JWT remain NOT VERIFIED. Disabled-owner and independent-session lifecycle/concurrency proofs retain their historical limitations; SQL-role tests do not replace them.
-- Hosted browser export of a persistent cohort exceeding 200 rows remains NOT VERIFIED by this cleanup. Preserve the canonical cursor/CSV contract.
-- Immutable Vercel deployment URL requires Vercel login; immutable-to-alias asset-byte comparison is NOT VERIFIED. Exact-SHA deployment metadata and alias HTTP checks were verified separately.
-- Fresh full backup and populated restore rehearsal for the 15 October chart release are **SKIPPED_OWNER_WAIVER**. Existing failed dumps are invalid backups. No full recovery capability is established; this exception applies only to that release.
-- Future-session feed/job stability and representative authenticated navigation latency require ongoing observation. Historical anonymous probes do not prove a database bottleneck.
-- Older requested capabilities such as versioned settings or cash/equity are not automatically complete because chart shipped. Verify the current contract/source before opening implementation or claiming closure.
+- Authenticated owner-browser on the exact latest recorded Production release and genuine
+  outsider JWT remain NOT VERIFIED. Disabled-owner and independent-session lifecycle/concurrency
+  proofs retain historical limitations; SQL-role/local doubles do not replace them.
+- Hosted browser export of a persistent cohort exceeding 200 rows remains NOT VERIFIED by this
+  cleanup. Preserve the canonical cursor/CSV contract.
+- Immutable deployment URL requires Vercel login; immutable-to-alias byte comparison remains
+  NOT VERIFIED. Exact-SHA deployment metadata and alias HTTP checks were separate evidence.
+- Fresh full backup/populated restore rehearsal for the 15 October chart release are
+  **SKIPPED_OWNER_WAIVER**. Failed dumps are invalid backups. No full recovery capability is
+  established; that exception applies only to its original release.
+- Future-session feed/job stability and representative authenticated navigation latency require
+  observation. Historical anonymous probes do not prove a database bottleneck.
+- Versioned settings and cash/equity are not automatically complete because chart shipped.
+  Check current contracts/source before opening implementation or claiming closure.
+- Manual 12 October backfill evidence was owner-attested, not an identified original BEI export;
+  it does not authorize new historical forward signals or ledger mutation.
 
 ## Documentation routing
 
-[README](README.md) is the stable setup guide. [PLAN](PLAN.md) owns active steps; this document owns baseline and remaining evidence. Historical audits remain accessible through their original-path stubs and the [archive index](docs/archive/README.md). They are optional, dated evidence and never grant production authorization.
+Documentation cleanup, 21 October: D1-D4 implemented locally; protected SOT/chart/CLAUDE
+and all 145 tracked non-Markdown files unchanged. Local links/anchors, archive preservation
+and diff checks PASS; independent frontend-only handover and shared-policy review PASS.
+Independent backend and workspace reviews also PASS after resumption; D1-D5 are complete locally.
+See [rule traceability](docs/AGENT_RULE_TRACEABILITY_20261021.md) and [PLAN](PLAN.md).
+These are uncommitted Markdown changes; no app tests, live probe, push or deployment ran.
 
-No application code, API, financial rule, environment or deployment changed during documentation cleanup. SOT synchronization only copies the already approved root dividend clarification.
+[README](README.md) owns setup, [PROJECT_CONTEXT](PROJECT_CONTEXT.md) stable portable context,
+[PLAN](PLAN.md) active Action/Proof, and this file dated implementation/release evidence.
+Original-path stubs and the archive retain audit headings, unresolved gaps and historical authority limits.
+No application code/API/financial rule/environment/deployment changed in this 21 October cleanup;
+SOT and chart snapshots/checksum/legal remain unchanged. The earlier SOT copy synchronization
+was of the already approved root dividend clarification, not a new rule change in this task.

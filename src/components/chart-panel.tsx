@@ -390,14 +390,14 @@ export function ChartPanel({
             <button type="button" onClick={closeChart}>
               Tutup chart
             </button>
-            <button type="button" onClick={() => void run()} disabled={busy || cooldown}>
+            <button type="button" onClick={() => void run()} disabled={busy || cooldown} title="Muat ulang data chart">
               Muat ulang
             </button>
             </div>
-            {(request.context === 'signal' || request.context === 'paper') && <div className={styles.toolbarGroup} role="group" aria-label="Sumber waktu chart">
+            {(request.context === 'signal' || request.context === 'paper') && <div className={`${styles.toolbarGroup} ${styles.segmentedView}`} role="group" aria-label="Sumber waktu chart">
               {(['snapshot', 'followup'] as const).map(view => <button key={view} type="button" aria-pressed={activeRequest.view === view} onClick={() => setChosenView({key: requestKey, view})}>{chartLabel(view)}</button>)}
             </div>}
-            <div className={styles.toolbarGroup} role="group" aria-label="Rentang chart">
+            <div className={`${styles.toolbarGroup} ${styles.segmentedRange}`} role="group" aria-label="Rentang chart">
             {([3, 6, 12] as const).map((n) => (
               <button
                 type="button"
@@ -408,22 +408,22 @@ export function ChartPanel({
                 {n === 12 ? "1 tahun" : `${n} bulan`}
               </button>
             ))}
-            <button type="button" onClick={() => setReset((n) => n + 1)}>
+            <button type="button" onClick={() => setReset((n) => n + 1)} title="Kembalikan zoom rentang">
               Reset zoom
             </button>
             </div>
-            <div className={styles.toolbarGroup} role="group" aria-label="Indikator chart">
+            <div className={`${styles.toolbarGroup} ${styles.indicatorGroup}`} role="group" aria-label="Indikator chart">
             {(
               [
-                ["SMA10", sma10, setSma10],
-                ["EMA200", ema200, setEma200],
-                ["MACD", macd, setMacd],
+                ["SMA10", sma10, setSma10, styles.chipSma, "#f2b44b"],
+                ["EMA200", ema200, setEma200, styles.chipEma, "#9caaff"],
+                ["MACD", macd, setMacd, styles.chipMacd, "#61d4ed"],
               ] as const
-            ).map(([label, checked, set]) => {
+            ).map(([label, checked, set, chipStyle, dotColor]) => {
               const keys = label === 'SMA10' ? ['sma10'] as const : label === 'EMA200' ? ['ema200'] as const : ['macd', 'macd_signal', 'macd_histogram'] as const;
               const held = keys.map(key => data?.indicators[key]).find(indicator => indicator?.status === 'unavailable');
               return (
-              <label key={label}>
+              <label key={label} className={`${styles.indicatorChip} ${chipStyle} ${checked ? styles.indicatorChipActive : ""}`}>
                 <input
                   type="checkbox"
                   checked={checked}
@@ -431,12 +431,13 @@ export function ChartPanel({
                   title={held?.reason ? chartReason(held.reason) : undefined}
                   onChange={(e) => set(e.target.checked)}
                 />
-                {label}
+                <span className={styles.indicatorDot} style={{ backgroundColor: dotColor }} aria-hidden="true" />
+                <span>{label}</span>
               </label>
             ); })}
             </div>
           </div>
-          {busy && <p role="status">Memuat data chart…</p>}
+          {busy && <p role="status" className={styles.loadingStatus}>Memuat data chart…</p>}
           {error && (
             <div role="alert" className={styles.warning}>
               <strong>{failureText(error.error.code)}</strong>
@@ -444,6 +445,20 @@ export function ChartPanel({
               <p>
                 Kode {error.error.code} · request {error.error.request_id}
               </p>
+              {error.error.code === 'SNAPSHOT_UNAVAILABLE' && (
+                <div className={styles.fallbackBox}>
+                  <p className={styles.fallbackText}>
+                    Snapshot historis saat sinyal belum di-generate atau sedang diproses. Anda dapat langsung membuka data dan indikator chart terkini.
+                  </p>
+                  <button
+                    type="button"
+                    className={styles.fallbackButton}
+                    onClick={() => setChosenView({ key: requestKey, view: 'followup' })}
+                  >
+                    Buka Chart Terkini (Followup) →
+                  </button>
+                </div>
+              )}
               {error.error.code === "UNAUTHENTICATED" ? (
                 <Link
                   href={`/login?next=${encodeURIComponent(fullPage ?? '/scanner')}`}

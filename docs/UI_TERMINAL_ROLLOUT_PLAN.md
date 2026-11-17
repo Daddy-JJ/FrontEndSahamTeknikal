@@ -2,7 +2,7 @@
 
 Status: HISTORICAL / SUPERSEDED FOR CURRENT WORK.
 
-Historical whole-site terminal rollout, distinct from the current Scanner split-layout plan. Shared styles exist; Scanner relayout stages 1-4 remain PLANNED in the active plan.
+Historical whole-site terminal rollout, distinct from the completed Scanner split-layout work. Release facts and evidence limits belong in current status; this stub carries no moving implementation status.
 
 Full dated contents: [archive](archive/UI_TERMINAL_ROLLOUT_PLAN.md).
 Current work: [status](../IMPLEMENTATION_STATUS.md) and [active plan](../PLAN.md).

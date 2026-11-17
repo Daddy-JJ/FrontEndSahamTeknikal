@@ -1,636 +1,169 @@
-# AGENTS.md — SahamTeknikal Frontend
-
-Operating instructions for the SahamTeknikal frontend repository.
-
-Repository path:
-
-```text
-C:\xampp\htdocs\SahamTeknikal\frontend
-```
-
-Sibling backend repository:
-
-```text
-C:\xampp\htdocs\SahamTeknikal\backend
-```
-
-Project-level documentation:
-
-```text
-C:\xampp\htdocs\SahamTeknikal\
-```
-
-This repository is an independent Git repository.
-
-The root project `AGENTS.md` contains the canonical shared project rules. This file adds frontend-specific operating instructions.
-
----
-
-## 1. Read before changing code
-
-Owner-approved routing,15October2026: keep context scoped to the current task.
-
-1. Follow root and repository AGENTS; read ../CODEX_HANDOFF.md and this repo's active PLAN.md.
-2. Inspect Git status and relevant source, tests, contracts and environment conventions.
-3. Read applicable sections of ../SOT.md for trading/market-data/financial presentation;
-   read auth/RLS/security contracts whenever those boundaries are affected.
-4. Open ../PRD.md for product scope, ../TECHNICAL_DOC.md for architecture, and README.md
-   or DEVELOPMENT.md for setup only as needed. These are not mandatory full-file rereads.
-5. Open IMPLEMENTATION_STATUS.md or ../IMPLEMENTATION_STATUS.md when release evidence or
-   unresolved gates matter. Historical/archive docs are on demand; do not restart old plans.
-
-Do not assume parent docs were automatically loaded or invent inaccessible requirements.
-If root docs are unavailable in a standalone frontend checkout, use local versioned SOT/contracts,
-report the missing shared context, and request clarification only when it blocks safe work.
-Root SOT is canonical; repository copies are synchronized snapshots, not independent rule sources.
-Latest explicit user instructions take precedence. An approved SOT DEFAULT does not require
-repeated confirmation. Preserve all domain, security, testing and release rules below.
-
----
-
-## 2. Frontend responsibility
-
-Default editable scope:
-
-```text
-C:\xampp\htdocs\SahamTeknikal\frontend
-```
-
-The frontend agent owns:
-
-- UI;
-- routes/pages;
-- client-side state;
-- forms and interaction;
-- API clients;
-- browser-safe configuration;
-- frontend validation;
-- presentation of scanner results;
-- journal UI;
-- statistics UI;
-- frontend tests.
-
-Reading the backend repository or parent documentation is allowed when access is available and needed for verification.
-
-Do not edit:
-
-```text
-..\backend
-```
-
-unless the user explicitly requests cross-repository implementation.
-
-If backend work is required, document the required backend change rather than silently working around it in the frontend.
-
----
-
-## 3. Understand before editing
-
-Before changing implementation:
-
-- locate the existing component or pattern;
-- identify affected screens/routes;
-- inspect relevant API client code;
-- inspect related types/interfaces;
-- inspect loading/error/empty-state handling;
-- inspect applicable tests;
-- determine whether an API or data contract is involved.
-
-Prefer existing patterns over introducing new abstractions.
-
-Existing code describes current implementation, but does not override `SOT.md`, approved product requirements, or explicit user instructions.
-
----
-
-## 4. Planning
-
-For a small obvious change:
-
-1. inspect;
-2. implement the smallest safe change;
-3. verify;
-4. report.
-
-For complex work, create or update:
-
-```text
-PLAN.md
-```
-
-Use a plan when work involves:
-
-- multiple related components;
-- multiple routes/pages;
-- shared application state;
-- authentication;
-- API contract changes;
-- major data-flow changes;
-- cross-repository integration;
-- architecture changes;
-- production configuration.
-
-Each meaningful plan step must include:
-
-```text
-Action:
-Proof:
-```
-
-Do not wait for approval merely because a task is long.
-
-Explicit approval is required before:
-
-- materially changing a public API contract;
-- changing canonical trading behavior;
-- replacing application architecture;
-- introducing a major dependency;
-- changing authentication/security architecture;
-- destructive Git operations;
-- deleting substantial existing behavior.
-
----
-
-## 5. Smallest safe change
-
-Prefer:
-
-- small diffs;
-- existing components;
-- existing utilities;
-- existing UI patterns;
-- existing API clients;
-- existing dependencies;
-- targeted fixes.
-
-Avoid without demonstrated need:
-
-- unrelated refactors;
-- speculative abstractions;
-- broad renames;
-- formatting churn;
-- new dependencies;
-- architecture rewrites;
-- unrelated cleanup.
-
-Do not modify unrelated working behavior.
-
-When tradeoffs exist, consider:
-
-- **UX** — user impact;
-- **DX** — maintainability for developers;
-- **AX** — clarity and verifiability for future agents.
-
-Correctness and data integrity take precedence over visual convenience.
-
----
-
-## 6. API boundary
-
-Treat the backend API and Supabase contracts as compatibility boundaries.
-
-Do not silently change assumptions about:
-
-- endpoint paths;
-- HTTP methods;
-- request payloads;
-- response structures;
-- status codes;
-- error formats;
-- authentication;
-- authorization;
-- RLS behavior;
-- pagination;
-- timestamps;
-- trading-strategy identifiers;
-- signal structures;
-- trade/fill structures;
-- statistics schemas.
-
-Before changing a frontend API assumption, inspect the backend contract when possible.
-
-If the backend contract cannot be inspected, rely on approved technical documentation and existing typed interfaces.
-
-Do not make the UI appear functional by hiding a backend incompatibility.
-
----
-
-## 7. Market-data integrity
-
-Never fabricate production market data.
-
-Do not silently substitute failed or missing live data with:
-
-- fixtures;
-- mock responses;
-- hard-coded prices;
-- stale cached values presented as current;
-- random values;
-- sample trading signals.
-
-Fixtures and mocks are allowed only in clearly isolated development/test contexts.
-
-The UI must distinguish where relevant:
-
-- loading;
-- current data;
-- stale data;
-- partial coverage;
-- missing data;
-- no signal;
-- API failure.
-
-`No signal` is not equivalent to `data unavailable`.
-
-Do not label data as live/current unless freshness supports the claim.
-
----
-
-## 8. Trading-rule safety
-
-The frontend is primarily a presentation layer.
-
-Do not independently redefine canonical strategy rules.
-
-Do not alter:
-
-- signal criteria;
-- indicator formulas;
-- fractal availability rules;
-- fill conventions;
-- initial risk;
-- SL/TP ambiguity treatment;
-- exit policy;
-- RS ranking rules;
-- official statistics;
-
-merely to produce preferred UI results.
-
-Official domain calculations should come from approved deterministic logic.
-
-Frontend-only display calculations must be clearly distinguished from canonical trading calculations.
-
-AI must not become the authoritative source of official signals, fills, P&L, or statistics.
-
----
-
-## 9. Temporal correctness
-
-Never introduce frontend logic that implies knowledge unavailable at decision time.
-
-Respect distinctions such as:
-
-```text
-pivot date
-!=
-fractal available-at date
-```
-
-and:
-
-```text
-signal-night information
-!=
-next-session open
-```
-
-Do not use future values to retroactively improve historical trade presentation.
-
-When presenting backtest/forward-test results, preserve the execution conventions defined by SOT/backend logic.
-
----
-
-## 10. UI states
-
-For affected flows, verify applicable states:
-
-- normal;
-- loading;
-- empty;
-- stale;
-- partial coverage;
-- error;
-- invalid input;
-- disabled;
-- double click / double submit;
-- refresh;
-- navigation;
-- responsive/mobile behavior.
-
-Failed data retrieval must not render as a successful empty result unless that behavior is explicitly intended.
-
----
-
-## 11. Authentication and browser security
-
-Assume everything shipped to the browser is visible to users.
-
-Never expose:
-
-- Supabase service-role keys;
-- private API keys;
-- database credentials;
-- AI provider secrets;
-- privileged tokens;
-- passwords;
-- session secrets.
-
-Only browser-safe public configuration may be exposed client-side.
-
-Do not print secret values while troubleshooting.
-
-When configuration is missing, report:
-
-- environment-variable name;
-- expected location;
-- purpose;
-
-not the secret value.
-
-RLS must not be replaced by frontend-only authorization assumptions.
-
----
-
-## 12. Bug workflow
-
-For bugs:
-
-1. reproduce the reported issue when practical;
-2. capture actual behavior;
-3. inspect relevant UI/state/API flow;
-4. identify the root cause;
-5. fix the root cause;
-6. repeat the original reproduction;
-7. run relevant regression checks.
-
-Do not:
-
-- swallow errors merely to keep the UI clean;
-- fabricate successful data;
-- disable validation to make a flow pass;
-- weaken tests solely to obtain green output;
-- hide backend failures behind mock responses.
-
----
-
-## 13. Subagents
-
-Use subagents only when decomposition materially helps.
-
-Preferred roles:
-
-### Explorer
-Read-only investigation.
-
-### Worker
-One bounded frontend implementation.
-
-### Reviewer
-Read-only review.
-
-Each delegated task must specify:
-
-- objective;
-- scope;
-- done condition;
-- expected evidence;
-- concise report.
-
-Do not assign two editing agents to the same file simultaneously.
-
-Verify material subagent claims before relying on them.
-
----
-
-## 14. Failed-attempt rule
-
-After two materially different failed attempts on the same problem:
-
-1. stop modifying that step;
-2. record attempts and observed evidence in `PLAN.md`;
-3. revisit assumptions;
-4. collect new evidence;
-5. form a new approach.
-
-Do not repeat variations of the same failed solution indefinitely.
-
----
-
-## 15. Git safety
-
-Before substantial edits:
-
-- inspect `git status`;
-- identify existing user work;
-- keep the diff scoped.
-
-Do not destroy unrelated changes.
-
-Unless explicitly authorized, do not use:
-
-- `git reset --hard`;
-- `git clean -fd`;
-- force push;
-- history rewriting;
-- destructive checkout.
-
-Do not modify backend Git history from this repository.
-
-Inspect the final diff before reporting completion.
-
----
-
-## 16. Verification
-
-Run the strongest practical frontend checks relevant to the change.
-
-Examples:
-
-- targeted unit tests;
-- component tests;
-- integration tests;
-- type checking;
-- linting;
-- production build;
-- browser smoke tests;
-- API integration checks.
-
-For trading-related UI, verify presentation against deterministic backend/source values where applicable.
-
-Read test/build output yourself.
-
-An unrun check is not a pass.
-
-Never claim:
-
-- tests pass;
-- build succeeds;
-- browser flow works;
-- API integration works;
-- production is ready;
-
-without evidence.
-
----
-
-## 17. Cross-repository verification
-
-When frontend behavior depends on backend behavior, verify as much of this path as access permits:
-
-```text
-UI action
-↓
-frontend state/handler
-↓
-API client
-↓
-request contract
-↓
-backend/API
-↓
-response contract
-↓
-frontend state
-↓
-rendered result
-```
-
-If the backend cannot be inspected or executed, explicitly report:
-
-```text
-Backend integration not verified in this session.
-```
-
-Do not describe frontend-only verification as end-to-end verification.
-
----
-
-## 18. Documentation and status
-
-When implementation materially changes approved behavior or project state, identify whether updates are required to:
-
-- `..\SOT.md`
-- `..\PRD.md`
-- `..\TECHNICAL_DOC.md`
-- `..\README.md`
-- `..\CODEX_HANDOFF.md`
-- `..\IMPLEMENTATION_STATUS.md`
-
-Do not change `SOT.md` simply to match accidental implementation.
-
-Canonical rule changes require explicit user direction or approval.
-
-`IMPLEMENTATION_STATUS.md` must remain evidence-based.
-
-Distinguish:
-
-- planned;
-- implemented locally;
-- tested locally;
-- configured;
-- deployed;
-- live smoke-tested.
-
----
-
-## 19. Review before completion
-
-Before finalizing:
-
-1. inspect final diff;
-2. remove accidental changes;
-3. remove debug code;
-4. remove temporary files;
-5. check browser console/logging;
-6. check for exposed secrets;
-7. verify API-contract assumptions;
-8. compare behavior against the task and SOT;
-9. run applicable tests/build;
-10. identify unresolved backend dependency.
-
-For substantial changes, use a read-only reviewer when available.
-
----
-
-## 20. Handoff
-
-If another session or backend agent must continue the work, provide:
-
-- objective;
-- frontend changes completed;
-- files changed;
-- contract assumptions;
-- verification performed;
-- unresolved issues;
-- required backend work;
-- exact recommended next action.
-
-Keep active implementation state in:
-
-```text
-PLAN.md
-```
-
-Use project-level `CODEX_HANDOFF.md` for durable cross-repository continuation context when appropriate.
-
----
-
-## 21. Definition of done
-
-Frontend work is done only when the relevant conditions are satisfied:
-
-- implementation matches approved behavior;
-- frontend/backend contracts remain compatible;
-- market-data states are represented truthfully;
-- no mock fallback can masquerade as live data;
-- relevant UI states are handled;
-- meaningful tests/build checks pass;
-- no privileged secret is exposed;
-- documentation/status impact is identified;
-- limitations are explicitly reported.
-
----
-
-## 22. Final report
-
-Report concisely:
-
-### Changed
-What changed and why.
-
-### Verified
-Exact checks run and their results.
-
-### Not verified
-Relevant checks not performed.
-
-### Backend impact
-Required backend work or contract dependencies.
-
-### Data / strategy impact
-Any effect on signal, trade, fill, statistics, timing, or displayed market data.
-
-### Tradeoffs
-Only meaningful compromises or deferred work.
-
-Use evidence rather than confidence statements.
-
----
-
-## 23. Lessons
-
-When the user provides a durable correction, add:
-
-> When X, do Y because Z.
-
-Newest lessons go first.
-
-Lessons must be specific, reusable, and actionable.
-
-Do not add temporary task details.
-
-Do not modify the operating sections above `Lessons` unless the user explicitly requests it.
-
----
+# SahamTeknikal frontend - operating instructions
+
+Policy snapshot: docs-context-v1-20261021, consolidated 21 October 2026 with owner approval.
+This is the independent frontend Git repository. Latest explicit user instructions prevail;
+approved SOT DEFAULT decisions need no repeated confirmation. Root shared rules are canonical
+when available; this guide retains the minimum safe obligations for a standalone clone.
+
+## FE-01 Read and scope
+
+Start locally: [PROJECT_CONTEXT](PROJECT_CONTEXT.md) -> [PLAN](PLAN.md) -> relevant source/tests
+and [SOT](SOT.md)/contracts. Read [status](IMPLEMENTATION_STATUS.md) for release evidence/gaps;
+[README](README.md) for setup. Archives are optional provenance, never a task queue.
+Inspect git status, existing user work, affected routes/components/patterns, types/API clients,
+loading/error/empty behavior, tests, environment conventions and contract impact before edits.
+Code describes implementation; it cannot override SOT, approved requirements or explicit instructions.
+Root handoff/PRD/technical docs and sibling backend are optional extra context when accessible.
+Do not invent inaccessible requirements; use local versioned snapshots/typed interfaces and
+report missing context. Clarify only when it blocks safe authorized work. Shared snapshot
+maintenance and external-source locations are in PROJECT_CONTEXT.
+
+Own UI/routes, state/forms/interaction, API clients, browser-safe config, validation, scanner,
+journal/statistics presentation and frontend tests. Read backend when needed and available;
+edit backend or parent only with explicit cross-repository scope. Document required backend
+work rather than masking an incompatibility in frontend.
+
+## FE-02 Plan, permission and Git
+
+Small work: inspect -> smallest safe change -> verify -> report. For multi-component/route,
+shared-state, auth, API/data-flow, cross-repository, architecture or production-config work,
+use PLAN with dependencies, risks, phases and Action/Proof per meaningful step. Length alone
+is no reason to seek permission. After two materially different failed attempts, stop that
+step, record attempts/evidence in PLAN, revisit assumptions, collect evidence and replan.
+
+Explicit approval is required for material public-contract or canonical-trading changes,
+architecture replacement, major dependencies, auth/security architecture changes, destructive
+Git and substantial behavior deletion. Do not commit/push/deploy, mutate production, use real
+email/payment or create persistent QA data without task-local authorization; Git publication
+and production mutations are separate gates. Pushing main can auto-deploy Vercel even for docs.
+Preserve unrelated changes; no reset --hard, clean -fd, force push, history rewrite or destructive
+checkout without authorization. Do not alter backend history here. Review the final diff.
+
+## FE-03 Small safe implementation
+
+Prefer existing components/utilities/API clients/dependencies and targeted fixes. Avoid unrelated
+refactors/cleanup, speculative abstractions, broad renames, formatting churn, new dependencies
+or rewrites without demonstrated need. Preserve working behavior; correctness/data integrity
+outweigh visual convenience; weigh UX, developer maintainability and future-agent clarity.
+Create new objects/copies rather than mutating. Organize cohesive files by feature/domain,
+typically 200-400 lines, maximum 800; functions under 50 lines and nesting at most 4 levels.
+Use readable names, no hardcoded values, schema validation at all input boundaries and fail
+fast with clear messages. Never trust external input. Handle errors at every level with
+user-friendly UI messages and detailed safe server logs; never silently swallow errors.
+Use consistent success/data/error/pagination envelopes and repository data-access interfaces
+(findAll/findById/create/update/delete) with business logic depending on the abstraction.
+For a new skeleton, evaluate proven templates for security/extensibility/relevance before
+cloning/iterating; use parallel specialist review where independent. Avoid large refactors
+in the final 20% of available context; simple scoped work may continue.
+
+## FE-04 Contract and domain integrity
+
+Backend API/Supabase contracts are compatibility boundaries. Inspect backend contracts when
+possible before changing assumptions about paths/methods, payload/response, status/errors,
+auth/authz/RLS, pagination/timestamps, strategy IDs, signals, trades/fills or statistics.
+If unavailable, use approved documentation and typed interfaces and state the limitation.
+Do not conceal incompatible or failed backend behavior behind apparent success.
+
+Frontend formats/interacts; deterministic backend/RPC owns official signals, fills, initial
+risk, ledger P&L and statistics. Never redefine signal criteria, indicator formulas, fractal
+availability, fill conventions, SL/TP ambiguity, exits, RS ranks or official statistics for UI
+convenience. Distinguish display calculations from canonical ones; AI is not their authority.
+Keep paper and actual ledgers separate. No future information: pivot date differs from fractal
+available-at date; signal-night information differs from next-session open. Preserve SOT/backend
+backtest/forward-test execution conventions; do not improve historical presentation retroactively.
+Never edit SOT merely to match accidental implementation; canonical changes require user direction.
+
+## FE-05 Truthful market data and UI
+
+Never fabricate production market data or silently substitute failures/missing live data with
+fixtures, mocks, hardcoded prices, stale cache presented as current, random values or sample
+signals. Isolate and label fixtures/mocks in development/tests. Claim current/live only when
+freshness supports it; no-signal is distinct from unavailable data.
+For affected flows verify normal/loading/empty/stale/partial/error/invalid/disabled states,
+double click/submit, refresh/navigation and responsive/mobile behavior. Missing/failed retrieval
+must not look like a successful empty result unless explicitly intended.
+
+## FE-06 Security
+
+Everything shipped to browsers is visible: expose only browser-safe public config. Never
+hardcode/expose/print service-role/private/provider keys, DB credentials, privileged tokens,
+passwords or session secrets. Use env/secret management; validate required config at startup.
+For missing config report variable name, location and purpose, never its value. RLS cannot
+be replaced by frontend-only authorization. Never publish secret/private runtime payloads in docs.
+Before any authorized commit verify input validation, parameterized SQL, sanitized HTML/XSS,
+CSRF protection, authentication/authorization, endpoint rate limits and nonleaking errors.
+If a security issue appears: stop the affected step, use security review, fix CRITICAL issues,
+rotate exposed secrets through authorized operations and inspect similar paths.
+
+## FE-07 TDD, bugs and checks
+
+For application features/fixes use mandatory RED -> minimal GREEN -> refactor; coverage minimum 80%.
+Required test types: unit, integration (API/database contracts) and E2E critical user flows.
+Choose relevant checks: component/dedicated browser suites, typecheck, lint, production build,
+API integration and deterministic backend/source comparisons for trading UI. Troubleshoot
+isolation -> mocks -> implementation; change tests only when wrong, never just to get green.
+For bugs reproduce/capture actual behavior, trace UI/state/API, fix root cause, repeat the
+original reproduction and run regressions. Never hide errors/failures, fabricate success,
+disable validation, weaken tests or substitute mock responses to make a flow pass.
+
+Read all check output. Existing PASS stays bound to its source/environment; rerun for changed
+code, failures, unresolved risk or a verification request. Unrun checks are never PASS.
+Documentation-only work validates links/anchors, preservation, protected hashes and diff;
+application checks remain mandatory for application changes, not this Markdown-only cleanup.
+Never claim test/build/browser/API success or production readiness without evidence.
+Trace cross-repository flows as access permits: UI action -> state/handler -> API client ->
+request -> backend -> response -> state -> render. Frontend-only proof is not E2E proof.
+If backend cannot be inspected/executed, say: "Backend integration not verified in this session."
+
+## FE-08 Specialist work and review
+
+Use a planner for complex work, a TDD guide for bugs/features, an architect for design,
+a code reviewer immediately after code changes (resolve HIGH/CRITICAL), and a security reviewer
+for sensitive code/before commits. Use an explorer for unfamiliar systems, React review for JSX,
+a11y for UI, performance review for measured bottlenecks and a build-error resolver to analyze,
+fix incrementally and verify after each fix. Other domain/OSS/RAG/loop/harness specialists
+apply when their domains arise; the shared ECC catalog is optional discovery, not a requirement
+to load unrelated frameworks. Use independent work in parallel where it materially helps.
+Each subtask specifies objective/scope/done condition/evidence/concise report. Explorer/reviewer
+are read-only; worker owns one bounded edit. Never overlap file writers; verify material claims.
+
+Before completion inspect diff; remove accidental/debug/temp changes; check relevant browser
+console/logging, secrets, API assumptions, task/SOT behavior, tests/build and backend dependencies.
+Use a read-only reviewer for substantial changes when available. Done means approved behavior,
+compatible contracts, truthful states/no mock fallback, applicable checks passed, acceptable
+performance, no security vulnerabilities/privileged secret exposure, documentation impact
+identified and explicit limitations. No waiver becomes PASS.
+
+## FE-09 Documentation, handover and release
+
+Keep PLAN active Action/Proof; status evidence-based with planned/implemented-locally/tested-locally/
+configured/deployed/live-smoke-tested separate. Label source/ref, environment/time and
+PASS/PARTIAL/FAIL/SKIPPED/NOT VERIFIED/NO-GO honestly; local fixtures, SQL roles, public HTTP and
+owner-browser/JWT proof are different. Update appropriate local/shared SOT, PRD, technical,
+README, handoff/status when behavior/state materially changes; keep document purposes distinct.
+Archive superseded content with links/wrappers and open gaps; never relabel old proof as new.
+Team architecture/API/runbook knowledge belongs in existing docs; do not duplicate task output.
+Personal notes follow applicable memory rules; ask before a new top-level doc when no home exists.
+New workflow contributions go in skills/; commands/ is compatibility only when a shim is needed.
+
+Handover minimum: task ID/role/scope; repo/branch/SHA and dirty files; decisions/rule IDs;
+completed changes/files/contract assumptions with proof per source/environment; blockers and
+NOT VERIFIED; approvals and their limits; backend work; exact next action, side effects and
+source/docs to read. PLAN/status/context suffice here; root handoff is optional coordination.
+Final report: changes/why, exact checks/results, not verified, backend impact, data/strategy/timing
+impact and meaningful tradeoffs. Report evidence, not confidence. If authorized to publish,
+use type: description (feat/fix/refactor/docs/test/chore/perf/ci); analyze full history for a
+comprehensive PR summary plus test plan and use push -u. Procedures are not publication permission.
+
+## FE-10 Lessons and maintenance
+
+Durable user corrections use "When X, do Y because Z", newest first, specific/reusable/actionable.
+Keep temporary task details out of Lessons. Do not change operating rules above Lessons without
+explicit user instruction; this consolidation was explicitly approved. When authorized shared
+context/rules change, synchronize both repository snapshots with date/version/source hash/ref;
+if unavailable or outside authorized scope record sync pending. Equal hashes prove snapshot
+agreement, not freshness against an unavailable root. See PROJECT_CONTEXT for the protocol.
+Full old-section/unique-rule mapping: [traceability](docs/AGENT_RULE_TRACEABILITY_20261021.md).
 
 ## Lessons
 

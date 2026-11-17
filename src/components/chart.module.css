@@ -1,9 +1,11 @@
 .panel {
-  background: #101922;
-  border: 1px solid #2c4050;
+  background: #0d151e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
   color: #d9e5ef;
   min-width: 0;
-  padding: 12px;
+  padding: 14px;
   font-family: Arial, sans-serif;
   font-size: 13px;
   container-type: inline-size;
@@ -17,29 +19,53 @@
   gap: 10px;
 }
 .header {
-  border-bottom: 1px solid #2c4050;
-  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 12px;
   justify-content: space-between;
 }
 .header strong {
   color: #f2b44b;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 .toolbar {
-  margin: 10px 0;
+  margin: 12px 0;
   align-items: stretch;
-  gap: 6px 12px;
+  gap: 8px 10px;
 }
 .toolbarGroup {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
 }
 .toolbarGroup a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(131, 224, 255, 0.2);
+  background: rgba(131, 224, 255, 0.05);
+  color: #83e0ff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 150ms ease;
+}
+.toolbarGroup a:hover {
+  background: rgba(131, 224, 255, 0.12);
+  border-color: rgba(131, 224, 255, 0.4);
+  color: #b1efff;
+}
+.toolbarGroup a:active {
+  transform: scale(0.97);
 }
 .panel button,
 .panel summary {
@@ -47,19 +73,36 @@
 }
 .panel button {
   min-height: 44px;
-  padding: 7px 12px;
-  background: #193548;
-  border: 1px solid #52768c;
-  border-radius: 3px;
-  color: #83e0ff;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #a0b6c8;
   font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+.panel button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2ecf5;
+}
+.panel button:active {
+  transform: scale(0.97);
 }
 .panel button[aria-pressed="true"] {
-  border-color: #f2b44b;
+  background: rgba(242, 180, 75, 0.12);
+  border-color: rgba(242, 180, 75, 0.35);
   color: #f2b44b;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 .panel button:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: wait;
 }
 .panel button:focus-visible,
@@ -68,7 +111,7 @@
 .tableRegion:focus-visible,
 .panel input:focus-visible {
   outline: 2px solid #f2b44b;
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 .panel label {
   display: flex;
@@ -78,19 +121,73 @@
 }
 .panel input {
   accent-color: #f2b44b;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+}
+.indicatorChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9bb0c4;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.indicatorChip:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #dbe7f2;
+}
+.indicatorChip:active {
+  transform: scale(0.97);
+}
+.indicatorChipActive {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+.indicatorDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+.chipSma.indicatorChipActive {
+  background: rgba(242, 180, 75, 0.12);
+  border-color: rgba(242, 180, 75, 0.35);
+  color: #f2b44b;
+}
+.chipEma.indicatorChipActive {
+  background: rgba(156, 170, 255, 0.12);
+  border-color: rgba(156, 170, 255, 0.35);
+  color: #9caaff;
+}
+.chipMacd.indicatorChipActive {
+  background: rgba(97, 212, 237, 0.12);
+  border-color: rgba(97, 212, 237, 0.35);
+  color: #61d4ed;
 }
 .quote {
   font-family: monospace;
   padding: 8px 0;
   min-height: 35px;
+  font-variant-numeric: tabular-nums;
 }
 .canvas {
   width: 100%;
   min-width: 0;
   height: clamp(340px, var(--chart-available-height, calc(100dvh - 360px)), 640px);
   overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #0b121a;
 }
 .canvasWithMacd {
   min-height: 440px;
@@ -106,16 +203,53 @@
 }
 .warning {
   color: #f2b44b;
-  background: #302619;
-  padding: 8px;
+  background: rgba(242, 180, 75, 0.08);
+  border: 1px solid rgba(242, 180, 75, 0.25);
+  border-radius: 8px;
+  padding: 12px 14px;
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+.fallbackBox {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(242, 180, 75, 0.25);
+  border-radius: 8px;
+}
+.fallbackText {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #ecd09e;
+  line-height: 1.5;
+}
+.fallbackButton {
+  min-height: 44px;
+  padding: 8px 16px;
+  background: #f2b44b;
+  color: #0d151e !important;
+  font-weight: 600;
+  font-size: 12px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fallbackButton:hover {
+  background: #ffc466 !important;
+  box-shadow: 0 2px 10px rgba(242, 180, 75, 0.35);
+}
+.fallbackButton:active {
+  transform: scale(0.97);
 }
 .panel a {
   color: #83e0ff;
 }
 .panel details {
-  border-top: 1px solid #2c4050;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   padding: 10px 0;
 }
 .panel summary {
@@ -137,6 +271,8 @@
   max-width: 100%;
   max-height: 360px;
   overflow: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 .tableRegion table {
   border-collapse: collapse;
@@ -147,7 +283,7 @@
 .tableRegion th,
 .tableRegion td {
   padding: 9px;
-  border-bottom: 1px solid #2c4050;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   text-align: right;
 }
 .tableRegion th:first-child {
@@ -162,7 +298,7 @@
 }
 @media (max-width: 767px) {
   .panel {
-    padding: 8px;
+    padding: 10px;
   }
   .source {
     grid-template-columns: 1fr;

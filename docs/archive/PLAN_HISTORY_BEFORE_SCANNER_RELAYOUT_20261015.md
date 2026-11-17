@@ -1,3 +1,8 @@
+> HISTORICAL / NOT AN ACTIVE TASK / NOT AUTHORIZATION
+> Source snapshot retained at 15 October 2026; original event dates and limits remain in the body. Wrapper clarified 21 October 2026.
+> Reason: historical documentation/operating or release evidence; superseded for active work by [PLAN](../../PLAN.md) and [AGENTS](../../AGENTS.md).
+> Unresolved gaps remain in [current status](../../IMPLEMENTATION_STATUS.md); original approvals/waivers are scoped to their original task.
+
 ## Chart V1 — owner-authorized release exception, 2026-10-15
 
 Action: release existing tested chart frontend after backend capability/canary. Owner explicitly permits
