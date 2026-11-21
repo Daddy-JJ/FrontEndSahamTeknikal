@@ -606,3 +606,155 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-style: italic;
 }
+
+/* Active Row in Table */
+.bf-table tr.clickable.active-row {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-left: 3px solid #6bd5ed;
+}
+
+/* Search Status Notification */
+.bf-search-status {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: var(--amber);
+  margin-top: 4px;
+}
+
+/* Header Sync Button */
+.bf-btn-sync {
+  background: rgba(56, 189, 248, 0.12);
+  color: #6bd5ed;
+  border: 1px solid #244f63;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.bf-btn-sync:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+}
+
+/* Market Quadrant Modal */
+.bf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 16, 0.85);
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.bf-modal-container {
+  background: #0d1723;
+  border: 1px solid #284462;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+  width: 100%;
+  max-width: 760px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: bfModalAppear 0.18s ease-out;
+}
+
+@keyframes bfModalAppear {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.bf-modal-header {
+  padding: 14px 18px;
+  background: #111d2c;
+  border-bottom: 1px solid #284462;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bf-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bf-modal-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+.bf-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.bf-modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bf-modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bf-modal-philosophy {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  background: #091018;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+}
+
+.bf-modal-search {
+  width: 100%;
+  background: #091018;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.bf-modal-search:focus {
+  border-color: #6bd5ed;
+  box-shadow: 0 0 0 1px #6bd5ed;
+}
+
+.bf-modal-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
+}

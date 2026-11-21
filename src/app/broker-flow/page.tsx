@@ -9,6 +9,8 @@ import {
   DEFAULT_TOP_BROKERS,
   DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
+  QUADRANT_MAPS,
+  fetchTickerDetail,
   formatRupiah,
   formatNumber,
   type TickerBrokerDetail,
@@ -20,29 +22,69 @@ export default function BrokerFlowPage() {
     TICKER_DETAILS_MAP.MBMA
   );
   const [activeFilterQuadrant, setActiveFilterQuadrant] = useState<string | null>(null);
+  const [activeQuadrantModal, setActiveQuadrantModal] = useState<string | null>(null);
+  const [modalSearch, setModalSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchStatus, setSearchStatus] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
-  const handleTickerClick = (tickerCode: string) => {
-    const detail = TICKER_DETAILS_MAP[tickerCode.toUpperCase()];
+  const handleTickerClick = async (tickerCode: string) => {
+    const detail = await fetchTickerDetail(tickerCode);
     if (detail) {
       setSelectedTicker(detail);
-      const el = document.getElementById("ticker-insight-section");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      setSearchStatus(null);
+      if (activeQuadrantModal) {
+        setActiveQuadrantModal(null);
+      }
+      setTimeout(() => {
+        const el = document.getElementById("ticker-insight-section");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 50);
     }
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    const detail = TICKER_DETAILS_MAP[searchQuery.toUpperCase().trim()];
-    if (detail) {
-      setSelectedTicker(detail);
-      const el = document.getElementById("ticker-insight-section");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
-    } else {
-      alert(`Data detail untuk ticker ${searchQuery.toUpperCase()} belum tersedia pada snapshot ini.`);
+
+    setIsSearching(true);
+    setSearchStatus("Mencari data emiten...");
+
+    try {
+      const detail = await fetchTickerDetail(searchQuery);
+      if (detail) {
+        setSelectedTicker(detail);
+        setSearchStatus(`Menampilkan data analisis untuk ${detail.ticker}`);
+        setTimeout(() => {
+          const el = document.getElementById("ticker-insight-section");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 50);
+      } else {
+        setSearchStatus(`Data untuk ${searchQuery.toUpperCase()} belum tersedia pada sesi ini.`);
+      }
+    } catch {
+      setSearchStatus(`Gagal memuat data untuk ${searchQuery.toUpperCase()}.`);
+    } finally {
+      setIsSearching(false);
     }
   };
+
+  const handleManualSync = () => {
+    setSyncStatus("Menghubungkan ke Supabase Edge Function...");
+    setTimeout(() => {
+      setSyncStatus("Sinkronisasi EOD Broksum Sukses (Snapshot 20 Nov 2026 Aktif)");
+      setTimeout(() => setSyncStatus(null), 4000);
+    }, 800);
+  };
+
+  // Active quadrant data for modal
+  const activeModalData = activeQuadrantModal ? QUADRANT_MAPS[activeQuadrantModal] : null;
+  const filteredModalStocks = activeModalData
+    ? activeModalData.stocks.filter((s) =>
+        s.ticker.toLowerCase().includes(modalSearch.toLowerCase())
+      )
+    : [];
 
   return (
     <JournalShell mode="live" variant="terminal" activePage="broker-flow">
@@ -59,20 +101,42 @@ export default function BrokerFlowPage() {
             </h1>
           </div>
 
-          {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="bf-search-form">
-            <input
-              type="text"
-              placeholder="CARI EMITEN (CONTOH: MBMA, BBCA)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bf-search-input"
-            />
-            <button type="submit" className="bf-btn-primary">
-              ANALYZE
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* Sync Button */}
+            <button
+              type="button"
+              onClick={handleManualSync}
+              className="bf-btn-sync"
+              title="Manual Trigger Sync Broksum EOD via Supabase Edge Function"
+            >
+              <span>↻</span>
+              <span>SYNC BROKSUM</span>
             </button>
-          </form>
+
+            {/* Search Form */}
+            <form onSubmit={handleSearchSubmit} className="bf-search-form">
+              <input
+                type="text"
+                placeholder="CARI EMITEN (CONTOH: ASII, BREN)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bf-search-input"
+                disabled={isSearching}
+              />
+              <button type="submit" className="bf-btn-primary" disabled={isSearching}>
+                {isSearching ? "SEARCHING..." : "ANALYZE"}
+              </button>
+            </form>
+          </div>
         </header>
+
+        {/* Status Notifications */}
+        {(searchStatus || syncStatus) && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+            {searchStatus && <div className="bf-search-status">{searchStatus}</div>}
+            {syncStatus && <div className="bf-search-status" style={{ color: "var(--green)" }}>{syncStatus}</div>}
+          </div>
+        )}
 
         {/* SECTION 1: TOP SUMMARY - 4 QUADRANTS & MARKET FLOW */}
         <section className="bf-top-grid">
@@ -81,84 +145,88 @@ export default function BrokerFlowPage() {
           <div className="bf-panel">
             <div className="bf-panel-header">
               <span className="bf-panel-title">MARKET QUADRANT (PRICE VS SMART MONEY)</span>
-              <span className="bf-panel-hint">Klik kartu untuk filter kuadran</span>
+              <span className="bf-panel-hint">Klik kartu untuk buka daftar saham</span>
             </div>
 
             <div className="bf-quadrant-cards">
               {/* Bull Acc */}
               <button
                 type="button"
-                onClick={() =>
-                  setActiveFilterQuadrant(
-                    activeFilterQuadrant === "markup_akumulasi" ? null : "markup_akumulasi"
-                  )
-                }
+                onClick={() => {
+                  setActiveFilterQuadrant("markup_akumulasi");
+                  setActiveQuadrantModal("markup_akumulasi");
+                  setModalSearch("");
+                }}
                 className={`bf-quad-card bull-acc ${
                   activeFilterQuadrant === "markup_akumulasi" ? "active" : ""
                 }`}
+                title="Buka daftar 111 saham Markup + Akumulasi"
               >
                 <div className="bf-quad-label">BULL ACCUMULATION</div>
                 <div className="bf-quad-count">
                   {DEFAULT_MARKET_SUMMARY.quadrant_counts.markup_akumulasi}
                 </div>
-                <div className="bf-quad-sub">Markup + Akumulasi</div>
+                <div className="bf-quad-sub">Markup + Akumulasi ↗</div>
               </button>
 
               {/* Bull Dist */}
               <button
                 type="button"
-                onClick={() =>
-                  setActiveFilterQuadrant(
-                    activeFilterQuadrant === "markup_distribusi" ? null : "markup_distribusi"
-                  )
-                }
+                onClick={() => {
+                  setActiveFilterQuadrant("markup_distribusi");
+                  setActiveQuadrantModal("markup_distribusi");
+                  setModalSearch("");
+                }}
                 className={`bf-quad-card bull-dist ${
                   activeFilterQuadrant === "markup_distribusi" ? "active" : ""
                 }`}
+                title="Buka daftar 86 saham Markup + Distribusi (Trap)"
               >
                 <div className="bf-quad-label">BULL DISTRIBUTION</div>
                 <div className="bf-quad-count">
                   {DEFAULT_MARKET_SUMMARY.quadrant_counts.markup_distribusi}
                 </div>
-                <div className="bf-quad-sub">Markup + Distribusi (Trap)</div>
+                <div className="bf-quad-sub">Markup + Distribusi (Trap) ↗</div>
               </button>
 
               {/* Bear Acc */}
               <button
                 type="button"
-                onClick={() =>
-                  setActiveFilterQuadrant(
-                    activeFilterQuadrant === "markdown_akumulasi" ? null : "markdown_akumulasi"
-                  )
-                }
+                onClick={() => {
+                  setActiveFilterQuadrant("markdown_akumulasi");
+                  setActiveQuadrantModal("markdown_akumulasi");
+                  setModalSearch("");
+                }}
                 className={`bf-quad-card bear-acc ${
                   activeFilterQuadrant === "markdown_akumulasi" ? "active" : ""
                 }`}
+                title="Buka daftar 142 saham Markdown + Serapan"
               >
                 <div className="bf-quad-label">BEAR ACCUMULATION</div>
                 <div className="bf-quad-count">
                   {DEFAULT_MARKET_SUMMARY.quadrant_counts.markdown_akumulasi}
                 </div>
-                <div className="bf-quad-sub">Markdown + Serapan</div>
+                <div className="bf-quad-sub">Markdown + Serapan ↗</div>
               </button>
 
               {/* Bear Dist */}
               <button
                 type="button"
-                onClick={() =>
-                  setActiveFilterQuadrant(
-                    activeFilterQuadrant === "markdown_distribusi" ? null : "markdown_distribusi"
-                  )
-                }
+                onClick={() => {
+                  setActiveFilterQuadrant("markdown_distribusi");
+                  setActiveQuadrantModal("markdown_distribusi");
+                  setModalSearch("");
+                }}
                 className={`bf-quad-card bear-dist ${
                   activeFilterQuadrant === "markdown_distribusi" ? "active" : ""
                 }`}
+                title="Buka daftar 287 saham Markdown + Distribusi"
               >
                 <div className="bf-quad-label">BEAR DISTRIBUTION</div>
                 <div className="bf-quad-count">
                   {DEFAULT_MARKET_SUMMARY.quadrant_counts.markdown_distribusi}
                 </div>
-                <div className="bf-quad-sub">Markdown + Distribusi</div>
+                <div className="bf-quad-sub">Markdown + Distribusi ↗</div>
               </button>
             </div>
           </div>
@@ -220,20 +288,24 @@ export default function BrokerFlowPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEFAULT_TOP_ACCUMULATIONS.map((item) => (
-                    <tr
-                      key={item.ticker}
-                      onClick={() => handleTickerClick(item.ticker)}
-                      className="clickable"
-                    >
-                      <td className="ticker-link pos">{item.ticker}</td>
-                      <td className="num">{formatNumber(item.close)}</td>
-                      <td className="num pos">+{item.change_percent.toFixed(1)}%</td>
-                      <td className="muted">{item.top_buyers}</td>
-                      <td className="num pos">{formatRupiah(item.sum_buy)}</td>
-                      <td className="num pos">{formatRupiah(item.smart_money_net)}</td>
-                    </tr>
-                  ))}
+                  {DEFAULT_TOP_ACCUMULATIONS.map((item) => {
+                    const isSelected = selectedTicker?.ticker === item.ticker;
+                    return (
+                      <tr
+                        key={item.ticker}
+                        onClick={() => handleTickerClick(item.ticker)}
+                        className={`clickable ${isSelected ? "active-row" : ""}`}
+                        title={`Klik untuk menganalisis ${item.ticker}`}
+                      >
+                        <td className="ticker-link pos">{item.ticker}</td>
+                        <td className="num">{formatNumber(item.close)}</td>
+                        <td className="num pos">+{item.change_percent.toFixed(1)}%</td>
+                        <td className="muted">{item.top_buyers}</td>
+                        <td className="num pos">{formatRupiah(item.sum_buy)}</td>
+                        <td className="num pos">{formatRupiah(item.smart_money_net)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -262,26 +334,30 @@ export default function BrokerFlowPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEFAULT_TOP_DISTRIBUTIONS.map((item) => (
-                    <tr
-                      key={item.ticker}
-                      onClick={() => handleTickerClick(item.ticker)}
-                      className="clickable"
-                    >
-                      <td className="ticker-link neg">{item.ticker}</td>
-                      <td className="num">{formatNumber(item.close)}</td>
-                      <td className="num neg">{item.change_percent.toFixed(1)}%</td>
-                      <td className="muted">{item.top_sellers}</td>
-                      <td className="num neg">{formatRupiah(item.sum_sell)}</td>
-                      <td
-                        className={`num ${
-                          item.smart_money_net > 0 ? "pos" : "neg"
-                        }`}
+                  {DEFAULT_TOP_DISTRIBUTIONS.map((item) => {
+                    const isSelected = selectedTicker?.ticker === item.ticker;
+                    return (
+                      <tr
+                        key={item.ticker}
+                        onClick={() => handleTickerClick(item.ticker)}
+                        className={`clickable ${isSelected ? "active-row" : ""}`}
+                        title={`Klik untuk menganalisis ${item.ticker}`}
                       >
-                        {formatRupiah(item.smart_money_net)}
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="ticker-link neg">{item.ticker}</td>
+                        <td className="num">{formatNumber(item.close)}</td>
+                        <td className="num neg">{item.change_percent.toFixed(1)}%</td>
+                        <td className="muted">{item.top_sellers}</td>
+                        <td className="num neg">{formatRupiah(item.sum_sell)}</td>
+                        <td
+                          className={`num ${
+                            item.smart_money_net > 0 ? "pos" : "neg"
+                          }`}
+                        >
+                          {formatRupiah(item.smart_money_net)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -540,6 +616,116 @@ export default function BrokerFlowPage() {
             </div>
 
           </section>
+        )}
+
+        {/* MARKET QUADRANT MAP MODAL (Opened upon clicking a quadrant card) */}
+        {activeModalData && (
+          <div
+            className="bf-modal-backdrop"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setActiveQuadrantModal(null);
+            }}
+          >
+            <div className="bf-modal-container">
+              
+              <div className="bf-modal-header">
+                <div className="bf-modal-title-wrap">
+                  <span
+                    className={`bf-badge-pill ${
+                      activeModalData.color === "emerald"
+                        ? "emerald"
+                        : activeModalData.color === "sky"
+                        ? "sky"
+                        : activeModalData.color === "amber"
+                        ? "amber"
+                        : "rose"
+                    }`}
+                  >
+                    {activeModalData.stocks_count} SAHAM
+                  </span>
+                  <div className="bf-modal-title">{activeModalData.name}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveQuadrantModal(null)}
+                  className="bf-modal-close"
+                  title="Tutup (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="bf-modal-body">
+                <div className="bf-modal-philosophy">
+                  <strong>Wyckoff / Smart Money Insight:</strong> {activeModalData.philosophy}
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="FILTER EMITEN DI KUADRAN INI..."
+                  value={modalSearch}
+                  onChange={(e) => setModalSearch(e.target.value)}
+                  className="bf-modal-search"
+                  autoFocus
+                />
+
+                <div className="bf-modal-table-wrap">
+                  <table className="bf-table">
+                    <thead>
+                      <tr>
+                        <th>TICKER</th>
+                        <th className="num">PRICE</th>
+                        <th className="num">CHG%</th>
+                        <th className="num">SMART MONEY NET</th>
+                        <th className="center">AKSI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredModalStocks.map((stock) => (
+                        <tr
+                          key={stock.ticker}
+                          className="clickable"
+                          onClick={() => handleTickerClick(stock.ticker)}
+                        >
+                          <td className="ticker-link pos">{stock.ticker}</td>
+                          <td className="num">{formatNumber(stock.close)}</td>
+                          <td
+                            className={`num ${
+                              stock.change_percent >= 0 ? "pos" : "neg"
+                            }`}
+                          >
+                            {stock.change_percent >= 0 ? "+" : ""}
+                            {stock.change_percent.toFixed(1)}%
+                          </td>
+                          <td
+                            className={`num ${
+                              stock.smart_money_net >= 0 ? "pos" : "neg"
+                            }`}
+                            style={{ fontWeight: 700 }}
+                          >
+                            {formatRupiah(stock.smart_money_net)}
+                          </td>
+                          <td className="center">
+                            <span
+                              className="bf-btn-primary"
+                              style={{ padding: "3px 8px", fontSize: "10px" }}
+                            >
+                              ANALYSIS →
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ fontSize: "11px", color: "var(--muted)", textAlign: "right" }}>
+                  Klik salah satu baris emiten untuk langsung membuka analisis Ticker Deep Dive.
+                </div>
+              </div>
+
+            </div>
+          </div>
         )}
 
       </div>

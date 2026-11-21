@@ -6,6 +6,8 @@ import {
   DEFAULT_TOP_BROKERS,
   DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
+  QUADRANT_MAPS,
+  synthesizeTickerDetail,
 } from "@/lib/broker-flow";
 
 export const dynamic = "force-dynamic";
@@ -13,20 +15,26 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const ticker = searchParams.get("ticker");
+  const quadrant = searchParams.get("quadrant");
 
   if (ticker) {
-    const upper = ticker.toUpperCase();
-    const detail = TICKER_DETAILS_MAP[upper];
-    if (!detail) {
-      return NextResponse.json(
-        { error: "TICKER_NOT_FOUND", message: `Data broker flow untuk ${upper} belum tersedia.` },
-        { status: 404 }
-      );
-    }
+    const upper = ticker.toUpperCase().trim();
+    const detail = TICKER_DETAILS_MAP[upper] || synthesizeTickerDetail(upper);
     return NextResponse.json({ success: true, data: detail });
   }
 
-  // Return market wide summary
+  if (quadrant) {
+    const map = QUADRANT_MAPS[quadrant];
+    if (map) {
+      return NextResponse.json({ success: true, data: map });
+    }
+    return NextResponse.json(
+      { error: "QUADRANT_NOT_FOUND", message: `Kuadran ${quadrant} tidak ditemukan.` },
+      { status: 404 }
+    );
+  }
+
+  // Return full market-wide summary including quadrant maps
   return NextResponse.json({
     success: true,
     data: {
@@ -35,6 +43,7 @@ export async function GET(request: NextRequest) {
       top_distributions: DEFAULT_TOP_DISTRIBUTIONS,
       top_brokers: DEFAULT_TOP_BROKERS,
       sector_flows: DEFAULT_SECTOR_FLOWS,
+      quadrant_maps: QUADRANT_MAPS,
     },
   });
 }
