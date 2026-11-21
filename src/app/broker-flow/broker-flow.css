@@ -1,0 +1,608 @@
+/* Broker Flow & Bandarmology Intelligence Stylesheet */
+/* Scoped under .scanner-terminal-shell */
+
+.bf-page-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 16px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header & Search */
+.bf-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bf-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.bf-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+.bf-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bf-search-input {
+  background: #121d28;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  padding: 7px 12px;
+  border-radius: 4px;
+  outline: none;
+  min-width: 220px;
+  text-transform: uppercase;
+}
+
+.bf-search-input:focus {
+  border-color: #6bd5ed;
+  box-shadow: 0 0 0 1px #6bd5ed;
+}
+
+.bf-btn-primary {
+  background: #183345;
+  color: #9ce4f4;
+  border: 1px solid #38566b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.bf-btn-primary:hover {
+  background: #20445d;
+  border-color: #4f7896;
+}
+
+/* Quadrant Top Section */
+.bf-top-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 960px) {
+  .bf-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bf-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.bf-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.bf-panel-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.bf-panel-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.bf-quadrant-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .bf-quadrant-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.bf-quad-card {
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: #0f1722;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.bf-quad-card:hover {
+  transform: translateY(-1px);
+}
+
+.bf-quad-card:active {
+  transform: translateY(0);
+}
+
+.bf-quad-card.bull-acc {
+  border-color: #285149;
+  background: rgba(17, 51, 46, 0.4);
+}
+.bf-quad-card.bull-acc:hover, .bf-quad-card.bull-acc.active {
+  border-color: var(--green);
+  background: rgba(17, 51, 46, 0.8);
+  box-shadow: 0 0 0 1px var(--green);
+}
+.bf-quad-card.bull-acc .bf-quad-count {
+  color: var(--green);
+}
+
+.bf-quad-card.bull-dist {
+  border-color: #66502c;
+  background: rgba(51, 41, 25, 0.4);
+}
+.bf-quad-card.bull-dist:hover, .bf-quad-card.bull-dist.active {
+  border-color: var(--amber);
+  background: rgba(51, 41, 25, 0.8);
+  box-shadow: 0 0 0 1px var(--amber);
+}
+.bf-quad-card.bull-dist .bf-quad-count {
+  color: var(--amber);
+}
+
+.bf-quad-card.bear-acc {
+  border-color: #244f63;
+  background: rgba(21, 44, 56, 0.4);
+}
+.bf-quad-card.bear-acc:hover, .bf-quad-card.bear-acc.active {
+  border-color: #6bd5ed;
+  background: rgba(21, 44, 56, 0.8);
+  box-shadow: 0 0 0 1px #6bd5ed;
+}
+.bf-quad-card.bear-acc .bf-quad-count {
+  color: #6bd5ed;
+}
+
+.bf-quad-card.bear-dist {
+  border-color: #5a2828;
+  background: rgba(51, 28, 28, 0.4);
+}
+.bf-quad-card.bear-dist:hover, .bf-quad-card.bear-dist.active {
+  border-color: var(--red);
+  background: rgba(51, 28, 28, 0.8);
+  box-shadow: 0 0 0 1px var(--red);
+}
+.bf-quad-card.bear-dist .bf-quad-count {
+  color: var(--red);
+}
+
+.bf-quad-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.bf-quad-count {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 4px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-quad-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* Smart Money Summary Box */
+.bf-summary-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.bf-net-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 30px;
+  font-weight: 700;
+  margin: 6px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-net-val.pos { color: var(--green); }
+.bf-net-val.neg { color: var(--red); }
+
+.bf-summary-meta {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bf-meta-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bf-meta-row strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dual Section Grids (Tables) */
+.bf-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 960px) {
+  .bf-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bf-table-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.bf-table-header {
+  padding: 10px 14px;
+  background: #15202d;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bf-table-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+
+.bf-table-title.acc { color: var(--green); }
+.bf-table-title.dist { color: var(--red); }
+.bf-table-title.neutral { color: var(--ink); }
+
+.bf-table-scroll {
+  overflow-x: auto;
+}
+
+.bf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  text-align: left;
+}
+
+.bf-table th {
+  padding: 8px 12px;
+  background: #0d1620;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.bf-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(41, 54, 68, 0.5);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-table tr.clickable {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.bf-table tr.clickable:hover {
+  background: #182738;
+}
+
+.bf-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-table .center {
+  text-align: center;
+}
+
+.bf-table .ticker-link {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bf-table .pos { color: var(--green); }
+.bf-table .neg { color: var(--red); }
+.bf-table .amber { color: var(--amber); }
+.bf-table .sky { color: #6bd5ed; }
+.bf-table .muted { color: var(--muted); }
+
+/* Ticker Insight Deep Dive */
+.bf-insight-card {
+  background: #0d1723;
+  border: 1px solid #284462;
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.bf-insight-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bf-insight-ticker-group {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.bf-insight-ticker {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.bf-insight-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-insight-chg {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-badge-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+
+.bf-badge-pill.emerald {
+  background: #11332e;
+  color: var(--green);
+  border-color: #285149;
+}
+.bf-badge-pill.sky {
+  background: #152c38;
+  color: #6bd5ed;
+  border-color: #244f63;
+}
+.bf-badge-pill.amber {
+  background: #332919;
+  color: var(--amber);
+  border-color: #66502c;
+}
+.bf-badge-pill.rose {
+  background: #331c1c;
+  color: var(--red);
+  border-color: #5a2828;
+}
+
+/* Footprint 4 Stats Grid */
+.bf-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .bf-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.bf-stat-box {
+  background: #091018;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 10px 12px;
+}
+
+.bf-stat-box .label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.bf-stat-box .val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Insight Bottom Grid */
+.bf-insight-bottom-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 860px) {
+  .bf-insight-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bf-broker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.bf-broker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: #091018;
+  border: 1px solid var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.bf-broker-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #172c3d;
+  color: #8ed6ec;
+  border: 1px solid #285472;
+}
+
+.bf-why-banner {
+  background: rgba(24, 51, 69, 0.4);
+  border: 1px solid #2f5675;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.bf-why-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  color: #6bd5ed;
+  margin-bottom: 4px;
+}
+
+/* Actionable Trade Plan Card */
+.bf-plan-card {
+  background: #091018;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bf-plan-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  letter-spacing: 0.8px;
+}
+
+.bf-plan-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.bf-plan-item .label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.bf-plan-item .val {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-entry-pill {
+  display: inline-block;
+  background: #1c2c3c;
+  color: #fff;
+  border: 1px solid #38566b;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.bf-plan-note {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-style: italic;
+}
