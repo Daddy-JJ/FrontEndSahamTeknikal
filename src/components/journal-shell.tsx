@@ -15,6 +15,7 @@ export function JournalShell({mode,children,variant="default",activePage,showMod
         <Link className="journal-brand" href="/">IDX <span>Night Scanner</span></Link>
         <nav aria-label="Navigasi utama">
           <Link aria-current={activePage === "scanner" ? "page" : undefined} href="/scanner" prefetch={false}>Scanner</Link>
+          <Link href="/broker-flow" prefetch={false}>Broker Flow</Link>
           <Link aria-current={activePage === "journal" ? "page" : undefined} href="/journal">Jurnal</Link>
           <Link aria-current={activePage === "analytics" ? "page" : undefined} href="/analytics">Analytics</Link>
           <Link aria-current={activePage === "operations" ? "page" : undefined} href="/operations">Operasi</Link>
