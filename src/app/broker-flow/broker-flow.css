@@ -758,3 +758,445 @@
   max-height: 400px;
   overflow-y: auto;
 }
+
+/* ==========================================================================
+   DAILY BANDARMOLOGY INSIGHT & TOP ACTION RADAR
+   ========================================================================== */
+.bf-daily-insight-container {
+  background: #0b131e;
+  border: 1px solid #1e334a;
+  border-radius: 8px;
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.bf-daily-insight-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #10b981 0%, #38bdf8 50%, #f59e0b 100%);
+}
+
+.bf-daily-insight-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bf-insight-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bf-insight-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.bf-insight-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+
+.bf-insight-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.bf-horizon-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #060b11;
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid #1a2a3c;
+}
+
+.bf-horizon-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bf-horizon-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.bf-horizon-btn.active {
+  background: #172c42;
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+}
+
+/* Macro Pulse Strip */
+.bf-macro-pulse-strip {
+  background: #070d14;
+  border: 1px solid #172535;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bf-macro-metrics-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-macro-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bf-macro-metric-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.bf-macro-metric-val {
+  font-weight: 800;
+}
+
+.bf-macro-metric-val.pos {
+  color: #34d399;
+}
+
+.bf-macro-metric-val.neg {
+  color: #f87171;
+}
+
+.bf-macro-summary-sentence {
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+  border-top: 1px dashed #172535;
+  padding-top: 6px;
+}
+
+/* 3-Column Insight Grid */
+.bf-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1024px) {
+  .bf-insight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bf-insight-col {
+  background: #08101a;
+  border: 1px solid #162436;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bf-insight-col-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #162436;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bf-insight-col-header.sweet {
+  background: rgba(16, 185, 129, 0.08);
+  border-bottom-color: rgba(16, 185, 129, 0.25);
+}
+
+.bf-insight-col-header.trap {
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom-color: rgba(239, 68, 68, 0.25);
+}
+
+.bf-insight-col-header.retail {
+  background: rgba(56, 189, 248, 0.08);
+  border-bottom-color: rgba(56, 189, 248, 0.25);
+}
+
+.bf-col-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bf-col-title.sweet { color: #34d399; }
+.bf-col-title.trap { color: #f87171; }
+.bf-col-title.retail { color: #38bdf8; }
+
+.bf-col-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.bf-insight-col-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 480px;
+}
+
+/* Individual Card Items */
+.bf-sweet-card, .bf-trap-card, .bf-retail-card {
+  background: #0d1723;
+  border: 1px solid #1d3044;
+  border-radius: 6px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+
+.bf-sweet-card:hover {
+  background: #111e2e;
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.bf-trap-card:hover {
+  background: #151622;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.bf-retail-card:hover {
+  background: #101c2b;
+  border-color: #38bdf8;
+}
+
+.bf-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bf-ticker-interactive {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: #fff;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-decoration: underline dotted;
+  transition: color 0.15s;
+}
+
+.bf-ticker-interactive:hover {
+  color: #38bdf8;
+}
+
+.bf-card-price-wrap {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bf-card-cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  background: #070d14;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #142232;
+}
+
+.bf-gap-tag {
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.bf-gap-tag.sweet {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+
+.bf-gap-tag.discount {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+}
+
+.bf-gap-tag.trap {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+
+.bf-card-lead-row {
+  font-size: 11px;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bf-card-lead-label {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.bf-card-counterparty-row {
+  font-size: 10.5px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bf-card-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #172739;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.bf-verdict-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.bf-verdict-pill.buy {
+  background: #064e3b;
+  color: #6ee7b7;
+  border: 1px solid #059669;
+}
+
+.bf-verdict-pill.avoid {
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #dc2626;
+}
+
+.bf-verdict-pill.wait {
+  background: #78350f;
+  color: #fde68a;
+  border: 1px solid #d97706;
+}
+
+.bf-plan-brief {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* Retail Specific Cards */
+.bf-retail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bf-retail-broker-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.bf-retail-sentiment-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.bf-retail-stocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-retail-stock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #94a3b8;
+}
+
+.bf-retail-stock-val {
+  font-weight: 700;
+}
+
+.bf-retail-stock-val.pos { color: #34d399; }
+.bf-retail-stock-val.neg { color: #f87171; }
+

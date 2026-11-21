@@ -11,9 +11,11 @@ import {
   TICKER_DETAILS_MAP,
   QUADRANT_MAPS,
   fetchTickerDetail,
+  getDailyInsight,
   formatRupiah,
   formatNumber,
   type TickerBrokerDetail,
+  type HorizonPeriod,
 } from "@/lib/broker-flow";
 import "./broker-flow.css";
 
@@ -21,6 +23,7 @@ export default function BrokerFlowPage() {
   const [selectedTicker, setSelectedTicker] = useState<TickerBrokerDetail | null>(
     TICKER_DETAILS_MAP.MBMA
   );
+  const [activeHorizon, setActiveHorizon] = useState<HorizonPeriod>("5D");
   const [activeFilterQuadrant, setActiveFilterQuadrant] = useState<string | null>(null);
   const [activeQuadrantModal, setActiveQuadrantModal] = useState<string | null>(null);
   const [modalSearch, setModalSearch] = useState("");
@@ -77,6 +80,9 @@ export default function BrokerFlowPage() {
       setTimeout(() => setSyncStatus(null), 4000);
     }, 800);
   };
+
+  // Active Daily Insight data by horizon
+  const dailyInsight = getDailyInsight(activeHorizon);
 
   // Active quadrant data for modal
   const activeModalData = activeQuadrantModal ? QUADRANT_MAPS[activeQuadrantModal] : null;
@@ -137,6 +143,264 @@ export default function BrokerFlowPage() {
             {syncStatus && <div className="bf-search-status" style={{ color: "var(--green)" }}>{syncStatus}</div>}
           </div>
         )}
+
+        {/* SECTION 0: DAILY BANDARMOLOGY INSIGHT & ACTION RADAR */}
+        <section className="bf-daily-insight-container">
+          {/* Top Bar: Title, Subtitle, and Horizon Switcher */}
+          <div className="bf-daily-insight-topbar">
+            <div className="bf-insight-title-group">
+              <span className="bf-insight-badge">⚡ DAILY RADAR</span>
+              <div>
+                <h2 className="bf-insight-title">Bandarmology Flow &amp; Actionable Radar</h2>
+                <div className="bf-insight-subtitle">
+                  {dailyInsight.horizon_label} • {dailyInsight.date_range}
+                </div>
+              </div>
+            </div>
+
+            {/* Horizon Selector Pill Group */}
+            <div className="bf-horizon-selector">
+              <button
+                type="button"
+                className={`bf-horizon-btn ${activeHorizon === "2D" ? "active" : ""}`}
+                onClick={() => setActiveHorizon("2D")}
+                title="Inisiasi 2 Hari Bursa: Deteksi momentum & spike akumulasi awal"
+              >
+                2 HARI
+              </button>
+              <button
+                type="button"
+                className={`bf-horizon-btn ${activeHorizon === "5D" ? "active" : ""}`}
+                onClick={() => setActiveHorizon("5D")}
+                title="Weekly Persistence 5 Hari: Uji konsistensi akumulasi (Rekomendasi Utama)"
+              >
+                5 HARI (1 PEKAN)
+              </button>
+              <button
+                type="button"
+                className={`bf-horizon-btn ${activeHorizon === "10D" ? "active" : ""}`}
+                onClick={() => setActiveHorizon("10D")}
+                title="Structural Base 10 Hari: Fondasi modal inventori bandar"
+              >
+                10 HARI (2 PEKAN)
+              </button>
+            </div>
+          </div>
+
+          {/* Macro Pulse Strip */}
+          <div className="bf-macro-pulse-strip">
+            <div className="bf-macro-metrics-row">
+              <div className="bf-macro-metric">
+                <span className="bf-macro-metric-label">GLOBAL SMART MONEY (FOREIGN):</span>
+                <span className={`bf-macro-metric-val ${dailyInsight.macro_pulse.foreign_net >= 0 ? "pos" : "neg"}`}>
+                  {formatRupiah(dailyInsight.macro_pulse.foreign_net)}
+                </span>
+              </div>
+              <div className="bf-macro-metric">
+                <span className="bf-macro-metric-label">DANANTARA / BUMN SUPPORT:</span>
+                <span className={`bf-macro-metric-val ${dailyInsight.macro_pulse.government_net >= 0 ? "pos" : "neg"}`}>
+                  {formatRupiah(dailyInsight.macro_pulse.government_net)}
+                </span>
+              </div>
+              <div className="bf-macro-metric">
+                <span className="bf-macro-metric-label">RETAIL CROWD (XL, XC, YP):</span>
+                <span className={`bf-macro-metric-val ${dailyInsight.macro_pulse.retail_net >= 0 ? "pos" : "neg"}`}>
+                  {formatRupiah(dailyInsight.macro_pulse.retail_net)}
+                </span>
+              </div>
+            </div>
+            <div className="bf-macro-summary-sentence">
+              <strong>Analisa Dinamika Aliran:</strong> {dailyInsight.macro_pulse.summary_sentence}
+            </div>
+          </div>
+
+          {/* 3-Column Insight Grid */}
+          <div className="bf-insight-grid">
+            {/* Column 1: Sweet Spots / Siap Ditumpangi */}
+            <div className="bf-insight-col">
+              <div className="bf-insight-col-header sweet">
+                <div className="bf-col-title sweet">
+                  <span>🎯</span>
+                  <span>SIAP DITUMPANGI (SWEET SPOT)</span>
+                </div>
+                <span className="bf-col-badge">{dailyInsight.sweet_spots.length} emiten</span>
+              </div>
+              <div className="bf-insight-col-body">
+                {dailyInsight.sweet_spots.map((item) => (
+                  <div key={item.ticker} className="bf-sweet-card">
+                    <div className="bf-card-head">
+                      <button
+                        type="button"
+                        className="bf-ticker-interactive"
+                        onClick={() => handleTickerClick(item.ticker)}
+                        title={`Buka detail analisis bandarmologi ${item.ticker}`}
+                      >
+                        {item.ticker}
+                      </button>
+                      <div className="bf-card-price-wrap">
+                        <span style={{ fontWeight: 800 }}>{formatNumber(item.close)}</span>
+                        <span style={{ color: item.change_percent >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>
+                          {item.change_percent >= 0 ? `+${item.change_percent.toFixed(1)}%` : `${item.change_percent.toFixed(1)}%`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bf-card-cost-row">
+                      <span>Modal Bandar: <strong>{formatNumber(item.bandar_cost)}</strong></span>
+                      <span className={`bf-gap-tag ${item.gap_pct <= 0 ? "discount" : "sweet"}`}>
+                        {item.gap_pct <= 0 ? `Diskon ${item.gap_pct.toFixed(1)}%` : `+${item.gap_pct.toFixed(1)}% dari modal`}
+                      </span>
+                    </div>
+
+                    <div className="bf-card-lead-row">
+                      <span className="bf-card-lead-label">Lead Accumulator:</span>
+                      <span style={{ fontWeight: 600 }}>{item.lead_accumulator}</span>
+                    </div>
+
+                    <div className="bf-card-counterparty-row">
+                      <span>🛡️ Counterparty:</span>
+                      <span style={{ color: "var(--cyan)", fontWeight: 600 }}>{item.counterparty_purity}</span>
+                    </div>
+
+                    <div style={{ fontSize: "11px", color: "#94a3b8", lineHeight: 1.4 }}>
+                      {item.why_brief}
+                    </div>
+
+                    <div className="bf-card-action-bar">
+                      <span className="bf-verdict-pill buy">{item.action_verdict}</span>
+                      <span className="bf-plan-brief">Zone: {item.sweet_zone} | SL: {item.stop_loss}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column 2: Traps / Wajib Dijauhi */}
+            <div className="bf-insight-col">
+              <div className="bf-insight-col-header trap">
+                <div className="bf-col-title trap">
+                  <span>⚠️</span>
+                  <span>DISTRIBUSI &amp; JEBAKAN RITEL</span>
+                </div>
+                <span className="bf-col-badge">{dailyInsight.traps.length} emiten</span>
+              </div>
+              <div className="bf-insight-col-body">
+                {dailyInsight.traps.map((item) => (
+                  <div key={item.ticker} className="bf-trap-card">
+                    <div className="bf-card-head">
+                      <button
+                        type="button"
+                        className="bf-ticker-interactive"
+                        style={{ color: "#f87171" }}
+                        onClick={() => handleTickerClick(item.ticker)}
+                        title={`Buka detail analisis bandarmologi ${item.ticker}`}
+                      >
+                        {item.ticker}
+                      </button>
+                      <div className="bf-card-price-wrap">
+                        <span style={{ fontWeight: 800 }}>{formatNumber(item.close)}</span>
+                        <span style={{ color: item.change_percent >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>
+                          {item.change_percent >= 0 ? `+${item.change_percent.toFixed(1)}%` : `${item.change_percent.toFixed(1)}%`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bf-card-cost-row" style={{ borderColor: "#3b1717" }}>
+                      <span style={{ color: "#fca5a5" }}>Smart Money Net: <strong>{formatRupiah(item.smart_money_net)}</strong></span>
+                      <span className="bf-gap-tag trap">Exit ~{formatNumber(item.bandar_exit_avg)}</span>
+                    </div>
+
+                    <div className="bf-card-lead-row">
+                      <span className="bf-card-lead-label" style={{ color: "#f87171" }}>Dominant Seller:</span>
+                      <span style={{ fontWeight: 600 }}>{item.smart_money_sellers}</span>
+                    </div>
+
+                    <div className="bf-card-counterparty-row">
+                      <span>⚠️ Ritel Trap:</span>
+                      <span style={{ color: "#fbbf24", fontWeight: 600 }}>{item.retail_buyers}</span>
+                    </div>
+
+                    <div style={{ fontSize: "11px", color: "#fca5a5", lineHeight: 1.4 }}>
+                      {item.risk_warning}
+                    </div>
+
+                    <div className="bf-card-action-bar">
+                      <span className={`bf-verdict-pill ${item.action_verdict.includes("AVOID") ? "avoid" : "wait"}`}>
+                        {item.action_verdict}
+                      </span>
+                      <span className="bf-plan-brief" style={{ color: "#f87171" }}>Disarankan Tidak Masuk</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column 3: Retail Tracker (XL, XC, YP) */}
+            <div className="bf-insight-col">
+              <div className="bf-insight-col-header retail">
+                <div className="bf-col-title retail">
+                  <span>🔍</span>
+                  <span>RETAIL TRACKER (XL, XC, YP)</span>
+                </div>
+                <span className="bf-col-badge">{dailyInsight.retail_footprints.length} broker</span>
+              </div>
+              <div className="bf-insight-col-body">
+                {dailyInsight.retail_footprints.map((item) => (
+                  <div key={item.broker_code} className="bf-retail-card">
+                    <div className="bf-retail-head">
+                      <div>
+                        <span className="bf-retail-broker-code">{item.broker_code}</span>
+                        <span style={{ fontSize: "11px", color: "var(--muted)", marginLeft: "6px" }}>
+                          {item.broker_name}
+                        </span>
+                      </div>
+                      <span className="bf-retail-sentiment-tag">{item.sentiment_label}</span>
+                    </div>
+
+                    <div className="bf-card-cost-row">
+                      <span>Net Volume Ritel:</span>
+                      <strong className={item.total_net >= 0 ? "pos" : "neg"} style={{ color: item.total_net >= 0 ? "#34d399" : "#f87171" }}>
+                        {formatRupiah(item.total_net)}
+                      </strong>
+                    </div>
+
+                    <div className="bf-retail-stocks-list">
+                      <div style={{ fontSize: "10.5px", color: "var(--muted)", fontWeight: 700 }}>TOP AKUMULASI RITEL:</div>
+                      {item.top_bought.map((s) => (
+                        <div key={s.ticker} className="bf-retail-stock-row">
+                          <span
+                            style={{ cursor: "pointer", textDecoration: "underline" }}
+                            onClick={() => handleTickerClick(s.ticker)}
+                          >
+                            {s.ticker}
+                          </span>
+                          <span className="bf-retail-stock-val pos">{formatRupiah(s.net_val)}</span>
+                        </div>
+                      ))}
+
+                      {item.top_sold.length > 0 && (
+                        <>
+                          <div style={{ fontSize: "10.5px", color: "var(--muted)", fontWeight: 700, marginTop: "4px" }}>TOP CUTLOSS / DISTRIBUSI RITEL:</div>
+                          {item.top_sold.map((s) => (
+                            <div key={s.ticker} className="bf-retail-stock-row">
+                              <span
+                                style={{ cursor: "pointer", textDecoration: "underline" }}
+                                onClick={() => handleTickerClick(s.ticker)}
+                              >
+                                {s.ticker}
+                              </span>
+                              <span className="bf-retail-stock-val neg">{formatRupiah(s.net_val)}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* SECTION 1: TOP SUMMARY - 4 QUADRANTS & MARKET FLOW */}
         <section className="bf-top-grid">

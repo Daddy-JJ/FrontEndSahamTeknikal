@@ -110,6 +110,61 @@ export interface QuadrantMapDetail {
   stocks: QuadrantStockItem[];
 }
 
+export type HorizonPeriod = "2D" | "5D" | "10D";
+
+export interface SweetSpotItem {
+  ticker: string;
+  close: number;
+  change_percent: number;
+  bandar_cost: number;
+  gap_pct: number;
+  lead_accumulator: string;
+  lead_group: "FOREIGN" | "GOVERNMENT" | "MIXED";
+  counterparty_purity: string;
+  action_verdict: "SWEET SPOT BUY" | "ACCUMULATE DIP" | "BUY ON BREAKOUT";
+  sweet_zone: string;
+  stop_loss: string;
+  target_price: string;
+  why_brief: string;
+}
+
+export interface TrapItem {
+  ticker: string;
+  close: number;
+  change_percent: number;
+  smart_money_net: number;
+  smart_money_sellers: string;
+  retail_net: number;
+  retail_buyers: string;
+  action_verdict: "BULL TRAP / AVOID" | "HEAVY DISTRIBUTION" | "WAIT FOR RETEST";
+  bandar_exit_avg: number;
+  risk_warning: string;
+}
+
+export interface RetailPulseItem {
+  broker_code: string;
+  broker_name: string;
+  total_net: number;
+  top_bought: { ticker: string; net_val: number }[];
+  top_sold: { ticker: string; net_val: number }[];
+  sentiment_label: string;
+}
+
+export interface DailyInsightCardData {
+  horizon: HorizonPeriod;
+  horizon_label: string;
+  date_range: string;
+  macro_pulse: {
+    foreign_net: number;
+    government_net: number;
+    retail_net: number;
+    summary_sentence: string;
+  };
+  sweet_spots: SweetSpotItem[];
+  traps: TrapItem[];
+  retail_footprints: RetailPulseItem[];
+}
+
 export function formatRupiah(value: number): string {
   const abs = Math.abs(value);
   const sign = value > 0 ? "+" : value < 0 ? "-" : "";
@@ -902,3 +957,448 @@ export async function fetchTickerDetail(tickerCode: string): Promise<TickerBroke
   // Graceful fallback
   return synthesizeTickerDetail(code);
 }
+
+/**
+ * Multi-Horizon Daily Insights Map
+ * Captures 2D (Momentum/Trigger), 5D (Weekly Persistence), and 10D (Structural Base)
+ */
+export const DAILY_INSIGHTS_MAP: Record<HorizonPeriod, DailyInsightCardData> = {
+  "2D": {
+    horizon: "2D",
+    horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+    date_range: "19 - 20 Nov 2026 (48 Jam Terakhir)",
+    macro_pulse: {
+      foreign_net: -62_400_000_000,
+      government_net: 84_100_000_000,
+      retail_net: 48_300_000_000,
+      summary_sentence: "Inisiasi beli agresif terjadi di sektor Nikel & Metal (MBMA, TINS), sementara Big Banks (BBCA, BMRI) masih mengalami rotasi penyesuaian.",
+    },
+    sweet_spots: [
+      {
+        ticker: "MBMA",
+        close: 344,
+        change_percent: 15.4,
+        bandar_cost: 340.4,
+        gap_pct: 1.0,
+        lead_accumulator: "BK (+77.8B) & NI (+13.4B)",
+        lead_group: "FOREIGN",
+        counterparty_purity: "Grade A (Ritel XL Net Sell -31.2B)",
+        action_verdict: "SWEET SPOT BUY",
+        sweet_zone: "338 - 346",
+        stop_loss: "328 (Risk -4.6%)",
+        target_price: "380 - 410 (Reward +10.5% s/d +19.2%)",
+        why_brief: "Spike akumulasi masif asing BK (77.8B) pada harga 340.4. Ritel panik TP/cutloss diserap penuh tanpa perlawanan.",
+      },
+      {
+        ticker: "TINS",
+        close: 3140,
+        change_percent: 3.0,
+        bandar_cost: 3090.0,
+        gap_pct: 1.6,
+        lead_accumulator: "BK (+37.0B) & AK (+12.1B)",
+        lead_group: "FOREIGN",
+        counterparty_purity: "Grade A (Absorpsi Ritel YP/PD)",
+        action_verdict: "SWEET SPOT BUY",
+        sweet_zone: "3080 - 3140",
+        stop_loss: "2980 (Risk -5.1%)",
+        target_price: "3450 - 3600 (Reward +9.8% s/d +14.6%)",
+        why_brief: "Asing BK & AK akumulasi konsisten 2 hari beruntun menembus resistance 3.100 dengan buy volume solid.",
+      },
+      {
+        ticker: "NCKL",
+        close: 735,
+        change_percent: 5.0,
+        bandar_cost: 724.0,
+        gap_pct: 1.5,
+        lead_accumulator: "BK (+36.8B) & CP (+11.2B)",
+        lead_group: "FOREIGN",
+        counterparty_purity: "Grade B+ (Net Buyer Terkonsentrasi)",
+        action_verdict: "BUY ON BREAKOUT",
+        sweet_zone: "725 - 740",
+        stop_loss: "700 (Risk -4.7%)",
+        target_price: "810 - 850 (Reward +10.2% s/d +15.6%)",
+        why_brief: "Breakout resistance 720 didorong net inflow asing BK. Konsentrasi top buyer mencapai 58%.",
+      },
+    ],
+    traps: [
+      {
+        ticker: "GOTO",
+        close: 27,
+        change_percent: 0.0,
+        smart_money_net: -76_400_000_000,
+        smart_money_sellers: "Institusi Global Net Sell -76.4B",
+        retail_net: 27_700_000_000,
+        retail_buyers: "XL (+17.1B) & XC (+10.6B) Net Buy",
+        action_verdict: "BULL TRAP / AVOID",
+        bandar_exit_avg: 27.0,
+        risk_warning: "Harga stagnan di 27 karena ritel terpancing menampung barang buangan smart money (exit liquidity).",
+      },
+      {
+        ticker: "BBCA",
+        close: 5550,
+        change_percent: -1.8,
+        smart_money_net: -142_000_000_000,
+        smart_money_sellers: "KZ & BK Net Sell -264B",
+        retail_net: 45_200_000_000,
+        retail_buyers: "Ritel AZ & XL menampung",
+        action_verdict: "HEAVY DISTRIBUTION",
+        bandar_exit_avg: 5580.0,
+        risk_warning: "Tekanan jual asing sangat dominan. Belum terbentuk pivot support teknikal.",
+      },
+      {
+        ticker: "MDKA",
+        close: 1710,
+        change_percent: -5.0,
+        smart_money_net: -35_300_000_000,
+        smart_money_sellers: "BK dumping -117.8B (1.713)",
+        retail_net: 19_800_000_000,
+        retail_buyers: "Ritel mencoba bottom-fishing",
+        action_verdict: "WAIT FOR RETEST",
+        bandar_exit_avg: 1713.0,
+        risk_warning: "Meskipun AK menampung 82.5B, BK keluar lebih masif (-117.8B). Risiko markdown lanjutan masih tinggi.",
+      },
+    ],
+    retail_footprints: [
+      {
+        broker_code: "XL",
+        broker_name: "Stockbit Sekuritas",
+        total_net: 28_500_000_000,
+        top_bought: [
+          { ticker: "ANTM", net_val: 9_800_000_000 },
+          { ticker: "BMRI", net_val: 8_800_000_000 },
+          { ticker: "BUMI", net_val: 10_400_000_000 },
+        ],
+        top_sold: [
+          { ticker: "BBRI", net_val: -7_200_000_000 },
+          { ticker: "PTRO", net_val: -4_500_000_000 },
+        ],
+        sentiment_label: "NET BUY (FOMO / ABSORPTION RISK)",
+      },
+      {
+        broker_code: "XC",
+        broker_name: "Ajaib Sekuritas",
+        total_net: 14_200_000_000,
+        top_bought: [
+          { ticker: "GOTO", net_val: 10_600_000_000 },
+          { ticker: "KOTA", net_val: 6_200_000_000 },
+        ],
+        top_sold: [
+          { ticker: "ASII", net_val: -3_100_000_000 },
+        ],
+        sentiment_label: "NET BUY (FOMO / ABSORPTION RISK)",
+      },
+      {
+        broker_code: "YP",
+        broker_name: "Mirae Asset Sekuritas",
+        total_net: 5_600_000_000,
+        top_bought: [
+          { ticker: "BBRI", net_val: 19_300_000_000 },
+        ],
+        top_sold: [
+          { ticker: "TLKM", net_val: -12_400_000_000 },
+        ],
+        sentiment_label: "NET BUY (MIXED ROTATION)",
+      },
+    ],
+  },
+
+  "5D": {
+    horizon: "5D",
+    horizon_label: "5 Hari Bursa (Weekly Persistence - Rekomendasi Utama)",
+    date_range: "16 - 20 Nov 2026 (1 Pekan Bursa)",
+    macro_pulse: {
+      foreign_net: -214_500_000_000,
+      government_net: 295_800_000_000,
+      retail_net: 118_200_000_000,
+      summary_sentence: "Danantara (CC, NI) bertindak sebagai benteng serapan utama di BBRI & ANTM saat Asing melepas perbankan (BBCA, BMRI). MBMA menjadi bintang akumulasi asing murni.",
+    },
+    sweet_spots: [
+      {
+        ticker: "MBMA",
+        close: 344,
+        change_percent: 15.4,
+        bandar_cost: 336.5,
+        gap_pct: 2.2,
+        lead_accumulator: "BK (+89.0B) & NI (+16.2B)",
+        lead_group: "FOREIGN",
+        counterparty_purity: "Grade A (Ritel Terus Jual -42.8B)",
+        action_verdict: "SWEET SPOT BUY",
+        sweet_zone: "336 - 344",
+        stop_loss: "324 (Risk -5.8%)",
+        target_price: "390 - 420 (Reward +13.3% s/d +22.0%)",
+        why_brief: "Konsistensi akumulasi 5 hari sempurna (Consistency Score 100%). Modal bandar 336.5 masih sangat dekat dengan harga penutupan.",
+      },
+      {
+        ticker: "ANTM",
+        close: 2610,
+        change_percent: 0.0,
+        bandar_cost: 2671.7,
+        gap_pct: -2.3,
+        lead_accumulator: "CC (+157.7B / Danantara Mandiri)",
+        lead_group: "GOVERNMENT",
+        counterparty_purity: "Grade A (Absorpsi Jualan Asing AK & YU)",
+        action_verdict: "ACCUMULATE DIP",
+        sweet_zone: "2580 - 2630",
+        stop_loss: "2510 (Risk -3.8%)",
+        target_price: "2850 - 2980 (Reward +9.2% s/d +14.1%)",
+        why_brief: "CC akumulasi super masif 157.7B selama 5 hari berturut-turut (Consistency 100%). Harga saat ini DI BAWAH modal bandar CC (-2.3%)!",
+      },
+      {
+        ticker: "TINS",
+        close: 3140,
+        change_percent: 3.0,
+        bandar_cost: 3075.0,
+        gap_pct: 2.1,
+        lead_accumulator: "BK (+48.5B) & MB (+14.2B)",
+        lead_group: "FOREIGN",
+        counterparty_purity: "Grade A- (Dominasi Asing > 65%)",
+        action_verdict: "SWEET SPOT BUY",
+        sweet_zone: "3080 - 3150",
+        stop_loss: "2970 (Risk -5.4%)",
+        target_price: "3500 - 3700 (Reward +11.4% s/d +17.8%)",
+        why_brief: "Pola markup gradual dengan volume bandar konsisten mengawal uptrend di sektor timah global.",
+      },
+      {
+        ticker: "BREN",
+        close: 2190,
+        change_percent: 7.4,
+        bandar_cost: 2140.0,
+        gap_pct: 2.3,
+        lead_accumulator: "NI (+32.1B) & ZP (+18.4B)",
+        lead_group: "MIXED",
+        counterparty_purity: "Grade B+ (Akumulasi Institusi Domestik)",
+        action_verdict: "BUY ON BREAKOUT",
+        sweet_zone: "2140 - 2200",
+        stop_loss: "2060 (Risk -5.9%)",
+        target_price: "2450 - 2580 (Reward +11.8% s/d +17.8%)",
+        why_brief: "Rebound kuat didukung akumulasi konsisten institusi lokal dari area demand support 2.050.",
+      },
+    ],
+    traps: [
+      {
+        ticker: "GOTO",
+        close: 27,
+        change_percent: 0.0,
+        smart_money_net: -118_500_000_000,
+        smart_money_sellers: "Foreign Algo Net Sell -118.5B",
+        retail_net: 44_200_000_000,
+        retail_buyers: "XL (+30.8B) & XC (+13.4B)",
+        action_verdict: "BULL TRAP / AVOID",
+        bandar_exit_avg: 27.02,
+        risk_warning: "Pola klasik exit liquidity ritel. Smart money membagi lot kecil agar tidak menjatuhkan harga seketika.",
+      },
+      {
+        ticker: "BBCA",
+        close: 5550,
+        change_percent: -1.8,
+        smart_money_net: -436_000_000_000,
+        smart_money_sellers: "KZ, BK, YU Total Jual -436B",
+        retail_net: 76_500_000_000,
+        retail_buyers: "Ritel lokal mengira murah",
+        action_verdict: "HEAVY DISTRIBUTION",
+        bandar_exit_avg: 5620.0,
+        risk_warning: "Outflow asing beruntun 5 hari bursa. Hindari menangkap pisau jatuh sebelum ada serapan balik terbukti.",
+      },
+      {
+        ticker: "TLKM",
+        close: 2070,
+        change_percent: -2.4,
+        smart_money_net: -298_000_000_000,
+        smart_money_sellers: "KZ & RX Net Sell -320B",
+        retail_net: 38_400_000_000,
+        retail_buyers: "Ritel terpancing dividen yield",
+        action_verdict: "WAIT FOR RETEST",
+        bandar_exit_avg: 2090.0,
+        risk_warning: "Walaupun Danantara (CC) menahan +52.2B, intensitas jualan asing KZ terlalu besar dan terus menekan harga.",
+      },
+    ],
+    retail_footprints: [
+      {
+        broker_code: "XL",
+        broker_name: "Stockbit Sekuritas",
+        total_net: 58_400_000_000,
+        top_bought: [
+          { ticker: "ANTM", net_val: 51_500_000_000 },
+          { ticker: "BRPT", net_val: 27_900_000_000 },
+          { ticker: "TINS", net_val: 18_400_000_000 },
+        ],
+        top_sold: [
+          { ticker: "BBRI", net_val: -14_200_000_000 },
+        ],
+        sentiment_label: "NET BUY (FOMO / ABSORPTION RISK)",
+      },
+      {
+        broker_code: "XC",
+        broker_name: "Ajaib Sekuritas",
+        total_net: 26_800_000_000,
+        top_bought: [
+          { ticker: "ANTM", net_val: 17_400_000_000 },
+          { ticker: "GOTO", net_val: 10_600_000_000 },
+          { ticker: "KOTA", net_val: 8_400_000_000 },
+        ],
+        top_sold: [
+          { ticker: "BMRI", net_val: -8_500_000_000 },
+        ],
+        sentiment_label: "NET BUY (FOMO / ABSORPTION RISK)",
+      },
+      {
+        broker_code: "YP",
+        broker_name: "Mirae Asset Sekuritas",
+        total_net: 32_900_000_000,
+        top_bought: [
+          { ticker: "ANTM", net_val: 40_600_000_000 },
+          { ticker: "BBRI", net_val: 28_400_000_000 },
+        ],
+        top_sold: [
+          { ticker: "BBCA", net_val: -32_100_000_000 },
+        ],
+        sentiment_label: "NET BUY (ROTATION)",
+      },
+    ],
+  },
+
+  "10D": {
+    horizon: "10D",
+    horizon_label: "10 Hari Bursa (Structural Base / Inventory Bandar)",
+    date_range: "9 - 20 Nov 2026 (2 Pekan Bursa)",
+    macro_pulse: {
+      foreign_net: -580_200_000_000,
+      government_net: 612_400_000_000,
+      retail_net: 240_800_000_000,
+      summary_sentence: "Struktur 2 pekan bursa memperlihatkan divergensi tajam: Danantara BUMN menyerap fondasi di ANTM & BBRI, sementara asing memangkas alokasi di Big Caps.",
+    },
+    sweet_spots: [
+      {
+        ticker: "ANTM",
+        close: 2610,
+        change_percent: 0.0,
+        bandar_cost: 2615.0,
+        gap_pct: -0.2,
+        lead_accumulator: "CC (+245.0B) & NI (+62.0B)",
+        lead_group: "GOVERNMENT",
+        counterparty_purity: "Grade A+ (Fondasi Akumulasi Danantara 10 Hari)",
+        action_verdict: "ACCUMULATE DIP",
+        sweet_zone: "2580 - 2630",
+        stop_loss: "2490 (Risk -4.6%)",
+        target_price: "2950 - 3150 (Reward +13.0% s/d +20.6%)",
+        why_brief: "Danantara telah mengunci 245B di level harga modal 2.615. Gap hanya -0.2%, posisi risk/reward paling prima di IHSG saat ini!",
+      },
+      {
+        ticker: "BBRI",
+        close: 3080,
+        change_percent: -0.3,
+        bandar_cost: 3055.0,
+        gap_pct: 0.8,
+        lead_accumulator: "CC (+182.0B) & KZ (+124.0B)",
+        lead_group: "MIXED",
+        counterparty_purity: "Grade A (Asing & Danantara Dual Accumulator)",
+        action_verdict: "ACCUMULATE DIP",
+        sweet_zone: "3040 - 3090",
+        stop_loss: "2960 (Risk -3.9%)",
+        target_price: "3380 - 3550 (Reward +9.7% s/d +15.2%)",
+        why_brief: "Serapan kuat di level psikologis 3.000 selama 10 hari bursa berturut-turut menciptakan support kokoh.",
+      },
+      {
+        ticker: "MBMA",
+        close: 344,
+        change_percent: 15.4,
+        bandar_cost: 328.0,
+        gap_pct: 4.8,
+        lead_accumulator: "BK (+142.0B)",
+        lead_group: "FOREIGN",
+        counterparty_purity: "Grade A (Akumulasi Struktural Asing)",
+        action_verdict: "SWEET SPOT BUY",
+        sweet_zone: "334 - 344",
+        stop_loss: "320 (Risk -7.0%)",
+        target_price: "410 - 450 (Reward +19.1% s/d +30.8%)",
+        why_brief: "Asing memegang inventori 142B dari harga 328. Target mark-up struktural diperkirakan berlanjut ke atas 400.",
+      },
+    ],
+    traps: [
+      {
+        ticker: "BBCA",
+        close: 5550,
+        change_percent: -1.8,
+        smart_money_net: -820_000_000_000,
+        smart_money_sellers: "Asing Total Buang -820B",
+        retail_net: 160_000_000_000,
+        retail_buyers: "Ritel Terjebak Akumulasi Turun",
+        action_verdict: "HEAVY DISTRIBUTION",
+        bandar_exit_avg: 5680.0,
+        risk_warning: "Distribusi struktural masif 2 pekan berturut-turut. Belum ada sinyal akumulasi balik.",
+      },
+      {
+        ticker: "GOTO",
+        close: 27,
+        change_percent: 0.0,
+        smart_money_net: -210_000_000_000,
+        smart_money_sellers: "Institusi Global Exit -210B",
+        retail_net: 72_000_000_000,
+        retail_buyers: "XL, XC, YP",
+        action_verdict: "BULL TRAP / AVOID",
+        bandar_exit_avg: 27.1,
+        risk_warning: "Pola distribusi jangka panjang. Jangan tertipu oleh spekulasi mantul 1 tick.",
+      },
+      {
+        ticker: "ASII",
+        close: 5300,
+        change_percent: -1.4,
+        smart_money_net: -240_000_000_000,
+        smart_money_sellers: "ZP & BK Net Sell -240B",
+        retail_net: 48_000_000_000,
+        retail_buyers: "Ritel",
+        action_verdict: "HEAVY DISTRIBUTION",
+        bandar_exit_avg: 5380.0,
+        risk_warning: "Downtrend didorong outflow asing reguler. Disarankan menunggu pembentukan base baru.",
+      },
+    ],
+    retail_footprints: [
+      {
+        broker_code: "XL",
+        broker_name: "Stockbit Sekuritas",
+        total_net: 98_400_000_000,
+        top_bought: [
+          { ticker: "ANTM", net_val: 82_000_000_000 },
+          { ticker: "GOTO", net_val: 45_000_000_000 },
+        ],
+        top_sold: [
+          { ticker: "BBCA", net_val: -28_000_000_000 },
+        ],
+        sentiment_label: "NET BUY (FOMO / ABSORPTION RISK)",
+      },
+      {
+        broker_code: "XC",
+        broker_name: "Ajaib Sekuritas",
+        total_net: 34_200_000_000,
+        top_bought: [
+          { ticker: "GOTO", net_val: 24_000_000_000 },
+          { ticker: "KOTA", net_val: 18_000_000_000 },
+        ],
+        top_sold: [
+          { ticker: "BBRI", net_val: -12_000_000_000 },
+        ],
+        sentiment_label: "NET BUY (FOMO / ABSORPTION RISK)",
+      },
+      {
+        broker_code: "YP",
+        broker_name: "Mirae Asset Sekuritas",
+        total_net: 62_800_000_000,
+        top_bought: [
+          { ticker: "BBRI", net_val: 55_000_000_000 },
+        ],
+        top_sold: [
+          { ticker: "TLKM", net_val: -35_000_000_000 },
+        ],
+        sentiment_label: "NET BUY (ROTATION)",
+      },
+    ],
+  },
+};
+
+/**
+ * Get Daily Insight by active Horizon
+ */
+export function getDailyInsight(horizon: HorizonPeriod = "5D"): DailyInsightCardData {
+  return DAILY_INSIGHTS_MAP[horizon] || DAILY_INSIGHTS_MAP["5D"];
+}
+
