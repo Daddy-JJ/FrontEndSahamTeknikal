@@ -177,3 +177,26 @@ test("Zero-identity safeguard across all tickers in TICKER_HORIZON_DETAILS_MAP",
     assert.notEqual(h2.bandar_avg_cost, h10.bandar_avg_cost, `Ticker ${ticker} 2D and 10D bandar_avg_cost must not be identical`);
   }
 });
+
+test("Daily snapshot bundle contains expanded market tickers with multi-horizon data", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const snapshotPath = path.resolve("src/data/broker_flow_snapshot_latest.json");
+
+  assert.ok(fs.existsSync(snapshotPath), "Snapshot JSON must exist");
+  const raw = fs.readFileSync(snapshotPath, "utf8");
+  const snapshot = JSON.parse(raw);
+
+  assert.equal(snapshot.snapshot_date, "2026-11-20");
+  assert.ok(snapshot.total_tickers_indexed >= 30, "Must index at least 30 tickers in expanded snapshot");
+
+  // Verify BBNI in snapshot horizons
+  const bbni = snapshot.ticker_horizons["BBNI"];
+  assert.ok(bbni, "BBNI must be indexed in expanded snapshot");
+  assert.ok(bbni["2D"]);
+  assert.ok(bbni["5D"]);
+  assert.ok(bbni["10D"]);
+  assert.equal(bbni["2D"].ticker, "BBNI");
+  assert.equal(bbni["5D"].ticker, "BBNI");
+  assert.equal(bbni["10D"].ticker, "BBNI");
+});
