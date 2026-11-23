@@ -6,7 +6,9 @@ import {
   DEFAULT_TOP_BROKERS,
   DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
+  TICKER_HORIZON_DETAILS_MAP,
   QUADRANT_MAPS,
+  type HorizonPeriod,
 } from "@/lib/broker-flow";
 
 export const dynamic = "force-dynamic";
@@ -15,10 +17,13 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const ticker = searchParams.get("ticker");
   const quadrant = searchParams.get("quadrant");
+  const horizon = searchParams.get("horizon") as HorizonPeriod | null;
 
   if (ticker) {
     const upper = ticker.toUpperCase().trim();
-    const detail = TICKER_DETAILS_MAP[upper];
+    const detail =
+      (horizon && TICKER_HORIZON_DETAILS_MAP[upper]?.[horizon]) ||
+      TICKER_DETAILS_MAP[upper];
     if (detail) {
       return NextResponse.json({ success: true, data: detail });
     }

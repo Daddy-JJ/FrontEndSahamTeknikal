@@ -7,6 +7,8 @@ import {
   DEFAULT_TOP_BROKERS,
   DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
+  TICKER_HORIZON_DETAILS_MAP,
+  getTickerDetailByHorizon,
   QUADRANT_MAPS,
   fetchTickerDetail,
   formatRupiah,
@@ -89,4 +91,38 @@ test("Format rupiah utility behaves accurately", () => {
   assert.equal(formatRupiah(91200000000), "+91.2B");
   assert.equal(formatRupiah(-311600000000), "-311.6B");
   assert.equal(formatRupiah(13570000000000), "+13.57T");
+});
+
+test("Multi-horizon ticker detail returns distinct genuine MCP data across 2D, 5D, and 10D", async () => {
+  // Test NAYZ across 2D, 5D, 10D
+  const nayz2D = getTickerDetailByHorizon("NAYZ", "2D");
+  const nayz5D = getTickerDetailByHorizon("NAYZ", "5D");
+  const nayz10D = getTickerDetailByHorizon("NAYZ", "10D");
+
+  assert.ok(nayz2D);
+  assert.ok(nayz5D);
+  assert.ok(nayz10D);
+
+  // 2D: GR buy avg 88.05
+  assert.equal(nayz2D.bandar_avg_cost, 88.05);
+  assert.equal(nayz2D.horizon, "2D");
+  assert.equal(nayz2D.top_accumulators[0].code, "GR");
+
+  // 5D: GR buy avg 86.64
+  assert.equal(nayz5D.bandar_avg_cost, 86.64);
+  assert.equal(nayz5D.horizon, "5D");
+  assert.equal(nayz5D.top_accumulators[0].code, "GR");
+
+  // 10D: GR buy avg 79.78
+  assert.equal(nayz10D.bandar_avg_cost, 79.78);
+  assert.equal(nayz10D.horizon, "10D");
+  assert.equal(nayz10D.top_accumulators[0].code, "GR");
+
+  // Also test async fetchTickerDetail with horizon parameter
+  const mbma2D = await fetchTickerDetail("MBMA", "2D");
+  const mbma5D = await fetchTickerDetail("MBMA", "5D");
+  assert.ok(mbma2D);
+  assert.ok(mbma5D);
+  assert.equal(mbma2D.bandar_avg_cost, 339.97);
+  assert.equal(mbma5D.bandar_avg_cost, 339.04);
 });

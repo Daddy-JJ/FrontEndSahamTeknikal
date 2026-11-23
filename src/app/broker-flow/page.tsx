@@ -11,6 +11,7 @@ import {
   TICKER_DETAILS_MAP,
   QUADRANT_MAPS,
   fetchTickerDetail,
+  getTickerDetailByHorizon,
   getDailyInsight,
   formatRupiah,
   formatNumber,
@@ -20,10 +21,11 @@ import {
 import "./broker-flow.css";
 
 export default function BrokerFlowPage() {
-  const [selectedTicker, setSelectedTicker] = useState<TickerBrokerDetail | null>(
-    TICKER_DETAILS_MAP.MBMA
-  );
+  const [selectedTickerCode, setSelectedTickerCode] = useState<string>("MBMA");
   const [activeHorizon, setActiveHorizon] = useState<HorizonPeriod>("5D");
+  const [selectedTicker, setSelectedTicker] = useState<TickerBrokerDetail | null>(() =>
+    getTickerDetailByHorizon("MBMA", "5D")
+  );
   const [activeFilterQuadrant, setActiveFilterQuadrant] = useState<string | null>(null);
   const [activeQuadrantModal, setActiveQuadrantModal] = useState<string | null>(null);
   const [modalSearch, setModalSearch] = useState("");
@@ -32,8 +34,20 @@ export default function BrokerFlowPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
+  const handleHorizonChange = async (newHorizon: HorizonPeriod) => {
+    setActiveHorizon(newHorizon);
+    if (selectedTickerCode) {
+      const detail = await fetchTickerDetail(selectedTickerCode, newHorizon);
+      if (detail) {
+        setSelectedTicker(detail);
+      }
+    }
+  };
+
   const handleTickerClick = async (tickerCode: string) => {
-    const detail = await fetchTickerDetail(tickerCode);
+    const code = tickerCode.toUpperCase().trim();
+    setSelectedTickerCode(code);
+    const detail = await fetchTickerDetail(code, activeHorizon);
     if (detail) {
       setSelectedTicker(detail);
       setSearchStatus(null);
@@ -55,16 +69,18 @@ export default function BrokerFlowPage() {
     setSearchStatus("Mencari data emiten...");
 
     try {
-      const detail = await fetchTickerDetail(searchQuery);
+      const upper = searchQuery.toUpperCase().trim();
+      const detail = await fetchTickerDetail(upper, activeHorizon);
       if (detail) {
+        setSelectedTickerCode(upper);
         setSelectedTicker(detail);
-        setSearchStatus(`Menampilkan data analisis untuk ${detail.ticker}`);
+        setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
         setTimeout(() => {
           const el = document.getElementById("ticker-insight-section");
           if (el) el.scrollIntoView({ behavior: "smooth" });
         }, 50);
       } else {
-        setSearchStatus(`Data untuk ${searchQuery.toUpperCase()} belum tersedia pada sesi ini.`);
+        setSearchStatus(`Data untuk ${upper} belum tersedia pada sesi ini.`);
       }
     } catch {
       setSearchStatus(`Gagal memuat data untuk ${searchQuery.toUpperCase()}.`);
@@ -163,7 +179,7 @@ export default function BrokerFlowPage() {
               <button
                 type="button"
                 className={`bf-horizon-btn ${activeHorizon === "2D" ? "active" : ""}`}
-                onClick={() => setActiveHorizon("2D")}
+                onClick={() => handleHorizonChange("2D")}
                 title="Inisiasi 2 Hari Bursa: Deteksi momentum & spike akumulasi awal"
               >
                 2 HARI
@@ -171,7 +187,7 @@ export default function BrokerFlowPage() {
               <button
                 type="button"
                 className={`bf-horizon-btn ${activeHorizon === "5D" ? "active" : ""}`}
-                onClick={() => setActiveHorizon("5D")}
+                onClick={() => handleHorizonChange("5D")}
                 title="Weekly Persistence 5 Hari: Uji konsistensi akumulasi (Rekomendasi Utama)"
               >
                 5 HARI (1 PEKAN)
@@ -179,7 +195,7 @@ export default function BrokerFlowPage() {
               <button
                 type="button"
                 className={`bf-horizon-btn ${activeHorizon === "10D" ? "active" : ""}`}
-                onClick={() => setActiveHorizon("10D")}
+                onClick={() => handleHorizonChange("10D")}
                 title="Structural Base 10 Hari: Fondasi modal inventori bandar"
               >
                 10 HARI (2 PEKAN)
@@ -729,27 +745,59 @@ export default function BrokerFlowPage() {
                   {selectedTicker.change_percent >= 0 ? "+" : ""}
                   {selectedTicker.change_percent.toFixed(1)}%
                 </span>
+                <span className="bf-insight-period-tag">
+                  {selectedTicker.horizon_label || (activeHorizon === "2D" ? "2 Hari (19-20 Nov)" : activeHorizon === "5D" ? "5 Hari (16-20 Nov)" : "10 Hari (09-20 Nov)")}
+                </span>
               </div>
 
-              <span
-                className={`bf-badge-pill ${
-                  selectedTicker.status_color === "emerald"
-                    ? "emerald"
-                    : selectedTicker.status_color === "sky"
-                    ? "sky"
-                    : selectedTicker.status_color === "amber"
-                    ? "amber"
-                    : "rose"
-                }`}
-              >
-                {selectedTicker.quadrant_label}
-              </span>
+              <div className="bf-insight-top-actions">
+                <div className="bf-horizon-selector bf-insight-horizon-nav">
+                  <button
+                    type="button"
+                    className={`bf-horizon-btn ${activeHorizon === "2D" ? "active" : ""}`}
+                    onClick={() => handleHorizonChange("2D")}
+                    title="Analisis 2 Hari Bursa: Inisiasi momentum 48 jam terakhir"
+                  >
+                    2D
+                  </button>
+                  <button
+                    type="button"
+                    className={`bf-horizon-btn ${activeHorizon === "5D" ? "active" : ""}`}
+                    onClick={() => handleHorizonChange("5D")}
+                    title="Analisis 5 Hari Bursa: Konsistensi akumulasi 1 pekan"
+                  >
+                    5D
+                  </button>
+                  <button
+                    type="button"
+                    className={`bf-horizon-btn ${activeHorizon === "10D" ? "active" : ""}`}
+                    onClick={() => handleHorizonChange("10D")}
+                    title="Analisis 10 Hari Bursa: Fondasi modal 2 pekan"
+                  >
+                    10D
+                  </button>
+                </div>
+
+                <span
+                  className={`bf-badge-pill ${
+                    selectedTicker.status_color === "emerald"
+                      ? "emerald"
+                      : selectedTicker.status_color === "sky"
+                      ? "sky"
+                      : selectedTicker.status_color === "amber"
+                      ? "amber"
+                      : "rose"
+                  }`}
+                >
+                  {selectedTicker.quadrant_label}
+                </span>
+              </div>
             </div>
 
             {/* Quantitative Footprints Grid */}
             <div className="bf-stats-grid">
               <div className="bf-stat-box">
-                <div className="label">NET VALUE SMART MONEY</div>
+                <div className="label">NET VALUE ({activeHorizon})</div>
                 <div
                   className={`val ${
                     selectedTicker.net_value >= 0 ? "pos" : "neg"
@@ -760,14 +808,14 @@ export default function BrokerFlowPage() {
               </div>
 
               <div className="bf-stat-box">
-                <div className="label">NET VOLUME</div>
+                <div className="label">NET VOLUME ({activeHorizon})</div>
                 <div className="val" style={{ color: "var(--ink)" }}>
                   {formatNumber(selectedTicker.net_volume_lots)} Lot
                 </div>
               </div>
 
               <div className="bf-stat-box">
-                <div className="label">HARGA MODAL BANDAR</div>
+                <div className="label">HARGA MODAL BANDAR ({activeHorizon})</div>
                 <div className="val amber">
                   Rp {formatNumber(selectedTicker.bandar_avg_cost)}
                 </div>
