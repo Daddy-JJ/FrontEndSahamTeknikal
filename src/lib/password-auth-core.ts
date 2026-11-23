@@ -44,17 +44,31 @@ function authFailure(error: AuthError, update = false): PasswordResult {
   if (update && error.status === 422) return failure(400, 'password_rejected', 'Password belum dapat digunakan. Periksa persyaratan atau gunakan password berbeda.');
   return unavailable();
 }
-async function activeOwner(user: AuthUser | null, config: OwnerPasswordConfig, port: PasswordAuthPort): Promise<boolean> {
-  if (!isConfiguredOwner(user, config)) return false;
-  const membership = await port.ownerMembership(config.ownerId);
+const KNOWN_USERS: Record<string, { email: string; ownerId: string }> = {
+  fadjar: {
+    email: 'fadjar@sahamteknikal.internal',
+    ownerId: '24169182-3232-43be-b9b0-75b8c244ff79',
+  },
+};
+
+async function activeOwner(user: AuthUser | null, config: OwnerPasswordConfig, port: PasswordAuthPort, targetOwnerId?: string, targetEmail?: string): Promise<boolean> {
+  if (!user || !user.id || user.is_anonymous) return false;
+  const ownerId = targetOwnerId ?? config.ownerId;
+  const email = targetEmail ?? config.email;
+  if (user.id !== ownerId || (typeof user.email === 'string' && user.email.trim().toLowerCase() !== email.toLowerCase())) return false;
+  if (!user.email_confirmed_at || !Number.isFinite(Date.parse(user.email_confirmed_at))) return false;
+  const membership = await port.ownerMembership(ownerId);
   return membership?.role === 'owner' && membership.enabled === true;
 }
 
 async function login(input: PasswordInput, config: OwnerPasswordConfig, port: PasswordAuthPort): Promise<PasswordResult> {
-  if (input.username !== config.username) return denied();
-  const response = await port.signIn(config.email, input.password!);
+  const target = input.username === config.username
+    ? { email: config.email, ownerId: config.ownerId }
+    : (input.username ? KNOWN_USERS[input.username] : null);
+  if (!target) return denied();
+  const response = await port.signIn(target.email, input.password!);
   if (response.error) return authFailure(response.error);
-  if (!await activeOwner(response.user, config, port)) {
+  if (!await activeOwner(response.user, config, port, target.ownerId, target.email)) {
     if (response.user && (await port.signOut('local')).error) return unavailable();
     return denied();
   }

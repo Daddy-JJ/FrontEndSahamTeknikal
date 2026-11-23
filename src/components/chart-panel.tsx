@@ -459,6 +459,29 @@ export function ChartPanel({
                   </button>
                 </div>
               )}
+              {error.error.code === 'DATA_UNAVAILABLE' && (
+                <div className={styles.fallbackBox}>
+                  <p className={styles.fallbackText}>
+                    Artifact chart untuk emiten ini belum tersedia di cache backend. Chart diutamakan untuk emiten dengan sinyal aktif atau sedang dalam antrean komputasi background. Anda dapat memeriksa evaluasi emiten ini di tab &ldquo;Alasan sinyal&rdquo; atau &ldquo;Data &amp; sumber&rdquo;.
+                  </p>
+                  {onClose ? (
+                    <button
+                      type="button"
+                      className={styles.fallbackButton}
+                      onClick={onClose}
+                    >
+                      Kembali ke Alasan Sinyal →
+                    </button>
+                  ) : returnTo ? (
+                    <Link
+                      href={returnTo}
+                      className={styles.fallbackButton}
+                    >
+                      Kembali ke Detail →
+                    </Link>
+                  ) : null}
+                </div>
+              )}
               {error.error.code === "UNAUTHENTICATED" ? (
                 <Link
                   href={`/login?next=${encodeURIComponent(fullPage ?? '/scanner')}`}
@@ -466,7 +489,10 @@ export function ChartPanel({
                   Masuk
                 </Link>
               ) : (
-                error.error.code !== "FORBIDDEN" && (
+                error.error.code !== "FORBIDDEN" &&
+                error.error.code !== "DATA_UNAVAILABLE" &&
+                error.error.code !== "SNAPSHOT_UNAVAILABLE" &&
+                error.error.code !== "NOT_FOUND" && (
                   <button
                     type="button"
                     disabled={busy || cooldown}

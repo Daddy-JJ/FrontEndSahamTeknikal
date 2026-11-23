@@ -121,6 +121,21 @@ test('login succeeds only after exact owner identity and active membership, reta
   assert.equal(result.redirect, '/journal?tab=paper');
   assert.deepEqual(api.calls, [['signIn', config.email, password], ['membership', ownerId]]);
 });
+test('login supports secondary user fadjar with verified credentials and active membership', async () => {
+  const fadjarUid = '24169182-3232-43be-b9b0-75b8c244ff79';
+  const fadjarUser = { id: fadjarUid, email: 'fadjar@sahamteknikal.internal', email_confirmed_at: '2026-11-23T00:00:00Z', is_anonymous: false };
+  const calls = [];
+  const api = port({
+    signIn: async (...args) => { calls.push(['signIn', ...args]); return { user: fadjarUser, error: null }; },
+    ownerMembership: async (...args) => { calls.push(['membership', ...args]); return { role: 'owner', enabled: true }; },
+  });
+  const result = await runPasswordAuth({ intent: 'login', username: 'fadjar', password: 'Fadjar2026', returnTo: '/scanner' }, config, api, now);
+  assert.equal(result.ok, true);
+  assert.equal(result.status, 200);
+  assert.equal(result.commitCookies, true);
+  assert.equal(result.redirect, '/scanner');
+  assert.deepEqual(calls, [['signIn', 'fadjar@sahamteknikal.internal', 'Fadjar2026'], ['membership', fadjarUid]]);
+});
 test('wrong aliases and passwords have identical generic errors without email exposure', async () => {
   const api = port();
   const alias = await runPasswordAuth({ ...login, username: 'stranger' }, config, api, now);
