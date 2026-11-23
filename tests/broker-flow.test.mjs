@@ -125,4 +125,11 @@ test("Multi-horizon ticker detail returns distinct genuine MCP data across 2D, 5
   assert.ok(mbma5D);
   assert.equal(mbma2D.bandar_avg_cost, 339.97);
   assert.equal(mbma5D.bandar_avg_cost, 339.04);
+
+  // Test LOPI penny stock across horizons
+  const lopi5D = await fetchTickerDetail("LOPI", "5D");
+  assert.ok(lopi5D);
+  assert.equal(lopi5D.close, 34);
+  assert.equal(lopi5D.bandar_avg_cost, 38.25);
+  assert.equal(lopi5D.top_accumulators[0].code, "CC");
 });
