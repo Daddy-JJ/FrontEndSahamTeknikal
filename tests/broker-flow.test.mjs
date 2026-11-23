@@ -133,3 +133,47 @@ test("Multi-horizon ticker detail returns distinct genuine MCP data across 2D, 5
   assert.equal(lopi5D.bandar_avg_cost, 38.25);
   assert.equal(lopi5D.top_accumulators[0].code, "CC");
 });
+
+test("AMMN multi-horizon bug fix: 2D, 5D, and 10D must have distinct authentic MCP Max values", () => {
+  const ammn2D = getTickerDetailByHorizon("AMMN", "2D");
+  const ammn5D = getTickerDetailByHorizon("AMMN", "5D");
+  const ammn10D = getTickerDetailByHorizon("AMMN", "10D");
+
+  assert.ok(ammn2D);
+  assert.ok(ammn5D);
+  assert.ok(ammn10D);
+
+  // Assert zero identity bug: net_value, volume, and bandar modal cost MUST diverge
+  assert.notEqual(ammn2D.net_value, ammn5D.net_value, "AMMN 2D and 5D net_value must not be identical");
+  assert.notEqual(ammn5D.net_value, ammn10D.net_value, "AMMN 5D and 10D net_value must not be identical");
+  assert.notEqual(ammn2D.bandar_avg_cost, ammn5D.bandar_avg_cost, "AMMN 2D and 5D modal must not be identical");
+  assert.notEqual(ammn5D.bandar_avg_cost, ammn10D.bandar_avg_cost, "AMMN 5D and 10D modal must not be identical");
+
+  // Exact MCP values check
+  assert.equal(ammn2D.bandar_avg_cost, 3156.62);
+  assert.equal(ammn2D.net_value, 12505960000);
+  assert.equal(ammn5D.bandar_avg_cost, 3313.12);
+  assert.equal(ammn5D.net_value, 29148977500);
+  assert.equal(ammn10D.bandar_avg_cost, 3455.05);
+  assert.equal(ammn10D.net_value, 46149067500);
+});
+
+test("Zero-identity safeguard across all tickers in TICKER_HORIZON_DETAILS_MAP", () => {
+  const tickers = Object.keys(TICKER_HORIZON_DETAILS_MAP);
+  assert.ok(tickers.length >= 20, "Must have at least 20 tickers with full multi-horizon profiles");
+
+  for (const ticker of tickers) {
+    const horizons = TICKER_HORIZON_DETAILS_MAP[ticker];
+    assert.ok(horizons["2D"], `Ticker ${ticker} must have 2D profile`);
+    assert.ok(horizons["5D"], `Ticker ${ticker} must have 5D profile`);
+    assert.ok(horizons["10D"], `Ticker ${ticker} must have 10D profile`);
+
+    const h2 = horizons["2D"];
+    const h5 = horizons["5D"];
+    const h10 = horizons["10D"];
+
+    // Assert that 2D, 5D, 10D are NOT copy-pasted clones
+    assert.notEqual(h2.net_value, h10.net_value, `Ticker ${ticker} 2D and 10D net_value must not be identical`);
+    assert.notEqual(h2.bandar_avg_cost, h10.bandar_avg_cost, `Ticker ${ticker} 2D and 10D bandar_avg_cost must not be identical`);
+  }
+});

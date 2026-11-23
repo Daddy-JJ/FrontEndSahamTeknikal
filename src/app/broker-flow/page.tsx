@@ -794,6 +794,29 @@ export default function BrokerFlowPage() {
               </div>
             </div>
 
+            {/* Fallback Safeguard Notification: Disclose honestly if a multi-horizon dataset is not yet compiled */}
+            {selectedTicker.is_horizon_fallback && (
+              <div
+                style={{
+                  margin: "0 0 16px 0",
+                  padding: "10px 14px",
+                  background: "rgba(245, 158, 11, 0.12)",
+                  border: "1px solid rgba(245, 158, 11, 0.35)",
+                  borderRadius: "6px",
+                  color: "#fbbf24",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <span>⚠️</span>
+                <span>
+                  <strong>Informasi Multi-Horizon:</strong> {selectedTicker.horizon_fallback_reason || `Snapshot multi-horizon (${activeHorizon}) belum tersedia untuk ${selectedTicker.ticker}. Data di bawah merupakan snapshot 1-Hari EOD.`}
+                </span>
+              </div>
+            )}
+
             {/* Quantitative Footprints Grid */}
             <div className="bf-stats-grid">
               <div className="bf-stat-box">

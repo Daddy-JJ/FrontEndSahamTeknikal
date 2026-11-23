@@ -96,6 +96,8 @@ export interface TickerBrokerDetail {
   counterparty_note: string;
   why_insight: string;
   trade_plan: TradePlan;
+  is_horizon_fallback?: boolean;
+  horizon_fallback_reason?: string;
 }
 
 export interface QuadrantStockItem {
@@ -1630,6 +1632,1478 @@ export const TICKER_HORIZON_DETAILS_MAP: Record<string, Partial<Record<HorizonPe
       },
     },
   },
+  AMMN: {
+    "2D": {
+      ticker: "AMMN",
+      close: 3160,
+      change_percent: 0.3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 12505960000, avg_price: 3156.62 },
+        { code: "TP", name: "OCBC Sekuritas", investor_group: "FOREIGN", net_value: 10733410000, avg_price: 3217.93 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 8704992500, avg_price: 3153.13 }
+      ],
+      top_distributors: [
+        { code: "DX", name: "Bahana Sekuritas", investor_group: "GOVERNMENT", net_value: -23029637500, avg_price: 3151.72 },
+        { code: "BB", name: "Verdhana Sekuritas", investor_group: "LOCAL", net_value: -20814290000, avg_price: 3177.67 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -8115785000, avg_price: 3147.28 }
+      ],
+      net_value: 12505960000,
+      net_volume_lots: 39599,
+      concentration_pct: 38.4,
+      bandar_avg_cost: 3156.62,
+      bandar_cost_gap_pct: 0.11,
+      counterparty_note: "Asing BK (+12.5B) & TP (+10.7B) menyerap tekanan jual lokal BB (-20.8B) & DX (-23.0B)",
+      why_insight: "Inisiasi 2D: Asing BK & TP memimpin akumulasi 23.2B di harga 3.156 - 3.217. Selisih harga sekarang 3.160 dengan modal bandar sangat dekat (+0.11%), momentum stabil.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3140 - 3160",
+        stop_loss: "3040 (Risk -3.8%)",
+        target_price: "3380 - 3500 (Reward +7.0% s/d +10.8%)",
+        rr_ratio: "1 : 2.5",
+        note: "Entry bertahap di dekat modal bandar BK 3.156."
+      }
+    },
+    "5D": {
+      ticker: "AMMN",
+      close: 3160,
+      change_percent: 0.3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 39041665000, avg_price: 3367.69 },
+        { code: "OD", name: "BRI Danareksa Sekuritas", investor_group: "GOVERNMENT", net_value: 33018425000, avg_price: 3397.53 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 29148977500, avg_price: 3313.12 }
+      ],
+      top_distributors: [
+        { code: "BB", name: "Verdhana Sekuritas", investor_group: "LOCAL", net_value: -73192105000, avg_price: 3374.73 },
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -52549812500, avg_price: 3416.71 },
+        { code: "DX", name: "Bahana Sekuritas", investor_group: "GOVERNMENT", net_value: -31832670000, avg_price: 3328.79 }
+      ],
+      net_value: 29148977500,
+      net_volume_lots: 87981,
+      concentration_pct: 35.2,
+      bandar_avg_cost: 3313.12,
+      bandar_cost_gap_pct: -4.62,
+      counterparty_note: "Institusi asing BK (+29.1B) & OD menampung pelepasan besar BB (-73.2B) & YU (-52.5B)",
+      why_insight: "Weekly flow 5D: Koreksi ke 3.160 terjadi akibat pelepasan BB & YU, namun smart money BK menampung 29.1B pada avg 3.313. Harga saat ini berada di zona diskon -4.62% di bawah modal bandar.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3130 - 3160",
+        stop_loss: "3020 (Risk -4.4%)",
+        target_price: "3450 - 3550 (Reward +9.2% s/d +12.3%)",
+        rr_ratio: "1 : 2.5",
+        note: "Swing akumulasi bertahap memanfaatkan diskon modal mingguan 3.313."
+      }
+    },
+    "10D": {
+      ticker: "AMMN",
+      close: 3160,
+      change_percent: 0.3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 46891895000, avg_price: 3485.19 },
+        { code: "OD", name: "BRI Danareksa Sekuritas", investor_group: "GOVERNMENT", net_value: 46460435000, avg_price: 3498.62 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 46149067500, avg_price: 3455.05 }
+      ],
+      top_distributors: [
+        { code: "BB", name: "Verdhana Sekuritas", investor_group: "LOCAL", net_value: -68378245000, avg_price: 3458.74 },
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -63268255000, avg_price: 3467.43 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -50426710000, avg_price: 3514.82 }
+      ],
+      net_value: 46149067500,
+      net_volume_lots: 133570,
+      concentration_pct: 42.6,
+      bandar_avg_cost: 3455.05,
+      bandar_cost_gap_pct: -8.54,
+      counterparty_note: "Akumulasi struktural 10 hari oleh BK (+46.1B) dan OD (+46.5B) terkunci di area modal 3.455 - 3.498",
+      why_insight: "Horizon 10D: Akumulasi struktural BK dan OD terkunci di avg 3.455 - 3.498. Harga 3.160 merupakan area markdown akumulasi dengan diskon -8.54% dari modal smart money 2 pekan.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3100 - 3160",
+        stop_loss: "2980 (Risk -5.7%)",
+        target_price: "3550 - 3650 (Reward +12.3% s/d +15.5%)",
+        rr_ratio: "1 : 2.5",
+        note: "Investasi swing 2 pekan dengan upside pengujian modal 3.455."
+      }
+    },
+  },
+  BREN: {
+    "2D": {
+      ticker: "BREN",
+      close: 2190,
+      change_percent: 7.4,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "NI", name: "BNI Sekuritas", investor_group: "GOVERNMENT", net_value: 50324980000, avg_price: 2088.29 },
+        { code: "DP", name: "DBS Vickers Sekuritas", investor_group: "FOREIGN", net_value: 9320410000, avg_price: 2002.02 }
+      ],
+      top_distributors: [
+        { code: "KZ", name: "CLSA Sekuritas", investor_group: "FOREIGN", net_value: -17240000000, avg_price: 2095.1 },
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -15120000000, avg_price: 2080.4 }
+      ],
+      net_value: 50324980000,
+      net_volume_lots: 241000,
+      concentration_pct: 44.5,
+      bandar_avg_cost: 2088.29,
+      bandar_cost_gap_pct: 4.87,
+      counterparty_note: "Danantara BNI (NI) menginjeksi 50.3B menyerap jualan institusi KZ & YU",
+      why_insight: "Inisiasi 2D: BREN melesat +7.4% didorong aksi borong institusi lokal NI senilai 50.3B pada rata-rata 2.088. Harga 2.190 berada di atas modal bandar +4.87%.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "2120 - 2190",
+        stop_loss: "2020 (Risk -7.8%)",
+        target_price: "2450 - 2600 (Reward +11.9% s/d +18.7%)",
+        rr_ratio: "1 : 2.0",
+        note: "Momentum inisiasi kuat. Pertahankan posisi selama bertahan di atas modal 2.088."
+      }
+    },
+    "5D": {
+      ticker: "BREN",
+      close: 2190,
+      change_percent: 7.4,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "NI", name: "BNI Sekuritas", investor_group: "GOVERNMENT", net_value: 120314520000, avg_price: 2051.05 },
+        { code: "DP", name: "DBS Vickers Sekuritas", investor_group: "FOREIGN", net_value: 15940180000, avg_price: 2014.63 }
+      ],
+      top_distributors: [
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -32810000000, avg_price: 2045.2 },
+        { code: "HD", name: "KGI Sekuritas", investor_group: "FOREIGN", net_value: -28340000000, avg_price: 2055 }
+      ],
+      net_value: 120314520000,
+      net_volume_lots: 586600,
+      concentration_pct: 48.6,
+      bandar_avg_cost: 2051.05,
+      bandar_cost_gap_pct: 6.77,
+      counterparty_note: "Danantara BNI (NI) mendominasi akumulasi mingguan 120.3B menampung outflow YU & HD",
+      why_insight: "Weekly flow 5D: Akumulasi konsisten tanpa henti oleh NI mencapai 120 Miliar pada modal 2.051. Mengonfirmasi tren bullish continuation.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "2100 - 2190",
+        stop_loss: "2000 (Risk -8.7%)",
+        target_price: "2500 - 2700 (Reward +14.1% s/d +23.3%)",
+        rr_ratio: "1 : 2.2",
+        note: "Akumulasi terstruktur Danantara. Swing target hingga 2.600."
+      }
+    },
+    "10D": {
+      ticker: "BREN",
+      close: 2190,
+      change_percent: 7.4,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "NI", name: "BNI Sekuritas", investor_group: "GOVERNMENT", net_value: 239012740000, avg_price: 2090.19 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 24610500000, avg_price: 2115.11 }
+      ],
+      top_distributors: [
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -65620000000, avg_price: 2085.4 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -54610000000, avg_price: 2095.3 }
+      ],
+      net_value: 239012740000,
+      net_volume_lots: 1143500,
+      concentration_pct: 53.1,
+      bandar_avg_cost: 2090.19,
+      bandar_cost_gap_pct: 4.78,
+      counterparty_note: "Basis Danantara BNI (NI) mengunci 239B selama 2 pekan bursa, mengendalikan suplai pasar",
+      why_insight: "Horizon 10D: Fondasi struktural 239 Miliar dibentuk oleh NI di area rata-rata 2.090. BREN memiliki bantalan akumulasi paling solid di sektor energi hijau.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "2100 - 2190",
+        stop_loss: "1980 (Risk -9.6%)",
+        target_price: "2600 - 2800 (Reward +18.7% s/d +27.8%)",
+        rr_ratio: "1 : 2.5",
+        note: "Struktur kepemilikan sangat terkonsentrasi di Danantara NI."
+      }
+    },
+  },
+  NCKL: {
+    "2D": {
+      ticker: "NCKL",
+      close: 735,
+      change_percent: 5,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 26914000000, avg_price: 732.9 },
+        { code: "CP", name: "KB Valbury Sekuritas", investor_group: "FOREIGN", net_value: 4012000000, avg_price: 711.83 }
+      ],
+      top_distributors: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -8510000000, avg_price: 728.4 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -6230000000, avg_price: 730.1 }
+      ],
+      net_value: 26914000000,
+      net_volume_lots: 367200,
+      concentration_pct: 41.2,
+      bandar_avg_cost: 732.9,
+      bandar_cost_gap_pct: 0.29,
+      counterparty_note: "Asing BK (+26.9B) memimpin serapan inisiasi 2 hari dekat harga penutupan",
+      why_insight: "Inisiasi 2D: Asing BK mengakumulasi 26.9B di level 732.90 (+0.29% gap). Posisi ideal untuk momentum lanjutan pengujian level 800.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "725 - 735",
+        stop_loss: "695 (Risk -5.4%)",
+        target_price: "810 - 840 (Reward +10.2% s/d +14.3%)",
+        rr_ratio: "1 : 2.2",
+        note: "Entry aman dekat modal bandar BK 733."
+      }
+    },
+    "5D": {
+      ticker: "NCKL",
+      close: 735,
+      change_percent: 5,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 25410000000, avg_price: 731.88 },
+        { code: "NI", name: "BNI Sekuritas", investor_group: "GOVERNMENT", net_value: 5210000000, avg_price: 711.97 }
+      ],
+      top_distributors: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -14210000000, avg_price: 725.6 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -9820000000, avg_price: 724.1 }
+      ],
+      net_value: 25410000000,
+      net_volume_lots: 347200,
+      concentration_pct: 39.8,
+      bandar_avg_cost: 731.88,
+      bandar_cost_gap_pct: 0.43,
+      counterparty_note: "BK menguasai kontrol suplai mingguan dengan modal stabil 731.88",
+      why_insight: "Weekly flow 5D: Akumulasi dominan oleh BK menahan NCKL tetap stabil di atas 730 meski AK melakukan aksi jual rutin.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "720 - 735",
+        stop_loss: "690 (Risk -6.1%)",
+        target_price: "810 - 850 (Reward +10.2% s/d +15.6%)",
+        rr_ratio: "1 : 2.2",
+        note: "Setup swing mingguan solid bersama BK."
+      }
+    },
+    "10D": {
+      ticker: "NCKL",
+      close: 735,
+      change_percent: 5,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 27420000000, avg_price: 732.62 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 11630000000, avg_price: 722.88 }
+      ],
+      top_distributors: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -22140000000, avg_price: 726.8 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -15410000000, avg_price: 723.4 }
+      ],
+      net_value: 27420000000,
+      net_volume_lots: 374300,
+      concentration_pct: 42.1,
+      bandar_avg_cost: 732.62,
+      bandar_cost_gap_pct: 0.32,
+      counterparty_note: "Dual akumulator BK & Mandiri CC mengamankan basis 10 hari bursa",
+      why_insight: "Horizon 10D: Struktur akumulasi 2 pekan terkonsentrasi di harga 732.62. Smart money asing BK dan Danantara CC menjaga pertahanan harga.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "715 - 735",
+        stop_loss: "680 (Risk -7.5%)",
+        target_price: "820 - 860 (Reward +11.6% s/d +17.0%)",
+        rr_ratio: "1 : 2.0",
+        note: "Disiplin hold selama bertengger di atas modal struktural 732."
+      }
+    },
+  },
+  TINS: {
+    "2D": {
+      ticker: "TINS",
+      close: 3140,
+      change_percent: 3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 30512000000, avg_price: 3083.83 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 30210000000, avg_price: 3107.99 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -28100000000, avg_price: 3112.5 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -14200000000, avg_price: 3098.2 }
+      ],
+      net_value: 30512000000,
+      net_volume_lots: 98900,
+      concentration_pct: 43.1,
+      bandar_avg_cost: 3083.83,
+      bandar_cost_gap_pct: 1.82,
+      counterparty_note: "Asing AK (+30.5B) & BK (+30.2B) kompak memborong TINS",
+      why_insight: "Inisiasi 2D: Outflow Mandiri CC diserap agresif oleh konsorsium asing AK & BK senilai 60B. Modal asing di 3.083 dengan gap aman +1.82%.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3100 - 3140",
+        stop_loss: "2980 (Risk -5.1%)",
+        target_price: "3400 - 3550 (Reward +8.3% s/d +13.1%)",
+        rr_ratio: "1 : 2.2",
+        note: "Momentum rebound timah didukung serapan asing masif."
+      }
+    },
+    "5D": {
+      ticker: "TINS",
+      close: 3140,
+      change_percent: 3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 34410000000, avg_price: 3309.55 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 19612000000, avg_price: 3226.48 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -42100000000, avg_price: 3255.4 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -18400000000, avg_price: 3260.1 }
+      ],
+      net_value: 19612000000,
+      net_volume_lots: 60780,
+      concentration_pct: 36.5,
+      bandar_avg_cost: 3226.48,
+      bandar_cost_gap_pct: -2.68,
+      counterparty_note: "BK menampung di harga diskon mingguan 3.226,48",
+      why_insight: "Weekly flow 5D: TINS terkoreksi tipis dengan harga saat ini (3.140) memberi diskon -2.68% dari modal mingguan smart money BK (3.226).",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3080 - 3140",
+        stop_loss: "2950 (Risk -6.1%)",
+        target_price: "3450 - 3600 (Reward +9.9% s/d +14.6%)",
+        rr_ratio: "1 : 2.1",
+        note: "Akumulasi di zona diskon modal mingguan."
+      }
+    },
+    "10D": {
+      ticker: "TINS",
+      close: 3140,
+      change_percent: 3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 68514000000, avg_price: 3371.19 },
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 34610000000, avg_price: 3401.47 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 27010000000, avg_price: 3379.02 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -72500000000, avg_price: 3390.2 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -31400000000, avg_price: 3385.1 }
+      ],
+      net_value: 68514000000,
+      net_volume_lots: 203200,
+      concentration_pct: 44.8,
+      bandar_avg_cost: 3371.19,
+      bandar_cost_gap_pct: -6.86,
+      counterparty_note: "Basis akumulasi 10 hari oleh AK (+68.5B) berada di atas 3.370",
+      why_insight: "Horizon 10D: Akumulasi struktural 2 pekan oleh UBS AK senilai 68.5B memiliki modal 3.371. Harga saat ini 3.140 diskon -6.86%, potensi swing recovery signifikan.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3050 - 3140",
+        stop_loss: "2920 (Risk -7.0%)",
+        target_price: "3500 - 3700 (Reward +11.5% s/d +17.8%)",
+        rr_ratio: "1 : 2.3",
+        note: "Target kembali ke rata-rata modal bandar struktural 3.371."
+      }
+    },
+  },
+  GOTO: {
+    "2D": {
+      ticker: "GOTO",
+      close: 27,
+      change_percent: 0,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Heavy Distribution",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "PP", name: "Pratama Sekuritas", investor_group: "LOCAL", net_value: 58620429000, avg_price: 27 },
+        { code: "MG", name: "Semesta Indovest", investor_group: "LOCAL", net_value: 44372423800, avg_price: 27 },
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 17369166000, avg_price: 27.02 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -48200000000, avg_price: 27 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -35100000000, avg_price: 27 }
+      ],
+      net_value: 58620429000,
+      net_volume_lots: 21711270,
+      concentration_pct: 32.1,
+      bandar_avg_cost: 27,
+      bandar_cost_gap_pct: 0,
+      counterparty_note: "Spekulan lokal PP (+58.6B) & MG menampung jualan asing di fraksi 27",
+      why_insight: "Inisiasi 2D: Transaksi terhimpit di fraksi Rp 27. Broker PP dan MG menampung 100B jualan asing, namun daya angkat harga masih nol.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 25",
+        rr_ratio: "-",
+        note: "Distribusi struktural asing belum selesai."
+      }
+    },
+    "5D": {
+      ticker: "GOTO",
+      close: 27,
+      change_percent: 0,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Heavy Distribution",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "PP", name: "Pratama Sekuritas", investor_group: "LOCAL", net_value: 209588776700, avg_price: 26.37 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 80135928200, avg_price: 26.04 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -145000000000, avg_price: 26.5 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -98000000000, avg_price: 26.8 }
+      ],
+      net_value: 209588776700,
+      net_volume_lots: 79477321,
+      concentration_pct: 35.4,
+      bandar_avg_cost: 26.37,
+      bandar_cost_gap_pct: 2.39,
+      counterparty_note: "Lokal PP menampung 209B outflow institusi global",
+      why_insight: "Weekly flow 5D: Tekanan jual asing berlangsung sistematis. Serapan lokal oleh PP belum sanggup memicu breakout teknikal.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Pantau likuiditas",
+        rr_ratio: "-",
+        note: "Risiko liquidity trap tinggi di saham teknologi."
+      }
+    },
+    "10D": {
+      ticker: "GOTO",
+      close: 27,
+      change_percent: 0,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Heavy Distribution",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "PP", name: "Pratama Sekuritas", investor_group: "LOCAL", net_value: 574954121700, avg_price: 25.57 },
+        { code: "RF", name: "Buana Capital", investor_group: "LOCAL", net_value: 57380709700, avg_price: 27.01 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -310000000000, avg_price: 26.1 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -210000000000, avg_price: 26.4 }
+      ],
+      net_value: 574954121700,
+      net_volume_lots: 224823459,
+      concentration_pct: 42.8,
+      bandar_avg_cost: 25.57,
+      bandar_cost_gap_pct: 5.59,
+      counterparty_note: "Akumulasi masif PP (+574B) di kisaran 25.57 berhadapan dengan exit raksasa asing",
+      why_insight: "Horizon 10D: Broker PP memegang inventori 224 juta lot sejak harga 25.57. Selama asing belum berhenti exit, hindari terburu-buru entry.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Wait and see",
+        rr_ratio: "-",
+        note: "Tetap waspada distribusi struktural institusi global."
+      }
+    },
+  },
+  AADI: {
+    "2D": {
+      ticker: "AADI",
+      close: 9875,
+      change_percent: 1.3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 36680245000, avg_price: 9882.65 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 10605740000, avg_price: 9861.92 },
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 9711932500, avg_price: 9864.15 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -18420000000, avg_price: 9890.1 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -12300000000, avg_price: 9870.5 }
+      ],
+      net_value: 36680245000,
+      net_volume_lots: 37070,
+      concentration_pct: 46.2,
+      bandar_avg_cost: 9882.65,
+      bandar_cost_gap_pct: -0.08,
+      counterparty_note: "Danantara Mandiri (CC) memborong 36.7B di rata-rata 9.882",
+      why_insight: "Inisiasi 2D: Danantara CC menguasai serapan bersih Rp 36.7B tepat di kisaran level psikologis 9.880. Gap harga penutupan hampir nol (-0.08%).",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "9750 - 9875",
+        stop_loss: "9450 (Risk -4.3%)",
+        target_price: "10500 - 10800 (Reward +6.3% s/d +9.4%)",
+        rr_ratio: "1 : 2.0",
+        note: "Entry prima di dekat modal Danantara CC 9.882."
+      }
+    },
+    "5D": {
+      ticker: "AADI",
+      close: 9875,
+      change_percent: 1.3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 46279465000, avg_price: 10116.13 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 41058127500, avg_price: 10005.85 },
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 31082522500, avg_price: 10068.96 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -38900000000, avg_price: 10150.2 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -26400000000, avg_price: 10080 }
+      ],
+      net_value: 46279465000,
+      net_volume_lots: 45803,
+      concentration_pct: 44.1,
+      bandar_avg_cost: 10116.13,
+      bandar_cost_gap_pct: -2.38,
+      counterparty_note: "Konsorsium AK & CC mengumpulkan 87B di atas modal 10.000",
+      why_insight: "Weekly flow 5D: Akumulasi gabungan asing AK dan Danantara CC mencapai 87.3B. Harga 9.875 berada di zona diskon -2.38% dari modal mingguan.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "9700 - 9875",
+        stop_loss: "9400 (Risk -4.8%)",
+        target_price: "10600 - 11000 (Reward +7.3% s/d +11.4%)",
+        rr_ratio: "1 : 2.2",
+        note: "Manfaatkan koreksi di bawah 10.000 untuk akumulasi swing."
+      }
+    },
+    "10D": {
+      ticker: "AADI",
+      close: 9875,
+      change_percent: 1.3,
+      quadrant: "markup_akumulasi",
+      quadrant_label: "[MA] Markup + Akumulasi",
+      status_color: "emerald",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 49224567500, avg_price: 10205.61 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 46009080000, avg_price: 10181.44 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 42124157500, avg_price: 10113.95 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -64500000000, avg_price: 10220.5 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -41200000000, avg_price: 10190 }
+      ],
+      net_value: 46009080000,
+      net_volume_lots: 45662,
+      concentration_pct: 47.5,
+      bandar_avg_cost: 10181.44,
+      bandar_cost_gap_pct: -3.01,
+      counterparty_note: "Basis akumulasi 10 hari stabil dipegang AK (+46B) & CC (+42B)",
+      why_insight: "Horizon 10D: Selama 2 pekan bursa, institusi asing AK dan Danantara CC menanam modal 88B di area rata-rata 10.113 - 10.181. Harga saat ini diskon -3.01%.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "9650 - 9875",
+        stop_loss: "9350 (Risk -5.3%)",
+        target_price: "10700 - 11200 (Reward +8.4% s/d +13.4%)",
+        rr_ratio: "1 : 2.3",
+        note: "Bantalan kuat institusi di level 10.100."
+      }
+    },
+  },
+  TLKM: {
+    "2D": {
+      ticker: "TLKM",
+      close: 2070,
+      change_percent: -2.4,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: 51172414000, avg_price: 2100.55 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 51099133000, avg_price: 2064.72 }
+      ],
+      top_distributors: [
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -46800000000, avg_price: 2075.2 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -31200000000, avg_price: 2070 }
+      ],
+      net_value: 51172414000,
+      net_volume_lots: 239247,
+      concentration_pct: 36.4,
+      bandar_avg_cost: 2100.55,
+      bandar_cost_gap_pct: -1.45,
+      counterparty_note: "Outflow YU & YP ditampung seimbang oleh ZP (+51.2B) & Mandiri CC (+51.1B)",
+      why_insight: "Inisiasi 2D: Tekanan jual asing YU memicu penurunan -2.4%, namun terjadi serapan defensif besar oleh ZP & Danantara CC di level 2.064 - 2.100.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu konfirmasi support 2.000",
+        rr_ratio: "-",
+        note: "Wait and see hingga tekanan jual mereda."
+      }
+    },
+    "5D": {
+      ticker: "TLKM",
+      close: 2070,
+      change_percent: -2.4,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: 330682423000, avg_price: 2170.19 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 149497154000, avg_price: 2142.5 }
+      ],
+      top_distributors: [
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -210000000000, avg_price: 2160 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -180000000000, avg_price: 2155 }
+      ],
+      net_value: 330682423000,
+      net_volume_lots: 1514726,
+      concentration_pct: 41.5,
+      bandar_avg_cost: 2170.19,
+      bandar_cost_gap_pct: -4.62,
+      counterparty_note: "ZP menginjeksi serapan 330B menahan laju distribusi asing",
+      why_insight: "Weekly flow 5D: Distribusi global oleh YU & AK mencapai 390B. Walaupun ZP memborong 330B di avg 2.170, harga masih tertahan di 2.070 (diskon -4.62%).",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 2.000",
+        rr_ratio: "-",
+        note: "Potensi pembentukan bottoming mingguan."
+      }
+    },
+    "10D": {
+      ticker: "TLKM",
+      close: 2070,
+      change_percent: -2.4,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: 418361133000, avg_price: 2149.08 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 128092779500, avg_price: 2120.76 }
+      ],
+      top_distributors: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -340000000000, avg_price: 2140 },
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: -290000000000, avg_price: 2135 }
+      ],
+      net_value: 418361133000,
+      net_volume_lots: 1930772,
+      concentration_pct: 43.8,
+      bandar_avg_cost: 2149.08,
+      bandar_cost_gap_pct: -3.68,
+      counterparty_note: "Basis 10 hari bursa: ZP memegang 1.93 juta lot akumulasi",
+      why_insight: "Horizon 10D: ZP dan Danantara CC menumpuk serapan lebih dari 540B di kisaran 2.120 - 2.149. Diskon harga -3.68% mengindikasikan potensi technical rebound jangka menengah.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu pivot di atas 2.120",
+        rr_ratio: "-",
+        note: "Tunggu sinyal pembalikan arah sebelum entry."
+      }
+    },
+  },
+  BMRI: {
+    "2D": {
+      ticker: "BMRI",
+      close: 3890,
+      change_percent: -0.5,
+      quadrant: "markdown_akumulasi",
+      quadrant_label: "[DA] Markdown + Akumulasi",
+      status_color: "sky",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 146773735000, avg_price: 3896.33 },
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: 64374906000, avg_price: 3886.71 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: 55669087000, avg_price: 3878.02 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -88400000000, avg_price: 3895 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -52100000000, avg_price: 3890 }
+      ],
+      net_value: 146773735000,
+      net_volume_lots: 376836,
+      concentration_pct: 45.1,
+      bandar_avg_cost: 3896.33,
+      bandar_cost_gap_pct: -0.16,
+      counterparty_note: "Danantara Mandiri (CC) menampung masif 146.8B menahan pelemahan harga",
+      why_insight: "Inisiasi 2D: Koreksi tipis BMRI -0.5% dimanfaatkan Danantara CC untuk menyerok 146.8B di rata-rata 3.896. Harga sangat dekat dengan modal bandar (-0.16%).",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3850 - 3890",
+        stop_loss: "3740 (Risk -3.9%)",
+        target_price: "4100 - 4250 (Reward +5.4% s/d +9.3%)",
+        rr_ratio: "1 : 2.0",
+        note: "Bantalan kuat Danantara CC di level 3.890."
+      }
+    },
+    "5D": {
+      ticker: "BMRI",
+      close: 3890,
+      change_percent: -0.5,
+      quadrant: "markdown_akumulasi",
+      quadrant_label: "[DA] Markdown + Akumulasi",
+      status_color: "sky",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: 156238853000, avg_price: 3915.97 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 147820517000, avg_price: 3920.96 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: 115635131000, avg_price: 3900.98 }
+      ],
+      top_distributors: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -240000000000, avg_price: 3925 },
+        { code: "KZ", name: "CLSA Sekuritas", investor_group: "FOREIGN", net_value: -110000000000, avg_price: 3910 }
+      ],
+      net_value: 156238853000,
+      net_volume_lots: 396412,
+      concentration_pct: 42.8,
+      bandar_avg_cost: 3915.97,
+      bandar_cost_gap_pct: -0.66,
+      counterparty_note: "Konsorsium ZP & Mandiri CC mengunci lebih dari 300B akumulasi mingguan",
+      why_insight: "Weekly flow 5D: Akumulasi serentak asing ZP (+156B) dan Danantara CC (+148B) membentuk basis kuat di 3.915. Harga 3.890 berada di zona markdown akumulasi.",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3840 - 3890",
+        stop_loss: "3720 (Risk -4.4%)",
+        target_price: "4150 - 4300 (Reward +6.7% s/d +10.5%)",
+        rr_ratio: "1 : 2.2",
+        note: "Akumulasi bertahap di zona support Big Caps perbankan."
+      }
+    },
+    "10D": {
+      ticker: "BMRI",
+      close: 3890,
+      change_percent: -0.5,
+      quadrant: "markdown_akumulasi",
+      quadrant_label: "[DA] Markdown + Akumulasi",
+      status_color: "sky",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: 280547215000, avg_price: 3878.78 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 215269514000, avg_price: 3881.6 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: 122253558000, avg_price: 3877.09 }
+      ],
+      top_distributors: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -420000000000, avg_price: 3885 },
+        { code: "KZ", name: "CLSA Sekuritas", investor_group: "FOREIGN", net_value: -190000000000, avg_price: 3870 }
+      ],
+      net_value: 280547215000,
+      net_volume_lots: 711964,
+      concentration_pct: 46.5,
+      bandar_avg_cost: 3878.78,
+      bandar_cost_gap_pct: 0.29,
+      counterparty_note: "Basis 10 hari bursa: ZP & CC menguasai serapan bersih nyaris 500B",
+      why_insight: "Horizon 10D: Fondasi struktural 2 pekan bursa di level 3.878 - 3.881 dengan total serapan institusi 495B. Harga 3.890 bertengger aman di atas modal bandar (+0.29%).",
+      trade_plan: {
+        action: "BUY ON PULLBACK",
+        entry_zone: "3820 - 3890",
+        stop_loss: "3700 (Risk -4.9%)",
+        target_price: "4200 - 4350 (Reward +8.0% s/d +11.8%)",
+        rr_ratio: "1 : 2.2",
+        note: "Posisi defensif kuat didukung Danantara & Maybank ZP."
+      }
+    },
+  },
+  ASII: {
+    "2D": {
+      ticker: "ASII",
+      close: 5300,
+      change_percent: -1.4,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 64825327500, avg_price: 5378.18 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 27898490000, avg_price: 5369.24 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -58400000000, avg_price: 5380 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: -38200000000, avg_price: 5370 }
+      ],
+      net_value: 64825327500,
+      net_volume_lots: 119189,
+      concentration_pct: 35.8,
+      bandar_avg_cost: 5378.18,
+      bandar_cost_gap_pct: -1.45,
+      counterparty_note: "Serapan AK (+64.8B) belum sanggup menahan tekanan jual ZP & BK",
+      why_insight: "Inisiasi 2D: Outflow ZP & BK menekan ASII -1.4%. Meskipun AK menyerap 64.8B pada modal 5.378, harga tertahan di bawah modal bandar.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 5.100",
+        rr_ratio: "-",
+        note: "Distribusi asing masih dominan."
+      }
+    },
+    "5D": {
+      ticker: "ASII",
+      close: 5300,
+      change_percent: -1.4,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 306681402500, avg_price: 5525.03 },
+        { code: "KZ", name: "CLSA Sekuritas", investor_group: "FOREIGN", net_value: 108436045000, avg_price: 5563.98 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -260000000000, avg_price: 5540 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: -180000000000, avg_price: 5510 }
+      ],
+      net_value: 306681402500,
+      net_volume_lots: 548377,
+      concentration_pct: 41.2,
+      bandar_avg_cost: 5525.03,
+      bandar_cost_gap_pct: -4.07,
+      counterparty_note: "AK terjebak menampung 306B di rata-rata 5.525 saat harga meluncur turun",
+      why_insight: "Weekly flow 5D: Terjadi perang broker asing: ZP & BK melepas 440B sementara AK menampung 306B di modal tinggi 5.525. Diskon harga -4.07%.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu pivot di atas 5.450",
+        rr_ratio: "-",
+        note: "Hindari menangkap pisau jatuh sebelum ada akumulasi balik."
+      }
+    },
+    "10D": {
+      ticker: "ASII",
+      close: 5300,
+      change_percent: -1.4,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 663544473000, avg_price: 5384.53 },
+        { code: "RX", name: "Macquarie Sekuritas", investor_group: "FOREIGN", net_value: 340609458500, avg_price: 5360.42 }
+      ],
+      top_distributors: [
+        { code: "ZP", name: "Maybank Sekuritas", investor_group: "FOREIGN", net_value: -560000000000, avg_price: 5410 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: -380000000000, avg_price: 5390 }
+      ],
+      net_value: 663544473000,
+      net_volume_lots: 1231460,
+      concentration_pct: 44.8,
+      bandar_avg_cost: 5384.53,
+      bandar_cost_gap_pct: -1.57,
+      counterparty_note: "Basis 10 hari bursa: Akumulasi raksasa AK (+663B) & RX (+340B)",
+      why_insight: "Horizon 10D: Akumulasi terakumulasi 1 Triliun oleh AK & RX di level 5.360 - 5.384. Meskipun tren jangka pendek melemah, bantalan struktural di 5.300 mulai terbentuk.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support konfirmasi",
+        rr_ratio: "-",
+        note: "Tunggu kepastian reversal sebelum entry."
+      }
+    },
+  },
+  MDKA: {
+    "2D": {
+      ticker: "MDKA",
+      close: 1710,
+      change_percent: -5,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 78612115000, avg_price: 1721.88 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: 20633712500, avg_price: 1777 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -45200000000, avg_price: 1750 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -28100000000, avg_price: 1760 }
+      ],
+      net_value: 78612115000,
+      net_volume_lots: 459754,
+      concentration_pct: 39.5,
+      bandar_avg_cost: 1721.88,
+      bandar_cost_gap_pct: -0.69,
+      counterparty_note: "AK menyerok 78.6B saat MDKA terkoreksi dalam -5.0%",
+      why_insight: "Inisiasi 2D: Koreksi tajam ke 1710 dimanfaatkan UBS AK untuk menampung 459 ribu lot pada modal 1.721. Selisih harga ke modal hanya -0.69%.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 1.650",
+        rr_ratio: "-",
+        note: "Wait and see hingga volatilitas mereda."
+      }
+    },
+    "5D": {
+      ticker: "MDKA",
+      close: 1710,
+      change_percent: -5,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 58812197000, avg_price: 1769.67 },
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 21184431500, avg_price: 1892.11 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -82000000000, avg_price: 1820 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: -41000000000, avg_price: 1840 }
+      ],
+      net_value: 58812197000,
+      net_volume_lots: 360561,
+      concentration_pct: 34.8,
+      bandar_avg_cost: 1769.67,
+      bandar_cost_gap_pct: -3.37,
+      counterparty_note: "Tekanan jual Mandiri CC (-82B) menekan harga di bawah modal AK",
+      why_insight: "Weekly flow 5D: Pelepasan besar dari Mandiri CC menyebabkan koreksi mingguan. Broker AK memegang posisi di 1.769 (diskon -3.37%).",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu base di 1.680",
+        rr_ratio: "-",
+        note: "Hindari masuk sebelum ada tanda absorpsi buyer sempurna."
+      }
+    },
+    "10D": {
+      ticker: "MDKA",
+      close: 1710,
+      change_percent: -5,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 85305974500, avg_price: 1853.36 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: 19700365500, avg_price: 1895.64 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -125000000000, avg_price: 1920 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: -68000000000, avg_price: 1910 }
+      ],
+      net_value: 85305974500,
+      net_volume_lots: 487265,
+      concentration_pct: 38.6,
+      bandar_avg_cost: 1853.36,
+      bandar_cost_gap_pct: -7.73,
+      counterparty_note: "Basis 10 hari bursa: AK mengakumulasi 85B pada modal struktural 1.853",
+      why_insight: "Horizon 10D: Akumulasi 2 pekan oleh AK terkunci di modal 1.853. Harga saat ini (1.710) memberi diskon dalam -7.73%, namun perlu konfirmasi reversal.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support kuat 1.650",
+        rr_ratio: "-",
+        note: "Disiplin tidak mendahului sinyal pembalikan arah."
+      }
+    },
+  },
+  BRPT: {
+    "2D": {
+      ticker: "BRPT",
+      close: 625,
+      change_percent: -4.6,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 27627938000, avg_price: 664.26 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 17706037000, avg_price: 665.36 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -24500000000, avg_price: 670 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -16800000000, avg_price: 668 }
+      ],
+      net_value: 27627938000,
+      net_volume_lots: 413833,
+      concentration_pct: 37.5,
+      bandar_avg_cost: 664.26,
+      bandar_cost_gap_pct: -5.91,
+      counterparty_note: "AK (+27.6B) & CC (+17.7B) menampung pelepasan ritel dan broker YP",
+      why_insight: "Inisiasi 2D: Koreksi ke 625 memperlebar jarak dari modal bandar 2 hari (664.26, diskon -5.91%). Serapan institusi mulai tampak.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 600",
+        rr_ratio: "-",
+        note: "Wait and see hingga harga kembali ke atas 650."
+      }
+    },
+    "5D": {
+      ticker: "BRPT",
+      close: 625,
+      change_percent: -4.6,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 37792780500, avg_price: 695.62 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 36980276500, avg_price: 701.31 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -48000000000, avg_price: 710 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -31000000000, avg_price: 705 }
+      ],
+      net_value: 37792780500,
+      net_volume_lots: 597264,
+      concentration_pct: 36.8,
+      bandar_avg_cost: 695.62,
+      bandar_cost_gap_pct: -10.15,
+      counterparty_note: "Serapan mingguan AK & CC tertahan oleh distribusi agresif",
+      why_insight: "Weekly flow 5D: Tekanan jual pasar menyeret harga turun ke 625, jauh di bawah modal akumulasi mingguan 695 (-10.15%).",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu base 600",
+        rr_ratio: "-",
+        note: "Jangan lawan tren penurunan sebelum terbentuk pola reversal."
+      }
+    },
+    "10D": {
+      ticker: "BRPT",
+      close: 625,
+      change_percent: -4.6,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 122442443000, avg_price: 756.53 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 120068889000, avg_price: 748.77 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -110000000000, avg_price: 765 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -75000000000, avg_price: 760 }
+      ],
+      net_value: 122442443000,
+      net_volume_lots: 1662123,
+      concentration_pct: 44.5,
+      bandar_avg_cost: 756.53,
+      bandar_cost_gap_pct: -17.39,
+      counterparty_note: "Basis 10 hari: CC (+122B) & AK (+120B) terkunci di level modal 748 - 756",
+      why_insight: "Horizon 10D: Akumulasi struktural 242B oleh CC dan AK terperangkap di modal rata-rata 750-an. Diskon ekstrem -17.39% memberi peluang recovery begitu seller habis.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu sinyal pembalikan arah di 600",
+        rr_ratio: "-",
+        note: "Potensi technical rebound tinggi bila suplai mereda."
+      }
+    },
+  },
+  INCO: {
+    "2D": {
+      ticker: "INCO",
+      close: 3250,
+      change_percent: 1.2,
+      quadrant: "markup_distribusi",
+      quadrant_label: "[MD] Markup + Distribusi (Trap)",
+      status_color: "amber",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 35478054000, avg_price: 3245.06 },
+        { code: "AZ", name: "Sucor Sekuritas", investor_group: "LOCAL", net_value: 8317305000, avg_price: 3278.4 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -26400000000, avg_price: 3260 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -15200000000, avg_price: 3255 }
+      ],
+      net_value: 35478054000,
+      net_volume_lots: 109800,
+      concentration_pct: 42.1,
+      bandar_avg_cost: 3245.06,
+      bandar_cost_gap_pct: 0.15,
+      counterparty_note: "Asing AK (+35.5B) memimpin serapan inisiasi di modal 3.245",
+      why_insight: "Inisiasi 2D: Rebound +1.2% ke 3.250 didorong serapan asing AK 35.5B. Harga bertengger sangat dekat di atas modal bandar (+0.15%).",
+      trade_plan: {
+        action: "AVOID / SELL ON STRENGTH",
+        entry_zone: "3230 - 3250",
+        stop_loss: "3120 (Risk -4.0%)",
+        target_price: "3450 - 3550 (Reward +6.2% s/d +9.2%)",
+        rr_ratio: "1 : 1.8",
+        note: "Pantau pelepasan dari Mandiri CC sebelum follow through."
+      }
+    },
+    "5D": {
+      ticker: "INCO",
+      close: 3250,
+      change_percent: 1.2,
+      quadrant: "markup_distribusi",
+      quadrant_label: "[MD] Markup + Distribusi (Trap)",
+      status_color: "amber",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: 23072336000, avg_price: 3312.75 },
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: 9485263000, avg_price: 3393.84 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -38000000000, avg_price: 3350 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -14000000000, avg_price: 3340 }
+      ],
+      net_value: 23072336000,
+      net_volume_lots: 75069,
+      concentration_pct: 35.8,
+      bandar_avg_cost: 3312.75,
+      bandar_cost_gap_pct: -1.89,
+      counterparty_note: "Pelepasan Mandiri CC (-38B) menahan penguatan mingguan",
+      why_insight: "Weekly flow 5D: Tekanan jual Mandiri CC menahan INCO tetap di bawah modal mingguan AK 3.312 (diskon -1.89%).",
+      trade_plan: {
+        action: "AVOID / SELL ON STRENGTH",
+        entry_zone: "3200 - 3250",
+        stop_loss: "3100 (Risk -4.6%)",
+        target_price: "3400 - 3500 (Reward +4.6% s/d +7.7%)",
+        rr_ratio: "1 : 1.5",
+        note: "Hati-hati jebakan markup jika distribusi berlanjut."
+      }
+    },
+    "10D": {
+      ticker: "INCO",
+      close: 3250,
+      change_percent: 1.2,
+      quadrant: "markup_distribusi",
+      quadrant_label: "[MD] Markup + Distribusi (Trap)",
+      status_color: "amber",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "LG", name: "Trimegah Sekuritas", investor_group: "LOCAL", net_value: 33227936000, avg_price: 3635.07 },
+        { code: "OD", name: "BRI Danareksa Sekuritas", investor_group: "GOVERNMENT", net_value: 24162170000, avg_price: 3475.72 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -65000000000, avg_price: 3550 },
+        { code: "AK", name: "UBS Sekuritas", investor_group: "FOREIGN", net_value: -42000000000, avg_price: 3520 }
+      ],
+      net_value: 33227936000,
+      net_volume_lots: 91063,
+      concentration_pct: 39.4,
+      bandar_avg_cost: 3635.07,
+      bandar_cost_gap_pct: -10.59,
+      counterparty_note: "Basis 10 hari: Akumulasi LG tertinggal di level modal tinggi 3.635",
+      why_insight: "Horizon 10D: Selama 2 pekan, broker lokal LG mengumpulkan 91 ribu lot di avg 3.635. Harga 3.250 berada di diskon -10.59%.",
+      trade_plan: {
+        action: "AVOID / SELL ON STRENGTH",
+        entry_zone: "3180 - 3250",
+        stop_loss: "3050 (Risk -6.2%)",
+        target_price: "3550 - 3650 (Reward +9.2% s/d +12.3%)",
+        rr_ratio: "1 : 1.8",
+        note: "Target pengujian modal struktural bandar di 3.600."
+      }
+    },
+  },
+  INDY: {
+    "2D": {
+      ticker: "INDY",
+      close: 1490,
+      change_percent: -5.7,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 6784993000, avg_price: 1542.31 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 5147567500, avg_price: 1517.5 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -9800000000, avg_price: 1550 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -6200000000, avg_price: 1540 }
+      ],
+      net_value: 6784993000,
+      net_volume_lots: 44171,
+      concentration_pct: 35.1,
+      bandar_avg_cost: 1542.31,
+      bandar_cost_gap_pct: -3.39,
+      counterparty_note: "Danantara CC (+6.8B) & BK (+5.1B) menampung serapan koreksi tajam",
+      why_insight: "Inisiasi 2D: Kejatuhan harga ke 1490 (-5.7%) memperlebar jarak dari modal akumulasi Mandiri CC di 1.542 (-3.39%).",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 1.400",
+        rr_ratio: "-",
+        note: "Downtrend batubara masih menekan."
+      }
+    },
+    "5D": {
+      ticker: "INDY",
+      close: 1490,
+      change_percent: -5.7,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "LG", name: "Trimegah Sekuritas", investor_group: "LOCAL", net_value: 37621289500, avg_price: 1843.21 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 10911701000, avg_price: 1662.74 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -28400000000, avg_price: 1780 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -19200000000, avg_price: 1750 }
+      ],
+      net_value: 37621289500,
+      net_volume_lots: 203040,
+      concentration_pct: 42.6,
+      bandar_avg_cost: 1843.21,
+      bandar_cost_gap_pct: -19.16,
+      counterparty_note: "Akumulasi LG 37.6B terperangkap di modal tinggi 1.843",
+      why_insight: "Weekly flow 5D: Broker LG menampung 203 ribu lot di harga tinggi 1.843. Harga saat ini (1.490) floating loss dalam -19.16%.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu base 1.400",
+        rr_ratio: "-",
+        note: "Risiko penurunan lanjutan masih terbuka."
+      }
+    },
+    "10D": {
+      ticker: "INDY",
+      close: 1490,
+      change_percent: -5.7,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "LG", name: "Trimegah Sekuritas", investor_group: "LOCAL", net_value: 37691592500, avg_price: 1843.05 },
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 13637611000, avg_price: 1711.23 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -45000000000, avg_price: 1820 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -31000000000, avg_price: 1790 }
+      ],
+      net_value: 37691592500,
+      net_volume_lots: 203519,
+      concentration_pct: 43.1,
+      bandar_avg_cost: 1843.05,
+      bandar_cost_gap_pct: -19.16,
+      counterparty_note: "Basis 10 hari bursa: Outflow sistematis dari broker ritel YP & PD",
+      why_insight: "Horizon 10D: Outflow sistematis selama 2 pekan bursa membuat INDY terpuruk di 1490. Meskipun modal bandar LG berada di 1.843, belum ada katalis pembalik arah.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu konfirmasi reversal",
+        rr_ratio: "-",
+        note: "Disiplin hindari saham downtrend."
+      }
+    },
+  },
+  JPFA: {
+    "2D": {
+      ticker: "JPFA",
+      close: 1445,
+      change_percent: -1,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "2D",
+      horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
+      date_range: "19 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 9740217500, avg_price: 1461.25 },
+        { code: "YU", name: "CGS International", investor_group: "FOREIGN", net_value: 5567384500, avg_price: 1476.27 }
+      ],
+      top_distributors: [
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: -8900000000, avg_price: 1465 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -4500000000, avg_price: 1460 }
+      ],
+      net_value: 9740217500,
+      net_volume_lots: 66637,
+      concentration_pct: 38.2,
+      bandar_avg_cost: 1461.25,
+      bandar_cost_gap_pct: -1.11,
+      counterparty_note: "Asing BK (+9.7B) menyerap pelepasan lokal di rata-rata 1.461",
+      why_insight: "Inisiasi 2D: Penurunan tipis -1.0% ditampung asing BK senilai 9.7B di modal 1.461. Diskon harga saat ini -1.11% dari modal bandar.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 1.380",
+        rr_ratio: "-",
+        note: "Tunggu pembentukan support kuat sebelum entry."
+      }
+    },
+    "5D": {
+      ticker: "JPFA",
+      close: 1445,
+      change_percent: -1,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "5D",
+      horizon_label: "5 Hari Bursa (Weekly Persistence)",
+      date_range: "16 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 10936631500, avg_price: 1484.17 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 9402172000, avg_price: 1503.33 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -15200000000, avg_price: 1495 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -11400000000, avg_price: 1490 }
+      ],
+      net_value: 10936631500,
+      net_volume_lots: 74550,
+      concentration_pct: 36.4,
+      bandar_avg_cost: 1484.17,
+      bandar_cost_gap_pct: -2.64,
+      counterparty_note: "BK & Mandiri CC mengumpulkan 20B di kisaran modal 1.484 - 1.503",
+      why_insight: "Weekly flow 5D: Konsolidasi perunggasan. BK memimpin serapan mingguan di avg 1.484. Selisih diskon harga -2.64%.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu pivot 1.480",
+        rr_ratio: "-",
+        note: "Wait and see hingga tren net buy kembali stabil."
+      }
+    },
+    "10D": {
+      ticker: "JPFA",
+      close: 1445,
+      change_percent: -1,
+      quadrant: "markdown_distribusi",
+      quadrant_label: "[DD] Markdown + Distribusi",
+      status_color: "rose",
+      horizon: "10D",
+      horizon_label: "10 Hari Bursa (Structural Base)",
+      date_range: "09 - 20 Nov 2026",
+      top_accumulators: [
+        { code: "DX", name: "Bahana Sekuritas", investor_group: "GOVERNMENT", net_value: 41385053000, avg_price: 1490.33 },
+        { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: 24370839000, avg_price: 1504.16 },
+        { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 17576436000, avg_price: 1503.48 }
+      ],
+      top_distributors: [
+        { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "FOREIGN", net_value: -38000000000, avg_price: 1510 },
+        { code: "PD", name: "Indo Premier Sekuritas", investor_group: "LOCAL", net_value: -24000000000, avg_price: 1505 }
+      ],
+      net_value: 41385053000,
+      net_volume_lots: 277974,
+      concentration_pct: 41.5,
+      bandar_avg_cost: 1490.33,
+      bandar_cost_gap_pct: -3.04,
+      counterparty_note: "Basis Danantara Bahana (DX) mengunci 41.4B selama 10 hari bursa",
+      why_insight: "Horizon 10D: Akumulasi struktural 2 pekan bursa dipimpin oleh institusi pemerintah Bahana DX (41.4B) pada rata-rata 1.490. Harga 1.445 berada di zona diskon -3.04%.",
+      trade_plan: {
+        action: "HARD AVOID",
+        entry_zone: "Dilarang Masuk",
+        stop_loss: "-",
+        target_price: "Tunggu support 1.400",
+        rr_ratio: "-",
+        note: "Disiplin pantau absorpsi buyer sebelum entry."
+      }
+    },
+  },
+
 };
 
 /**
@@ -1643,7 +3117,18 @@ export function getTickerDetailByHorizon(
   if (TICKER_HORIZON_DETAILS_MAP[code]?.[horizon]) {
     return TICKER_HORIZON_DETAILS_MAP[code]![horizon]!;
   }
-  return TICKER_DETAILS_MAP[code] || null;
+  const base1D = TICKER_DETAILS_MAP[code];
+  if (base1D) {
+    // Explicit safeguard: If requesting multi-day horizon but only 1D is available,
+    // explicitly mark is_horizon_fallback = true so UI warns the user honestly.
+    return {
+      ...base1D,
+      horizon,
+      is_horizon_fallback: true,
+      horizon_fallback_reason: `Snapshot multi-horizon (${horizon}) belum tersedia untuk ${code}. Menampilkan baseline 1-Hari EOD secara transparan.`,
+    };
+  }
+  return null;
 }
 
 /**
