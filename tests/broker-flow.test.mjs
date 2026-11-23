@@ -8,7 +8,7 @@ import {
   DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
   QUADRANT_MAPS,
-  synthesizeTickerDetail,
+  fetchTickerDetail,
   formatRupiah,
 } from "../src/lib/broker-flow.ts";
 
@@ -71,11 +71,18 @@ test("Quadrant maps contain 4 Wyckoff-Smart Money quadrants", () => {
   assert.equal(QUADRANT_MAPS.markdown_distribusi.stocks_count, 287);
 });
 
-test("Synthesize ticker detail works gracefully for unknown tickers", () => {
-  const custom = synthesizeTickerDetail("PGAS");
-  assert.equal(custom.ticker, "PGAS");
-  assert.ok(custom.trade_plan);
-  assert.ok(custom.top_accumulators.length > 0);
+test("NAYZ has verified genuine EOD data from MCP Max", () => {
+  const nayz = TICKER_DETAILS_MAP.NAYZ;
+  assert.ok(nayz);
+  assert.equal(nayz.ticker, "NAYZ");
+  assert.equal(nayz.close, 90);
+  assert.equal(nayz.top_accumulators[0].code, "GR");
+  assert.equal(nayz.top_distributors[0].code, "SQ");
+});
+
+test("Unknown tickers return null honestly without fabricating data", async () => {
+  const unknown = await fetchTickerDetail("UNKNOWN_STOCK_XYZ");
+  assert.equal(unknown, null);
 });
 
 test("Format rupiah utility behaves accurately", () => {

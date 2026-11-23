@@ -7,7 +7,6 @@ import {
   DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
   QUADRANT_MAPS,
-  synthesizeTickerDetail,
 } from "@/lib/broker-flow";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +18,14 @@ export async function GET(request: NextRequest) {
 
   if (ticker) {
     const upper = ticker.toUpperCase().trim();
-    const detail = TICKER_DETAILS_MAP[upper] || synthesizeTickerDetail(upper);
-    return NextResponse.json({ success: true, data: detail });
+    const detail = TICKER_DETAILS_MAP[upper];
+    if (detail) {
+      return NextResponse.json({ success: true, data: detail });
+    }
+    return NextResponse.json(
+      { success: false, error: "TICKER_NOT_FOUND", message: `Data snapshot untuk ${upper} belum tersedia.` },
+      { status: 404 }
+    );
   }
 
   if (quadrant) {

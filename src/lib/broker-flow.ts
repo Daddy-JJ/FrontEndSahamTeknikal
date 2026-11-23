@@ -894,49 +894,47 @@ export const TICKER_DETAILS_MAP: Record<string, TickerBrokerDetail> = {
       note: "Tunggu sinyal pembalikan arah dan absorpsi buyer sebelum entry.",
     },
   },
+  NAYZ: {
+    ticker: "NAYZ",
+    close: 90,
+    change_percent: 9.76,
+    quadrant: "markup_akumulasi",
+    quadrant_label: "[MA] Markup + Akumulasi",
+    status_color: "emerald",
+    top_accumulators: [
+      { code: "GR", name: "Panin Sekuritas", investor_group: "LOCAL", net_value: 1_925_351_900, avg_price: 89.10 },
+      { code: "CP", name: "KB Valbury Sekuritas", investor_group: "FOREIGN", net_value: 203_593_900, avg_price: 89.86 },
+      { code: "AI", name: "UOB Kay Hian", investor_group: "FOREIGN", net_value: 175_845_400, avg_price: 87.92 },
+    ],
+    top_distributors: [
+      { code: "SQ", name: "BCA Sekuritas", investor_group: "LOCAL", net_value: -518_167_700, avg_price: 89.80 },
+      { code: "XC", name: "Ajaib Sekuritas", investor_group: "LOCAL", net_value: -362_041_500, avg_price: 89.22 },
+      { code: "TP", name: "OCBC Sekuritas", investor_group: "FOREIGN", net_value: -263_100_000, avg_price: 88.50 },
+      { code: "XL", name: "Stockbit Sekuritas", investor_group: "LOCAL", net_value: -102_683_700, avg_price: 87.99 },
+    ],
+    net_value: 1_925_351_900,
+    net_volume_lots: 216_110,
+    concentration_pct: 45.2,
+    bandar_avg_cost: 89.15,
+    bandar_cost_gap_pct: 0.95,
+    counterparty_note: "Akumulasi lokal GR (+1.92B) menyerap cutloss/TP ritel Ajaib (XC) & Stockbit (XL)",
+    why_insight: "NAYZ naik +9.8% ke Rp 90 dengan transaksi 6.6B. Akumulasi terpusat pada broker GR (1.92B) dan CP (203M) menyerap pelepasan dari ritel SQ & XC.",
+    trade_plan: {
+      action: "BUY ON PULLBACK",
+      entry_zone: "88 - 90",
+      stop_loss: "84 (Risk -6.7%)",
+      target_price: "100 - 106 (Reward +11.1% s/d +17.8%)",
+      rr_ratio: "1 : 2.5",
+      note: "Saham akselerasi volatilitas tinggi. Disiplin stop loss bila tembus 84.",
+    },
+  },
 };
 
 /**
- * Fallback synthesizer for any valid IDX ticker not present in the static snapshot
+ * On-demand ticker detail fetcher (Memory first, then API/DB query, then honest null)
+ * NEVER synthesizes fake financial data or hallucinations.
  */
-export function synthesizeTickerDetail(tickerCode: string): TickerBrokerDetail {
-  const code = tickerCode.toUpperCase().trim();
-  return {
-    ticker: code,
-    close: 1000,
-    change_percent: 0.0,
-    quadrant: "markup_akumulasi",
-    quadrant_label: "[MA] Estimasi Akumulasi",
-    status_color: "emerald",
-    top_accumulators: [
-      { code: "CC", name: "Mandiri Sekuritas", investor_group: "GOVERNMENT", net_value: 12_500_000_000, avg_price: 995.00 },
-      { code: "BK", name: "J.P. Morgan Sekuritas", investor_group: "FOREIGN", net_value: 8_200_000_000, avg_price: 998.00 },
-    ],
-    top_distributors: [
-      { code: "YP", name: "Mirae Asset Sekuritas", investor_group: "LOCAL", net_value: -6_400_000_000, avg_price: 1005.00 },
-    ],
-    net_value: 14_300_000_000,
-    net_volume_lots: 143_000,
-    concentration_pct: 35.0,
-    bandar_avg_cost: 995.00,
-    bandar_cost_gap_pct: 0.50,
-    counterparty_note: "Smart Money institusi memegang kontrol dominasi buy",
-    why_insight: `Data live snapshot untuk ${code} disintesis dari feed pasar IDX. Smart money terdeteksi mengakumulasi bertahap di sekitar harga modal 995.`,
-    trade_plan: {
-      action: "BUY ON PULLBACK",
-      entry_zone: "980 - 1000",
-      stop_loss: "940 (Risk -5.0%)",
-      target_price: "1120 - 1160 (Reward +12.0% s/d +16.0%)",
-      rr_ratio: "1 : 2.8",
-      note: `Analisis on-demand untuk ${code}. Jaga disiplin stop loss bila menembus modal bandar.`,
-    },
-  };
-}
-
-/**
- * On-demand ticker detail fetcher (Memory first, then API/DB query, then graceful synthesis)
- */
-export async function fetchTickerDetail(tickerCode: string): Promise<TickerBrokerDetail> {
+export async function fetchTickerDetail(tickerCode: string): Promise<TickerBrokerDetail | null> {
   const code = tickerCode.toUpperCase().trim();
   if (TICKER_DETAILS_MAP[code]) {
     return TICKER_DETAILS_MAP[code];
@@ -954,8 +952,8 @@ export async function fetchTickerDetail(tickerCode: string): Promise<TickerBroke
     // network or API offline fallback
   }
 
-  // Graceful fallback
-  return synthesizeTickerDetail(code);
+  // Honest null: never fabricate data
+  return null;
 }
 
 /**
