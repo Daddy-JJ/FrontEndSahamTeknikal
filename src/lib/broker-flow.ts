@@ -3289,16 +3289,16 @@ export function buildQuadrantFallbackDetail(
       const isPositive = stock.smart_money_net >= 0;
       const horizonLabel =
         horizon === "2D"
-          ? "2 Hari (19-20 Nov)"
+          ? "2 Hari (20-23 Nov)"
           : horizon === "10D"
-          ? "10 Hari (09-20 Nov)"
-          : "5 Hari (16-20 Nov)";
+          ? "10 Hari (10-23 Nov)"
+          : "5 Hari (17-23 Nov)";
       const dateRange =
         horizon === "2D"
-          ? "19 - 20 Nov 2026"
+          ? "20 - 23 Nov 2026"
           : horizon === "10D"
-          ? "09 - 20 Nov 2026"
-          : "16 - 20 Nov 2026";
+          ? "10 - 23 Nov 2026"
+          : "17 - 23 Nov 2026";
 
       return {
         ticker: stock.ticker,
@@ -3454,7 +3454,7 @@ export const DAILY_INSIGHTS_MAP: Record<HorizonPeriod, DailyInsightCardData> = {
   "2D": {
     horizon: "2D",
     horizon_label: "2 Hari Bursa (Inisiasi & Momentum)",
-    date_range: "19 - 20 Nov 2026 (48 Jam Terakhir)",
+    date_range: "20 - 23 Nov 2026 (48 Jam Terakhir)",
     macro_pulse: {
       foreign_net: -62_400_000_000,
       government_net: 84_100_000_000,
@@ -3593,7 +3593,7 @@ export const DAILY_INSIGHTS_MAP: Record<HorizonPeriod, DailyInsightCardData> = {
   "5D": {
     horizon: "5D",
     horizon_label: "5 Hari Bursa (Weekly Persistence - Rekomendasi Utama)",
-    date_range: "16 - 20 Nov 2026 (1 Pekan Bursa)",
+    date_range: "17 - 23 Nov 2026 (1 Pekan Bursa)",
     macro_pulse: {
       foreign_net: -214_500_000_000,
       government_net: 295_800_000_000,
@@ -3748,7 +3748,7 @@ export const DAILY_INSIGHTS_MAP: Record<HorizonPeriod, DailyInsightCardData> = {
   "10D": {
     horizon: "10D",
     horizon_label: "10 Hari Bursa (Structural Base / Inventory Bandar)",
-    date_range: "9 - 20 Nov 2026 (2 Pekan Bursa)",
+    date_range: "10 - 23 Nov 2026 (2 Pekan Bursa)",
     macro_pulse: {
       foreign_net: -580_200_000_000,
       government_net: 612_400_000_000,

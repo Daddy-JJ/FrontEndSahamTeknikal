@@ -147,7 +147,7 @@ export default function BrokerFlowPage() {
   const handleManualSync = () => {
     setSyncStatus("Menghubungkan ke Supabase Edge Function...");
     setTimeout(() => {
-      setSyncStatus("Sinkronisasi EOD Broksum Sukses (Snapshot 20 Nov 2026 Aktif)");
+      setSyncStatus("Sinkronisasi EOD Broksum Sukses (Snapshot 23 Nov 2026 Aktif)");
       setTimeout(() => setSyncStatus(null), 4000);
     }, 800);
   };
@@ -817,7 +817,7 @@ export default function BrokerFlowPage() {
                   {selectedTicker.change_percent.toFixed(1)}%
                 </span>
                 <span className="bf-insight-period-tag">
-                  {selectedTicker.horizon_label || (activeHorizon === "2D" ? "2 Hari (19-20 Nov)" : activeHorizon === "5D" ? "5 Hari (16-20 Nov)" : "10 Hari (09-20 Nov)")}
+                  {selectedTicker.horizon_label || (activeHorizon === "2D" ? "2 Hari (20-23 Nov)" : activeHorizon === "5D" ? "5 Hari (17-23 Nov)" : "10 Hari (10-23 Nov)")}
                 </span>
               </div>
 
