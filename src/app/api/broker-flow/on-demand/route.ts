@@ -52,12 +52,13 @@ export async function POST(request: NextRequest) {
       message: `Analisis on-demand untuk ${upper} berhasil ditarik langsung dari Max MCP.`,
       synced_at: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Gagal melakukan analisis on-demand.";
     console.error("On-demand broker flow error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Gagal melakukan analisis on-demand.",
+        error: msg,
       },
       { status: 502 }
     );

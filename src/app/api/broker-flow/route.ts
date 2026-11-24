@@ -10,6 +10,7 @@ import {
   QUADRANT_MAPS,
   buildQuadrantFallbackDetail,
   type HorizonPeriod,
+  type TickerBrokerDetail,
 } from "@/lib/broker-flow";
 import { fetchOnDemandTickerHorizons } from "@/lib/mcp-broker-flow";
 import snapshotData from "@/data/broker_flow_snapshot_latest.json";
@@ -36,8 +37,9 @@ export async function GET(request: NextRequest) {
           TICKER_DETAILS_MAP[upper] = liveHorizons[horizon];
           return NextResponse.json({ success: true, data: liveHorizons[horizon] });
         }
-      } catch (err: any) {
-        console.warn("Explicit on-demand fetch failed:", err?.message);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Error";
+        console.warn("Explicit on-demand fetch failed:", msg);
       }
     }
 
@@ -50,7 +52,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Dynamic lookup from daily snapshot bundle (Expanded market tickers)
-    const snapshotHorizons = (snapshotData as any)?.ticker_horizons?.[upper];
+    const snapshotBundle = snapshotData as Record<string, unknown> | null;
+    const tickerHorizons = snapshotBundle?.ticker_horizons as Record<string, Record<string, TickerBrokerDetail>> | undefined;
+    const snapshotHorizons = tickerHorizons?.[upper];
     if (snapshotHorizons) {
       const targetDetail =
         snapshotHorizons[horizon] ||
@@ -119,12 +123,15 @@ export async function GET(request: NextRequest) {
   }
 
   // Return full market-wide summary including quadrant maps
+  const bundle = snapshotData as Record<string, unknown> | null;
   const marketSummary = snapshotData?.market_summary || DEFAULT_MARKET_SUMMARY;
-  const topAcc = (snapshotData as any)?.top_accumulations?.length > 0
-    ? (snapshotData as any).top_accumulations
+  const rawTopAcc = bundle?.top_accumulations;
+  const topAcc = Array.isArray(rawTopAcc) && rawTopAcc.length > 0
+    ? rawTopAcc
     : DEFAULT_TOP_ACCUMULATIONS;
-  const topDist = (snapshotData as any)?.top_distributions?.length > 0
-    ? (snapshotData as any).top_distributions
+  const rawTopDist = bundle?.top_distributions;
+  const topDist = Array.isArray(rawTopDist) && rawTopDist.length > 0
+    ? rawTopDist
     : DEFAULT_TOP_DISTRIBUTIONS;
 
   return NextResponse.json({

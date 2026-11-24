@@ -1,15 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import { JournalShell } from "@/components/journal-shell";
+
+const BrokerFlowInlineChart = dynamic(
+  () => import("@/components/broker-flow-inline-chart"),
+  { ssr: false }
+);
 import {
   DEFAULT_MARKET_SUMMARY,
   DEFAULT_TOP_ACCUMULATIONS,
   DEFAULT_TOP_DISTRIBUTIONS,
   DEFAULT_TOP_BROKERS,
   DEFAULT_SECTOR_FLOWS,
-  TICKER_DETAILS_MAP,
   QUADRANT_MAPS,
   fetchTickerDetail,
   getTickerDetailByHorizon,
@@ -36,6 +40,7 @@ export default function BrokerFlowPage() {
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [isOnDemandLoading, setIsOnDemandLoading] = useState(false);
   const [onDemandTarget, setOnDemandTarget] = useState<string | null>(null);
+  const [isChartOpen, setIsChartOpen] = useState(false);
 
   const handleHorizonChange = async (newHorizon: HorizonPeriod) => {
     setActiveHorizon(newHorizon);
@@ -77,8 +82,9 @@ export default function BrokerFlowPage() {
       } else {
         setSearchStatus(`❌ Gagal on-demand: ${data.error || "Data emiten tidak ditemukan di Bursa."}`);
       }
-    } catch (err: any) {
-      setSearchStatus(`❌ Gagal on-demand: ${err?.message || "Koneksi terputus."}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Koneksi terputus.";
+      setSearchStatus(`❌ Gagal on-demand: ${msg}`);
     } finally {
       setIsOnDemandLoading(false);
     }
@@ -816,11 +822,11 @@ export default function BrokerFlowPage() {
               </div>
 
               <div className="bf-insight-top-actions">
-                <Link
-                  href={`/chart/${selectedTicker.ticker}`}
-                  className="bf-btn-secondary"
+                <button
+                  type="button"
+                  className={`bf-btn-secondary ${isChartOpen ? "bf-btn-chart-active" : ""}`}
+                  onClick={() => setIsChartOpen(!isChartOpen)}
                   style={{
-                    textDecoration: "none",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "6px",
@@ -828,11 +834,15 @@ export default function BrokerFlowPage() {
                     fontSize: "12px",
                     fontWeight: 700,
                     borderRadius: "6px",
+                    cursor: "pointer",
+                    backgroundColor: isChartOpen ? "rgba(56, 189, 248, 0.18)" : undefined,
+                    borderColor: isChartOpen ? "#38bdf8" : undefined,
+                    color: isChartOpen ? "#38bdf8" : undefined,
                   }}
-                  title={`Buka analisis grafik teknikal interaktif untuk ${selectedTicker.ticker}`}
+                  title={isChartOpen ? `Tutup grafik teknikal interaktif` : `Buka grafik teknikal interaktif untuk ${selectedTicker.ticker}`}
                 >
-                  📈 Buka Chart Teknikal →
-                </Link>
+                  {isChartOpen ? "📉 Tutup Chart" : "📈 Buka Chart Teknikal"}
+                </button>
 
                 <button
                   type="button"
@@ -1056,6 +1066,17 @@ export default function BrokerFlowPage() {
               </div>
 
             </div>
+
+            {/* Embedded Inline Chart (Lightweight Charts: Volume, Supertrend, MACD, Modal Bandar) */}
+            {isChartOpen && (
+              <div className="bf-inline-chart-mount-point" style={{ marginTop: "20px" }}>
+                <BrokerFlowInlineChart
+                  ticker={selectedTicker.ticker}
+                  bandarAvgCost={selectedTicker.bandar_avg_cost}
+                  onClose={() => setIsChartOpen(false)}
+                />
+              </div>
+            )}
 
           </section>
         )}

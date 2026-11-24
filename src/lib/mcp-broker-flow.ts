@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   TickerBrokerDetail,
   BrokerDetailItem,
@@ -82,7 +83,7 @@ export async function callMaxTradeMcp(
  * Helper to calculate weighted average cost of bandar/accumulators.
  */
 function calculateBandarAverageCost(
-  buyers: any[],
+  buyers: Array<Record<string, unknown>>,
   fallbackPrice: number
 ): number {
   if (!buyers || buyers.length === 0) return fallbackPrice;
@@ -91,8 +92,8 @@ function calculateBandarAverageCost(
   let totalVolumeLots = 0;
 
   for (const b of buyers) {
-    const netVal = b.netValue || b.buyValue || 0;
-    const netVol = b.netVolume || b.buyVolume || 0;
+    const netVal = Number(b.netValue || b.buyValue) || 0;
+    const netVol = Number(b.netVolume || b.buyVolume) || 0;
     if (netVal > 0 && netVol > 0) {
       totalValue += netVal;
       totalVolumeLots += netVol;
@@ -105,7 +106,7 @@ function calculateBandarAverageCost(
   }
 
   // Fallback to top buyer avg price if available
-  const topAvg = buyers[0]?.buyAvgPrice || buyers[0]?.avgPrice;
+  const topAvg = Number(buyers[0]?.buyAvgPrice || buyers[0]?.avgPrice);
   return topAvg ? Math.round(topAvg * 100) / 100 : fallbackPrice;
 }
 
@@ -305,27 +306,27 @@ export async function fetchOnDemandTickerHorizons(
   const result: Partial<Record<HorizonPeriod, TickerBrokerDetail>> = {};
 
   for (const cfg of horizonsConfig) {
-    const rawBrokers = cfg.brokersResp?.records || [];
+    const rawBrokers = (cfg.brokersResp?.records as Array<Record<string, unknown>>) || [];
     const rawSignal = cfg.signalResp;
 
     // Filter top buyers & sellers
-    const buyers = rawBrokers.filter((r: any) => r.netSide === "BUY");
-    const sellers = rawBrokers.filter((r: any) => r.netSide === "SELL");
+    const buyers = rawBrokers.filter((r) => r.netSide === "BUY");
+    const sellers = rawBrokers.filter((r) => r.netSide === "SELL");
 
-    const topAccumulators: BrokerDetailItem[] = buyers.slice(0, 3).map((b: any) => ({
-      code: b.code || "INST",
-      name: b.name || b.code || "Institusi",
-      investor_group: (b.investorGroups?.[0] as any) || "LOCAL",
-      net_value: b.netValue || 0,
-      avg_price: b.buyAvgPrice || b.avgPrice || closePrice,
+    const topAccumulators: BrokerDetailItem[] = buyers.slice(0, 3).map((b) => ({
+      code: String(b.code || "INST"),
+      name: String(b.name || b.code || "Institusi"),
+      investor_group: ((b.investorGroups as string[])?.[0] || "LOCAL") as BrokerDetailItem["investor_group"],
+      net_value: Number(b.netValue) || 0,
+      avg_price: Number(b.buyAvgPrice || b.avgPrice) || closePrice,
     }));
 
-    const topDistributors: BrokerDetailItem[] = sellers.slice(0, 3).map((s: any) => ({
-      code: s.code || "SELLER",
-      name: s.name || s.code || "Penjual",
-      investor_group: (s.investorGroups?.[0] as any) || "LOCAL",
-      net_value: s.netValue || 0,
-      avg_price: s.sellAvgPrice || s.avgPrice || closePrice,
+    const topDistributors: BrokerDetailItem[] = sellers.slice(0, 3).map((s) => ({
+      code: String(s.code || "SELLER"),
+      name: String(s.name || s.code || "Penjual"),
+      investor_group: ((s.investorGroups as string[])?.[0] || "LOCAL") as BrokerDetailItem["investor_group"],
+      net_value: Number(s.netValue) || 0,
+      avg_price: Number(s.sellAvgPrice || s.avgPrice) || closePrice,
     }));
 
     const bandarCost = calculateBandarAverageCost(buyers, closePrice);
@@ -339,7 +340,7 @@ export async function fetchOnDemandTickerHorizons(
       rawSignal?.summary?.foreignNetValue ||
       1_000_000_000;
     const netVolumeLots =
-      buyers[0]?.netVolume || Math.round(netValue / (closePrice * 100));
+      Number(buyers[0]?.netVolume) || Math.round(netValue / (closePrice * 100));
 
     const { quadrant, quadrant_label, status_color } = classifyQuadrant(
       changePct,

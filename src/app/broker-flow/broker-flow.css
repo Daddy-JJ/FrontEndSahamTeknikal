@@ -1299,3 +1299,254 @@
   100% { opacity: 0.6; }
 }
 
+
+/* ==========================================================================
+   INLINE LIGHTWEIGHT CHART (BROKER FLOW INTEGRATION)
+   ========================================================================== */
+.bf-inline-chart-mount-point {
+  border-top: 1px solid #1c3148;
+  padding-top: 18px;
+  animation: bfFadeIn 0.25s ease-out;
+}
+
+@keyframes bfFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bf-inline-chart-card {
+  background: #09131e;
+  border: 1px solid #223e5e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.bf-chart-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #0d1a29;
+  border-bottom: 1px solid #1a2f45;
+}
+
+.bf-chart-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bf-chart-title-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+}
+
+.bf-chart-ticker-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.bf-chart-bandar-cost-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.bf-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.bf-timeframe-btn-group {
+  display: flex;
+  background: #060d15;
+  border: 1px solid #1a2e44;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bf-tf-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 4px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bf-tf-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.bf-tf-btn.active {
+  background: #173b5c;
+  color: #38bdf8;
+  border-radius: 4px;
+}
+
+.bf-indicator-toggles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bf-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: #0a1420;
+  border: 1px solid #1c3147;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.bf-toggle-pill input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  accent-color: #38bdf8;
+}
+
+.bf-toggle-pill.active.green {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+}
+
+.bf-toggle-pill.active.blue {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.bf-toggle-pill.active.sky {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+
+.bf-toggle-pill.active.amber {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.bf-chart-close-btn {
+  background: transparent;
+  border: 1px solid #233b54;
+  color: #94a3b8;
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.bf-chart-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.bf-chart-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: #08111b;
+  border-bottom: 1px solid #142436;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+}
+
+.bf-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bf-legend-item .lbl {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.bf-legend-item .val {
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.bf-legend-item .val.pos { color: #34d399; }
+.bf-legend-item .val.neg { color: #f87171; }
+.bf-legend-item .val.sky { color: #38bdf8; }
+.bf-legend-item .val.amber { color: #fbbf24; }
+
+.bf-chart-container-wrap {
+  position: relative;
+  background: #09131e;
+}
+
+.bf-chart-loading-overlay,
+.bf-chart-error-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(9, 19, 30, 0.88);
+  z-index: 10;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.bf-chart-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #070e17;
+  border-top: 1px solid #142436;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.bf-btn-chart-active {
+  background: rgba(56, 189, 248, 0.18) !important;
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+}

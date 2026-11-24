@@ -4,8 +4,6 @@ import {
   DEFAULT_MARKET_SUMMARY,
   DEFAULT_TOP_ACCUMULATIONS,
   DEFAULT_TOP_DISTRIBUTIONS,
-  DEFAULT_TOP_BROKERS,
-  DEFAULT_SECTOR_FLOWS,
   TICKER_DETAILS_MAP,
   TICKER_HORIZON_DETAILS_MAP,
   getTickerDetailByHorizon,
@@ -170,7 +168,6 @@ test("Zero-identity safeguard across all tickers in TICKER_HORIZON_DETAILS_MAP",
     assert.ok(horizons["10D"], `Ticker ${ticker} must have 10D profile`);
 
     const h2 = horizons["2D"];
-    const h5 = horizons["5D"];
     const h10 = horizons["10D"];
 
     // Assert that 2D, 5D, 10D are NOT copy-pasted clones
