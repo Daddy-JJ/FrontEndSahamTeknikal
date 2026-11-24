@@ -1,7 +1,7 @@
 {
   "snapshot_date": "2026-11-23",
   "synced_at": "2026-11-24T10:57:21.380214",
-  "total_tickers_indexed": 54,
+  "total_tickers_indexed": 55,
   "market_summary": {
     "date": "2026-11-23",
     "quadrant_counts": {
@@ -7932,6 +7932,158 @@
           "entry_zone": "980 - 1010",
           "stop_loss": "185 (Risk ~4.5%)",
           "target_price": "3485 (Reward ~13.5%)",
+          "rr_ratio": "1 : 3.0",
+          "note": "Markup akumulasi valid. Smart money mengawal tren naik."
+        }
+      }
+    },
+    "CDIA": {
+      "2D": {
+        "ticker": "CDIA",
+        "close": 386,
+        "change_percent": 24.516129032258064,
+        "quadrant": "markup_akumulasi",
+        "quadrant_label": "[MA] Markup + Akumulasi",
+        "status_color": "emerald",
+        "horizon": "2D",
+        "horizon_label": "2 Hari Bursa (Inisiasi & Momentum)",
+        "date_range": "19 - 20 Nov 2026",
+        "top_accumulators": [
+          {
+            "code": "MG",
+            "name": "MG",
+            "investor_group": "LOCAL",
+            "net_value": 10076812600,
+            "avg_price": 384.77
+          },
+          {
+            "code": "AK",
+            "name": "AK",
+            "investor_group": "FOREIGN",
+            "net_value": 5740686600,
+            "avg_price": 350.97
+          },
+          {
+            "code": "CC",
+            "name": "CC",
+            "investor_group": "GOVERNMENT",
+            "net_value": 2070276000,
+            "avg_price": 344.01
+          }
+        ],
+        "top_distributors": [],
+        "net_value": 10076812600,
+        "net_volume_lots": 260948,
+        "concentration_pct": 0.0,
+        "bandar_avg_cost": 358.73,
+        "bandar_cost_gap_pct": 7.6,
+        "counterparty_note": "Distribusi transaksi seimbang antar partisipan pasar.",
+        "why_insight": "Analisis horizon 2D untuk CDIA. Akumulasi dipimpin broker MG pada harga modal 358.73.",
+        "trade_plan": {
+          "action": "BUY ON PULLBACK / BREAKOUT",
+          "entry_zone": "378 - 390",
+          "stop_loss": "344 (Risk ~4.5%)",
+          "target_price": "528 (Reward ~13.5%)",
+          "rr_ratio": "1 : 3.0",
+          "note": "Markup akumulasi valid. Smart money mengawal tren naik."
+        }
+      },
+      "5D": {
+        "ticker": "CDIA",
+        "close": 386,
+        "change_percent": 24.516129032258064,
+        "quadrant": "markup_akumulasi",
+        "quadrant_label": "[MA] Markup + Akumulasi",
+        "status_color": "emerald",
+        "horizon": "5D",
+        "horizon_label": "5 Hari Bursa (Weekly Persistence)",
+        "date_range": "16 - 20 Nov 2026",
+        "top_accumulators": [
+          {
+            "code": "MG",
+            "name": "MG",
+            "investor_group": "LOCAL",
+            "net_value": 10154718800,
+            "avg_price": 384.5
+          },
+          {
+            "code": "AK",
+            "name": "AK",
+            "investor_group": "FOREIGN",
+            "net_value": 4124414600,
+            "avg_price": 352
+          },
+          {
+            "code": "OD",
+            "name": "OD",
+            "investor_group": "GOVERNMENT",
+            "net_value": 3431663800,
+            "avg_price": 346.15
+          }
+        ],
+        "top_distributors": [],
+        "net_value": 10154718800,
+        "net_volume_lots": 263101,
+        "concentration_pct": 0.0,
+        "bandar_avg_cost": 363.19,
+        "bandar_cost_gap_pct": 6.28,
+        "counterparty_note": "Distribusi transaksi seimbang antar partisipan pasar.",
+        "why_insight": "Analisis horizon 5D untuk CDIA. Akumulasi dipimpin broker MG pada harga modal 363.19.",
+        "trade_plan": {
+          "action": "BUY ON PULLBACK / BREAKOUT",
+          "entry_zone": "378 - 390",
+          "stop_loss": "349 (Risk ~4.5%)",
+          "target_price": "513 (Reward ~13.5%)",
+          "rr_ratio": "1 : 3.0",
+          "note": "Markup akumulasi valid. Smart money mengawal tren naik."
+        }
+      },
+      "10D": {
+        "ticker": "CDIA",
+        "close": 386,
+        "change_percent": 24.516129032258064,
+        "quadrant": "markup_akumulasi",
+        "quadrant_label": "[MA] Markup + Akumulasi",
+        "status_color": "emerald",
+        "horizon": "10D",
+        "horizon_label": "10 Hari Bursa (Structural Base)",
+        "date_range": "09 - 20 Nov 2026",
+        "top_accumulators": [
+          {
+            "code": "MG",
+            "name": "MG",
+            "investor_group": "LOCAL",
+            "net_value": 10098740400,
+            "avg_price": 382.49
+          },
+          {
+            "code": "AK",
+            "name": "AK",
+            "investor_group": "FOREIGN",
+            "net_value": 6651661000,
+            "avg_price": 350.54
+          },
+          {
+            "code": "OD",
+            "name": "OD",
+            "investor_group": "GOVERNMENT",
+            "net_value": 3070820600,
+            "avg_price": 346.34
+          }
+        ],
+        "top_distributors": [],
+        "net_value": 10098740400,
+        "net_volume_lots": 261517,
+        "concentration_pct": 0.0,
+        "bandar_avg_cost": 358.46,
+        "bandar_cost_gap_pct": 7.68,
+        "counterparty_note": "Distribusi transaksi seimbang antar partisipan pasar.",
+        "why_insight": "Analisis horizon 10D untuk CDIA. Akumulasi dipimpin broker MG pada harga modal 358.46.",
+        "trade_plan": {
+          "action": "BUY ON PULLBACK / BREAKOUT",
+          "entry_zone": "378 - 390",
+          "stop_loss": "344 (Risk ~4.5%)",
+          "target_price": "528 (Reward ~13.5%)",
           "rr_ratio": "1 : 3.0",
           "note": "Markup akumulasi valid. Smart money mengawal tren naik."
         }

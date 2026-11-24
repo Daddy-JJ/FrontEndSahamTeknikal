@@ -34,6 +34,8 @@ export default function BrokerFlowPage() {
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [isOnDemandLoading, setIsOnDemandLoading] = useState(false);
+  const [onDemandTarget, setOnDemandTarget] = useState<string | null>(null);
 
   const handleHorizonChange = async (newHorizon: HorizonPeriod) => {
     setActiveHorizon(newHorizon);
@@ -42,6 +44,43 @@ export default function BrokerFlowPage() {
       if (detail) {
         setSelectedTicker(detail);
       }
+    }
+  };
+
+  const handleTriggerOnDemand = async (tickerToFetch: string) => {
+    const upper = tickerToFetch.toUpperCase().trim();
+    setIsOnDemandLoading(true);
+    setSearchStatus(`⚡ Menghubungkan ke Max MCP... Menarik data aliran dana & menghitung multi-horizon 2D/5D/10D untuk ${upper}...`);
+
+    try {
+      const resp = await fetch("/api/broker-flow/on-demand", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker: upper }),
+      });
+      const data = await resp.json();
+
+      if (data.success && data.horizons) {
+        const targetDetail = data.horizons[activeHorizon] || data.detail;
+        if (targetDetail) {
+          setSelectedTickerCode(upper);
+          setSelectedTicker(targetDetail);
+          setOnDemandTarget(null);
+          setSearchStatus(`✅ Berhasil! Analisis on-demand [${activeHorizon}] untuk ${upper} siap.`);
+          setTimeout(() => {
+            const el = document.getElementById("ticker-insight-section");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }, 50);
+        } else {
+          setSearchStatus(`Data ditarik tapi detail ${activeHorizon} tidak ditemukan.`);
+        }
+      } else {
+        setSearchStatus(`❌ Gagal on-demand: ${data.error || "Data emiten tidak ditemukan di Bursa."}`);
+      }
+    } catch (err: any) {
+      setSearchStatus(`❌ Gagal on-demand: ${err?.message || "Koneksi terputus."}`);
+    } finally {
+      setIsOnDemandLoading(false);
     }
   };
 
@@ -61,9 +100,11 @@ export default function BrokerFlowPage() {
     const detail = await fetchTickerDetail(code, activeHorizon);
     if (detail) {
       setSelectedTicker(detail);
+      setOnDemandTarget(null);
       setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
     } else {
-      setSearchStatus(`Data untuk ${code} belum tersedia pada sesi ini.`);
+      setOnDemandTarget(code);
+      setSearchStatus(`Data untuk ${code} belum tersedia di snapshot lokal.`);
     }
   };
 
@@ -80,13 +121,15 @@ export default function BrokerFlowPage() {
       if (detail) {
         setSelectedTickerCode(upper);
         setSelectedTicker(detail);
+        setOnDemandTarget(null);
         setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
         setTimeout(() => {
           const el = document.getElementById("ticker-insight-section");
           if (el) el.scrollIntoView({ behavior: "smooth" });
         }, 50);
       } else {
-        setSearchStatus(`Data untuk ${upper} belum tersedia pada sesi ini.`);
+        setOnDemandTarget(upper);
+        setSearchStatus(`Data untuk ${upper} belum tersedia di snapshot lokal.`);
       }
     } catch {
       setSearchStatus(`Gagal memuat data untuk ${searchQuery.toUpperCase()}.`);
@@ -159,9 +202,25 @@ export default function BrokerFlowPage() {
         </header>
 
         {/* Status Notifications */}
-        {(searchStatus || syncStatus) && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-            {searchStatus && <div className="bf-search-status">{searchStatus}</div>}
+        {(searchStatus || syncStatus || onDemandTarget) && (
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "10px", margin: "10px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              {searchStatus && <div className="bf-search-status">{searchStatus}</div>}
+              {onDemandTarget && (
+                <button
+                  type="button"
+                  className="bf-btn-ondemand"
+                  disabled={isOnDemandLoading}
+                  onClick={() => handleTriggerOnDemand(onDemandTarget)}
+                >
+                  {isOnDemandLoading ? (
+                    <span className="bf-pulse-loader">⏳ Menarik Data {onDemandTarget}...</span>
+                  ) : (
+                    <>⚡ Tarik Data On-Demand untuk {onDemandTarget}</>
+                  )}
+                </button>
+              )}
+            </div>
             {syncStatus && <div className="bf-search-status" style={{ color: "var(--green)" }}>{syncStatus}</div>}
           </div>
         )}
@@ -774,6 +833,30 @@ export default function BrokerFlowPage() {
                 >
                   📈 Buka Chart Teknikal →
                 </Link>
+
+                <button
+                  type="button"
+                  className="bf-btn-secondary bf-btn-refresh-ondemand"
+                  disabled={isOnDemandLoading}
+                  onClick={() => handleTriggerOnDemand(selectedTicker.ticker)}
+                  title={`Tarik data on-demand terbaru dari Max MCP untuk ${selectedTicker.ticker}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "5px 12px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    borderRadius: "6px",
+                    cursor: isOnDemandLoading ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {isOnDemandLoading && selectedTickerCode === selectedTicker.ticker ? (
+                    <span className="bf-pulse-loader">⏳ Syncing...</span>
+                  ) : (
+                    <>⚡ Refresh On-Demand</>
+                  )}
+                </button>
 
                 <div className="bf-horizon-selector bf-insight-horizon-nav">
                   <button

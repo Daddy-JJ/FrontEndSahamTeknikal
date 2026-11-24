@@ -1,6 +1,6 @@
 # SahamTeknikal frontend
 
-Next.js owner application for IDX Night Scanner, actual/paper journals, Analytics and ticker charts.
+Next.js owner application for IDX Night Scanner, Smart Money Flow & Bandarmology (`/broker-flow`), actual/paper journals, Analytics and ticker charts.
 This folder is an independent Git repository; Vercel project root is `.`.
 Backend source, migrations, canonical financial arithmetic and market-data artifacts belong to the sibling backend repository.
 
@@ -60,6 +60,7 @@ npm.cmd run test:scanner
 npm.cmd run test:scanner:release
 npm.cmd run test:reporting
 npm.cmd run test:chart
+node --test tests/broker-flow.test.mjs
 ```
 
 Select checks relevant to the task. Browser suites use isolated local HTTP doubles and labelled fixtures; their success does not prove authenticated hosted behavior. `npm.cmd test` alone does not cover every dedicated suite.
@@ -67,6 +68,7 @@ Select checks relevant to the task. Browser suites use isolated local HTTP doubl
 ## Application boundaries
 
 Scanner `/` in live mode and `/scanner` display published backend snapshots with coverage/hold/failure states. Ticker details expose Alasan sinyal, Chart and Data & sumber; `/chart/[ticker]` opens a dedicated owner chart.
+Broker Flow `/broker-flow` provides Smart Money Flow and Bandarmology intelligence, featuring Wyckoff Market Quadrants (`[MA]`, `[MD]`, `[DA]`, `[DD]`), multi-horizon analysis (2D momentum, 5D weekly persistence, 10D structural base), and direct links to `/chart/[ticker]`. `/api/broker-flow` queries Supabase cloud table `broker_flow_ticker_horizons` with automatic fallback to static snapshot `public/data/broker_flow_horizons.json`.
 `/journal`, `/journal/paper/[id]` and `/analytics?tab=paper|actual|signals` consume canonical RPCs. `/journal/export` and `/api/export/journal` preserve the actual CSV contract.
 The browser formats results and plots backend series; it does not independently calculate official signals, ledger P&L, risk or statistics. Data failure never silently becomes fixture output or an empty successful result.
 

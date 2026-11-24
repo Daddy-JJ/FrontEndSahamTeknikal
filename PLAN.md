@@ -1,10 +1,19 @@
-# Active plan - Jurnal, Analytics, Scanner guide and chart overlay
+# Active plan - Smart Money Flow, Broker Flow, Jurnal, Analytics, Scanner guide and chart overlay
 
-Updated 22 October 2026. Owner requested a combined plan before further implementation.
-**A/B/C/D released and public-smoke-verified, 22 October 2026.** This assignment supersedes completed
-password-login and documentation plans; it does not reopen reset/backfill or auth work.
+Updated 24 November 2026.
+**Smart Money Flow & Broker Flow (`/broker-flow`) RELEASED and verified, 24 November 2026.**
+Earlier A/B/C/D features released and public-smoke-verified, 22 October 2026.
 
-Read the [focused combined plan](docs/UI_JOURNAL_ANALYTICS_STRATEGY_GUIDE_PLAN_20261022.md)
+## Smart Money Flow & Broker Flow — 24 November 2026
+
+| Scope | Action | Proof / state |
+| --- | --- | --- |
+| Multi-Horizon Flow | Query genuine Max MCP horizon calculations for 2D, 5D, and 10D flows; eliminate duplicate metrics | RELEASED. Verified across AMMN and all active tickers; distinct volume, net value, broker modal, and PnL |
+| Wyckoff Market Quadrants | Visual quadrant segmentation for `[MA]`, `[MD]`, `[DA]`, and `[DD]`; modal deep-dive navigation | RELEASED. Fixed navigation race condition, added robust `buildQuadrantFallbackDetail` fallback |
+| Chart Integration | Add direct interactive technical chart shortcut (`📈 Buka Chart Teknikal →`) linking to `/chart/[ticker]` | RELEASED. Seamless client-side navigation |
+| Dual-Tier API | `/api/broker-flow` loads Supabase `broker_flow_ticker_horizons` with automatic fallback to static snapshot | RELEASED. 13/13 passing contract tests (`tests/broker-flow.test.mjs`), build PASS |
+
+Read the earlier [focused combined plan](docs/UI_JOURNAL_ANALYTICS_STRATEGY_GUIDE_PLAN_20261022.md)
 for exact layout, strategy copy, [chart overlay D](docs/UI_JOURNAL_ANALYTICS_STRATEGY_GUIDE_PLAN_20261022.md#d-overlay-chart-dari-daftar-jurnal-dan-analytics), responsive behavior and acceptance.
 
 | Scope | Action | Proof / state |

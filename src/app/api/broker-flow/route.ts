@@ -11,6 +11,7 @@ import {
   buildQuadrantFallbackDetail,
   type HorizonPeriod,
 } from "@/lib/broker-flow";
+import { fetchOnDemandTickerHorizons } from "@/lib/mcp-broker-flow";
 import snapshotData from "@/data/broker_flow_snapshot_latest.json";
 import { publicSupabaseConfig, createClient } from "@/lib/supabase/server";
 
@@ -21,9 +22,24 @@ export async function GET(request: NextRequest) {
   const ticker = searchParams.get("ticker");
   const quadrant = searchParams.get("quadrant");
   const horizon = (searchParams.get("horizon") as HorizonPeriod | null) || "5D";
+  const onDemand = searchParams.get("on_demand") === "true";
 
   if (ticker) {
     const upper = ticker.toUpperCase().trim();
+
+    // 0. If explicit on_demand requested, fetch directly from MCP
+    if (onDemand) {
+      try {
+        const liveHorizons = await fetchOnDemandTickerHorizons(upper);
+        TICKER_HORIZON_DETAILS_MAP[upper] = liveHorizons;
+        if (liveHorizons[horizon]) {
+          TICKER_DETAILS_MAP[upper] = liveHorizons[horizon];
+          return NextResponse.json({ success: true, data: liveHorizons[horizon] });
+        }
+      } catch (err: any) {
+        console.warn("Explicit on-demand fetch failed:", err?.message);
+      }
+    }
 
     // 1. Fast in-memory cache lookup (Pre-loaded top 20 featured tickers)
     const inMemoryDetail =
@@ -85,6 +101,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: "TICKER_NOT_FOUND",
         message: `Data snapshot untuk ${upper} belum tersedia.`,
+        can_on_demand: true,
       },
       { status: 404 }
     );

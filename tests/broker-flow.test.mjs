@@ -213,3 +213,28 @@ test("Quadrant fallback synthesizer creates honest transparent details for quadr
   const unknown = buildQuadrantFallbackDetail("TOTALLY_UNKNOWN");
   assert.equal(unknown, null);
 });
+
+test("CDIA has verified genuine EOD and multi-horizon bandarmology data", () => {
+  const cdia2D = getTickerDetailByHorizon("CDIA", "2D");
+  const cdia5D = getTickerDetailByHorizon("CDIA", "5D");
+  const cdia10D = getTickerDetailByHorizon("CDIA", "10D");
+
+  assert.ok(cdia2D, "CDIA 2D must exist");
+  assert.ok(cdia5D, "CDIA 5D must exist");
+  assert.ok(cdia10D, "CDIA 10D must exist");
+
+  assert.equal(cdia2D.ticker, "CDIA");
+  assert.equal(cdia2D.close, 386);
+  assert.equal(cdia2D.change_percent, 24.52);
+  assert.equal(cdia2D.top_accumulators[0].code, "MG");
+
+  // Distinct multi-horizon costs
+  assert.notEqual(cdia2D.bandar_avg_cost, cdia5D.bandar_avg_cost);
+  assert.notEqual(cdia5D.bandar_avg_cost, cdia10D.bandar_avg_cost);
+});
+
+test("On-demand MCP client module exports valid synthesis functions", async () => {
+  const mcpModule = await import("../src/lib/mcp-broker-flow.ts");
+  assert.equal(typeof mcpModule.callMaxTradeMcp, "function");
+  assert.equal(typeof mcpModule.fetchOnDemandTickerHorizons, "function");
+});

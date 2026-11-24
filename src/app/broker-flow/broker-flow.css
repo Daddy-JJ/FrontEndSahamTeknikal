@@ -1243,3 +1243,59 @@
 .bf-retail-stock-val.pos { color: #34d399; }
 .bf-retail-stock-val.neg { color: #f87171; }
 
+/* On-Demand Trigger Button */
+.bf-btn-ondemand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid #34d399;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.bf-btn-ondemand:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+.bf-btn-ondemand:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bf-btn-refresh-ondemand {
+  background: #0f2234;
+  color: #38bdf8 !important;
+  border: 1px solid #1e3a5f;
+  transition: all 0.2s ease;
+}
+
+.bf-btn-refresh-ondemand:hover:not(:disabled) {
+  background: #17324d;
+  border-color: #38bdf8;
+  color: #ffffff !important;
+}
+
+.bf-pulse-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: bfPulse 1.5s infinite;
+}
+
+@keyframes bfPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+

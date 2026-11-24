@@ -1,5 +1,20 @@
 # Frontend implementation status
 
+## Smart Money Flow & Broker Flow release verified, 24 November 2026
+
+- **Module**: `/broker-flow` in production at `https://sahamteknikal.vercel.app/broker-flow`.
+- **Feature Set**:
+  - Wyckoff Market Quadrant Map: Visual quadrant sorting for Markup+Akumulasi `[MA]`, Markup+Distribusi `[MD]`, Markdown+Akumulasi `[DA]`, and Markdown+Distribusi `[DD]`.
+  - Quadrant Modal Deep Dive: Fixed modal navigation and implemented `buildQuadrantFallbackDetail` fallback ensuring zero silent click failures when deep-dive detail is missing from static payload.
+  - Multi-Horizon Analysis: 2D momentum, 5D weekly persistence, and 10D structural base with genuine Max MCP flow metrics, solving previous duplicate metric issue.
+  - Technical Chart Shortcut: Direct `📈 Buka Chart Teknikal →` button linking directly to `/chart/[ticker]`.
+- **API & Storage Architecture**:
+  - Route `/api/broker-flow` implements dual-tier data loading: primary query against Supabase table `broker_flow_ticker_horizons`, with graceful zero-downtime fallback to static snapshot `public/data/broker_flow_horizons.json` (<200KB).
+- **Verification & Deployment**:
+  - Test Suite: 13/13 passing contract tests (`node --test tests/broker-flow.test.mjs`).
+  - Next.js Production Build: 0 errors (`npm run build`).
+  - Production Delivery: Git commit `9f88c7b` on branch `main` pushed to `origin/main` (Vercel deployment active).
+
 ## A-D release verified, 22 October 2026
 
 - Owner requested QA only where missing, then commit/push/Production deployment. Independent

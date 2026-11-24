@@ -7,8 +7,8 @@ Frontend source ref: 513870f6020983ddb20ba022c946eaffd223fce6; context edits are
 
 ## Product and topology
 
-SahamTeknikal is an owner application for an IDX end-of-day scanner, signal research,
-paper evaluation, an actual trade journal, Analytics and canonical ticker charts.
+SahamTeknikal is an owner application for an IDX end-of-day scanner, Smart Money Flow & Bandarmology
+intelligence (`/broker-flow`), signal research, paper evaluation, an actual trade journal, Analytics and canonical ticker charts.
 Paper and actual ledgers remain separate; AI/research output is not official trading arithmetic.
 Two independent Git repositories are used:
 
@@ -21,10 +21,12 @@ Run Git/source work inside its assigned repository; reading another repo is not 
 ## Stack and ownership
 
 Frontend: Next.js 16.3.8, React 19.3.0, TypeScript; Vercel project root is this repo (.).
-Backend: Python 3.12 scanner, GitHub Actions cloud jobs and Supabase Auth/Postgres/RPC/watchdog.
+Backend: Python 3.12 scanner & sync pipeline, GitHub Actions cloud jobs and Supabase Auth/Postgres/RPC/watchdog.
 Frontend owns formatting, plotting, routes, state, validation and interaction against contracts.
+Key features include Night Scanner (`/scanner`), Smart Money Flow & Bandarmology (`/broker-flow`) with Wyckoff Market Quadrants and multi-horizon (2D/5D/10D) flow, interactive ticker charts (`/chart/[ticker]`), paper/actual journals (`/journal`), and portfolio analytics (`/analytics`).
 Backend/SOT owns deterministic signal/trading rules and canonical financial/journal/statistics values.
 Do not recompute official values in the browser or silently substitute synthetic data for failures.
+`/api/broker-flow` uses a dual-tier strategy: querying Supabase `broker_flow_ticker_horizons` with automatic fallback to static snapshot `public/data/broker_flow_horizons.json`.
 Read the [local SOT](SOT.md) and [chart contract](contracts/ticker-chart-v1.md) for affected rules.
 Source and tests show implementation; they never override approved canonical rules.
 
