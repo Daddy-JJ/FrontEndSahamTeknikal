@@ -81,6 +81,25 @@
   border-color: #4f7896;
 }
 
+.bf-btn-secondary {
+  background: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.bf-btn-secondary:hover {
+  background: rgba(14, 165, 233, 0.24);
+  border-color: #38bdf8;
+  color: #e0f2fe;
+}
+
 /* Quadrant Top Section */
 .bf-top-grid {
   display: grid;

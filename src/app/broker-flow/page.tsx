@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { JournalShell } from "@/components/journal-shell";
 import {
   DEFAULT_MARKET_SUMMARY,
@@ -47,17 +48,22 @@ export default function BrokerFlowPage() {
   const handleTickerClick = async (tickerCode: string) => {
     const code = tickerCode.toUpperCase().trim();
     setSelectedTickerCode(code);
+    if (activeQuadrantModal) {
+      setActiveQuadrantModal(null);
+    }
+    setSearchStatus(`Memuat analisis untuk ${code}...`);
+
+    setTimeout(() => {
+      const el = document.getElementById("ticker-insight-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+
     const detail = await fetchTickerDetail(code, activeHorizon);
     if (detail) {
       setSelectedTicker(detail);
-      setSearchStatus(null);
-      if (activeQuadrantModal) {
-        setActiveQuadrantModal(null);
-      }
-      setTimeout(() => {
-        const el = document.getElementById("ticker-insight-section");
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 50);
+      setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
+    } else {
+      setSearchStatus(`Data untuk ${code} belum tersedia pada sesi ini.`);
     }
   };
 
@@ -751,6 +757,24 @@ export default function BrokerFlowPage() {
               </div>
 
               <div className="bf-insight-top-actions">
+                <Link
+                  href={`/chart/${selectedTicker.ticker}`}
+                  className="bf-btn-secondary"
+                  style={{
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "5px 12px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    borderRadius: "6px",
+                  }}
+                  title={`Buka analisis grafik teknikal interaktif untuk ${selectedTicker.ticker}`}
+                >
+                  📈 Buka Chart Teknikal →
+                </Link>
+
                 <div className="bf-horizon-selector bf-insight-horizon-nav">
                   <button
                     type="button"
@@ -1041,12 +1065,25 @@ export default function BrokerFlowPage() {
                             {formatRupiah(stock.smart_money_net)}
                           </td>
                           <td className="center">
-                            <span
+                            <button
+                              type="button"
                               className="bf-btn-primary"
-                              style={{ padding: "3px 8px", fontSize: "10px" }}
+                              style={{
+                                padding: "4px 10px",
+                                fontSize: "10px",
+                                cursor: "pointer",
+                                border: "none",
+                                borderRadius: "4px",
+                                fontWeight: 700,
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTickerClick(stock.ticker);
+                              }}
+                              title={`Buka analisis mendalam untuk ${stock.ticker}`}
                             >
                               ANALYSIS →
-                            </span>
+                            </button>
                           </td>
                         </tr>
                       ))}

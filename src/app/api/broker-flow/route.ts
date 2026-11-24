@@ -8,6 +8,7 @@ import {
   TICKER_DETAILS_MAP,
   TICKER_HORIZON_DETAILS_MAP,
   QUADRANT_MAPS,
+  buildQuadrantFallbackDetail,
   type HorizonPeriod,
 } from "@/lib/broker-flow";
 import snapshotData from "@/data/broker_flow_snapshot_latest.json";
@@ -71,6 +72,12 @@ export async function GET(request: NextRequest) {
       } catch {
         // Fall through to 404
       }
+    }
+
+    // 4. Transparent fallback from quadrant or daily insights metadata
+    const fallbackDetail = buildQuadrantFallbackDetail(upper, horizon);
+    if (fallbackDetail) {
+      return NextResponse.json({ success: true, data: fallbackDetail });
     }
 
     return NextResponse.json(

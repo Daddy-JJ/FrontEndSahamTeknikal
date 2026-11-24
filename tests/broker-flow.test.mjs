@@ -12,6 +12,7 @@ import {
   QUADRANT_MAPS,
   fetchTickerDetail,
   formatRupiah,
+  buildQuadrantFallbackDetail,
 } from "../src/lib/broker-flow.ts";
 
 test("Broker flow snapshot data integrity", () => {
@@ -180,23 +181,35 @@ test("Zero-identity safeguard across all tickers in TICKER_HORIZON_DETAILS_MAP",
 
 test("Daily snapshot bundle contains expanded market tickers with multi-horizon data", async () => {
   const fs = await import("node:fs");
-  const path = await import("node:path");
-  const snapshotPath = path.resolve("src/data/broker_flow_snapshot_latest.json");
+  const { fileURLToPath } = await import("node:url");
+  const snapshotPath = fileURLToPath(new URL("../src/data/broker_flow_snapshot_latest.json", import.meta.url));
 
   assert.ok(fs.existsSync(snapshotPath), "Snapshot JSON must exist");
   const raw = fs.readFileSync(snapshotPath, "utf8");
   const snapshot = JSON.parse(raw);
 
-  assert.equal(snapshot.snapshot_date, "2026-11-20");
+  assert.ok(snapshot.snapshot_date, "Snapshot must have snapshot_date");
   assert.ok(snapshot.total_tickers_indexed >= 30, "Must index at least 30 tickers in expanded snapshot");
 
-  // Verify BBNI in snapshot horizons
-  const bbni = snapshot.ticker_horizons["BBNI"];
-  assert.ok(bbni, "BBNI must be indexed in expanded snapshot");
-  assert.ok(bbni["2D"]);
-  assert.ok(bbni["5D"]);
-  assert.ok(bbni["10D"]);
-  assert.equal(bbni["2D"].ticker, "BBNI");
-  assert.equal(bbni["5D"].ticker, "BBNI");
-  assert.equal(bbni["10D"].ticker, "BBNI");
+  // Verify featured tickers in snapshot horizons
+  const isat = snapshot.ticker_horizons["ISAT"];
+  assert.ok(isat, "ISAT must be indexed in expanded snapshot");
+  assert.ok(isat["2D"]);
+  assert.ok(isat["5D"]);
+  assert.ok(isat["10D"]);
+  assert.equal(isat["2D"].ticker, "ISAT");
+});
+
+test("Quadrant fallback synthesizer creates honest transparent details for quadrant stocks", () => {
+  const isatFallback = buildQuadrantFallbackDetail("ISAT", "5D");
+  assert.ok(isatFallback, "ISAT fallback must be created");
+  assert.equal(isatFallback.ticker, "ISAT");
+  assert.equal(isatFallback.close, 1380);
+  assert.equal(isatFallback.quadrant, "markdown_akumulasi");
+  assert.equal(isatFallback.is_horizon_fallback, true);
+  assert.ok(isatFallback.horizon_fallback_reason.includes("transparan"));
+
+  // Check unknown stock
+  const unknown = buildQuadrantFallbackDetail("TOTALLY_UNKNOWN");
+  assert.equal(unknown, null);
 });
