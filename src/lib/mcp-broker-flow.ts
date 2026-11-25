@@ -224,6 +224,138 @@ function synthesizeTradePlan(
   }
 }
 
+function formatSignedBillions(value: number): string {
+  const sign = value >= 0 ? "+" : "-";
+  const absB = Math.abs(value) / 1e9;
+  return `${sign}${absB.toFixed(1)}B`;
+}
+
+function describeCostStance(gapPct: number): string {
+  if (gapPct <= 0) return "berada di area diskon bawah modal bandar";
+  if (gapPct <= 3) return "dekat dengan modal rata-rata bandar (zona akumulasi sehat)";
+  if (gapPct <= 7) return "sedang markup terkendali di atas modal";
+  return "sudah jauh di atas modal rata-rata bandar (waspada chasing)";
+}
+
+export interface SynthesizeHorizonParams {
+  ticker: string;
+  closePrice: number;
+  changePct: number;
+  period: HorizonPeriod;
+  label: string;
+  range: string;
+  buyersResp: any;
+  sellersResp: any;
+  signalResp: any;
+}
+
+/**
+ * Synthesizes a structured TickerBrokerDetail entry for a single horizon from Max MCP responses.
+ */
+export function synthesizeTickerHorizonDetail(
+  params: SynthesizeHorizonParams
+): TickerBrokerDetail {
+  const { ticker, closePrice, changePct, period, label, range, buyersResp, sellersResp, signalResp } =
+    params;
+  const upper = ticker.toUpperCase().trim();
+  const rawBuyers = (buyersResp?.records as Array<Record<string, unknown>>) || [];
+  const rawSellers = (sellersResp?.records as Array<Record<string, unknown>>) || [];
+
+  const buyers = rawBuyers.filter((r) => r.netSide === "BUY");
+  const sellers = rawSellers.filter((r) => r.netSide === "SELL");
+
+  const topAccumulators: BrokerDetailItem[] = buyers.slice(0, 3).map((b) => ({
+    code: String(b.code || "INST"),
+    name: String(b.name || b.code || "Institusi"),
+    investor_group: ((b.investorGroups as string[])?.[0] ||
+      "LOCAL") as BrokerDetailItem["investor_group"],
+    net_value: Number(b.netValue) || 0,
+    avg_price: Number(b.buyAvgPrice || b.avgPrice) || closePrice,
+  }));
+
+  const topDistributors: BrokerDetailItem[] = sellers.slice(0, 3).map((s) => ({
+    code: String(s.code || "SELLER"),
+    name: String(s.name || s.code || "Penjual"),
+    investor_group: ((s.investorGroups as string[])?.[0] ||
+      "LOCAL") as BrokerDetailItem["investor_group"],
+    net_value: Number(s.netValue) || 0,
+    avg_price: Number(s.sellAvgPrice || s.avgPrice) || closePrice,
+  }));
+
+  const bandarCost = calculateBandarAverageCost(buyers, closePrice);
+  const bandarGapPct =
+    bandarCost > 0 ? Math.round(((closePrice - bandarCost) / bandarCost) * 10000) / 100 : 0;
+
+  const top3Sum = topAccumulators.reduce((sum, item) => sum + item.net_value, 0);
+  const foreignNet = Number(signalResp?.summary?.foreignNetValue) || 0;
+  const netValue = topAccumulators[0]?.net_value || foreignNet || 0;
+  const netVolumeLots =
+    Number(buyers[0]?.netVolume) ||
+    (closePrice > 0 ? Math.round(Math.abs(netValue) / (closePrice * 100)) : 0);
+
+  const { quadrant, quadrant_label, status_color } = classifyQuadrant(changePct, netValue);
+  const tradePlan = synthesizeTradePlan(quadrant, closePrice, bandarCost);
+
+  const topBuyerCode = topAccumulators[0]?.code || "Smart Money";
+  const topSellerCode = topDistributors[0]?.code || "Ritel";
+  const phaseName =
+    period === "2D" ? "Inisiasi 48j" : period === "5D" ? "Persistensi 5D" : "Fondasi 10D";
+  const signalScore =
+    typeof signalResp?.score === "number" ? Number(signalResp.score) : undefined;
+  const signalLabel = signalResp?.label ? String(signalResp.label) : undefined;
+  const consistencyPct =
+    typeof signalResp?.evidence?.accumulationConsistencyPct === "number"
+      ? Number(signalResp.evidence.accumulationConsistencyPct)
+      : undefined;
+
+  const coalitionText =
+    topAccumulators.length > 0
+      ? topAccumulators
+          .map((a) => `${a.code} (${formatSignedBillions(a.net_value)})`)
+          .join(", ")
+      : topBuyerCode;
+  const telemetryParts: string[] = [];
+  if (typeof consistencyPct === "number") {
+    telemetryParts.push(`konsistensi ${Math.round(consistencyPct)}%`);
+  }
+  if (typeof signalScore === "number") {
+    telemetryParts.push(`score ${Math.round(signalScore)}`);
+  }
+  if (foreignNet !== 0) {
+    telemetryParts.push(`foreign ${formatSignedBillions(foreignNet)}`);
+  }
+  const telemetryClause = telemetryParts.length > 0 ? ` (${telemetryParts.join(", ")})` : "";
+  const whyInsight = `${phaseName}: ${coalitionText} menyerap pelepasan ${topSellerCode}${telemetryClause}. Posisi harga saat ini ${describeCostStance(bandarGapPct)}.`;
+
+  return {
+    ticker: upper,
+    close: closePrice,
+    change_percent: changePct,
+    quadrant,
+    quadrant_label,
+    status_color,
+    horizon: period,
+    horizon_label: label,
+    date_range: range,
+    top_accumulators: topAccumulators,
+    top_distributors: topDistributors,
+    net_value: netValue,
+    net_volume_lots: netVolumeLots,
+    concentration_pct: Number(signalResp?.components?.brokerConcentration) || 15.0,
+    bandar_avg_cost: bandarCost,
+    bandar_cost_gap_pct: bandarGapPct,
+    counterparty_note: `Serapan oleh ${topBuyerCode} terhadap pelepasan posisi ${topSellerCode}.`,
+    why_insight: whyInsight,
+    trade_plan: tradePlan,
+    is_horizon_fallback: false,
+    top_accumulators_net_value: top3Sum,
+    foreign_net_value: foreignNet,
+    signal_label: signalLabel,
+    signal_score: signalScore,
+    consistency_pct: consistencyPct,
+  };
+}
+
 /**
  * Fetch and synthesize multi-horizon bandarmology detail on-demand from Max MCP.
  */
@@ -357,77 +489,17 @@ export async function fetchOnDemandTickerHorizons(
   const result: Partial<Record<HorizonPeriod, TickerBrokerDetail>> = {};
 
   for (const cfg of horizonsConfig) {
-    const rawBuyers = (cfg.buyersResp?.records as Array<Record<string, unknown>>) || [];
-    const rawSellers = (cfg.sellersResp?.records as Array<Record<string, unknown>>) || [];
-    const rawSignal = cfg.signalResp;
-
-    const buyers = rawBuyers.filter((r) => r.netSide === "BUY");
-    const sellers = rawSellers.filter((r) => r.netSide === "SELL");
-
-    const topAccumulators: BrokerDetailItem[] = buyers.slice(0, 3).map((b) => ({
-      code: String(b.code || "INST"),
-      name: String(b.name || b.code || "Institusi"),
-      investor_group: ((b.investorGroups as string[])?.[0] || "LOCAL") as BrokerDetailItem["investor_group"],
-      net_value: Number(b.netValue) || 0,
-      avg_price: Number(b.buyAvgPrice || b.avgPrice) || closePrice,
-    }));
-
-    const topDistributors: BrokerDetailItem[] = sellers.slice(0, 3).map((s) => ({
-      code: String(s.code || "SELLER"),
-      name: String(s.name || s.code || "Penjual"),
-      investor_group: ((s.investorGroups as string[])?.[0] || "LOCAL") as BrokerDetailItem["investor_group"],
-      net_value: Number(s.netValue) || 0,
-      avg_price: Number(s.sellAvgPrice || s.avgPrice) || closePrice,
-    }));
-
-    const bandarCost = calculateBandarAverageCost(buyers, closePrice);
-    const bandarGapPct =
-      bandarCost > 0
-        ? Math.round(((closePrice - bandarCost) / bandarCost) * 10000) / 100
-        : 0;
-
-    const netValue =
-      topAccumulators[0]?.net_value ||
-      rawSignal?.summary?.foreignNetValue ||
-      1_000_000_000;
-    const netVolumeLots =
-      Number(buyers[0]?.netVolume) || Math.round(netValue / (closePrice * 100));
-
-    const { quadrant, quadrant_label, status_color } = classifyQuadrant(
-      changePct,
-      netValue
-    );
-    const tradePlan = synthesizeTradePlan(quadrant, closePrice, bandarCost);
-
-    const topBuyerCode = topAccumulators[0]?.code || "Smart Money";
-    const topSellerCode = topDistributors[0]?.code || "Ritel";
-
-    const whyInsight = `Analisis live horizon ${cfg.period} (${cfg.range}) untuk ${upper}. Aliran broker utama mencatat net ${netValue >= 0 ? "+" : ""}${(netValue / 1e9).toFixed(1)}B dipimpin ${topBuyerCode} pada estimasi modal Rp ${bandarCost.toLocaleString("id-ID")}. Jarak harga saat ini ke modal bandar ${bandarGapPct >= 0 ? "+" : ""}${bandarGapPct}%.`;
-
-    const counterpartyNote = `Serapan oleh ${topBuyerCode} terhadap pelepasan posisi ${topSellerCode}.`;
-
-    result[cfg.period] = {
+    result[cfg.period] = synthesizeTickerHorizonDetail({
       ticker: upper,
-      close: closePrice,
-      change_percent: changePct,
-      quadrant,
-      quadrant_label,
-      status_color,
-      horizon: cfg.period,
-      horizon_label: cfg.label,
-      date_range: cfg.range,
-      top_accumulators: topAccumulators,
-      top_distributors: topDistributors,
-      net_value: netValue,
-      net_volume_lots: netVolumeLots,
-      concentration_pct: rawSignal?.components?.brokerConcentration || 15.0,
-      bandar_avg_cost: bandarCost,
-      bandar_cost_gap_pct: bandarGapPct,
-      counterparty_note: counterpartyNote,
-      why_insight: whyInsight,
-      trade_plan: tradePlan,
-      is_horizon_fallback: false,
-    };
+      closePrice,
+      changePct,
+      period: cfg.period,
+      label: cfg.label,
+      range: cfg.range,
+      buyersResp: cfg.buyersResp,
+      sellersResp: cfg.sellersResp,
+      signalResp: cfg.signalResp,
+    });
   }
 
   const finalHorizons = result as Record<HorizonPeriod, TickerBrokerDetail>;

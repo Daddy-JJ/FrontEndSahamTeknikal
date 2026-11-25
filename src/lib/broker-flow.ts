@@ -98,6 +98,34 @@ export interface TickerBrokerDetail {
   trade_plan: TradePlan;
   is_horizon_fallback?: boolean;
   horizon_fallback_reason?: string;
+  top_accumulators_net_value?: number;
+  foreign_net_value?: number;
+  signal_label?: string;
+  signal_score?: number;
+  consistency_pct?: number;
+}
+
+export interface TickerMultiHorizonResult {
+  ticker: string;
+  activeHorizon: HorizonPeriod;
+  active: TickerBrokerDetail;
+  horizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>>;
+  source: string;
+}
+
+export interface CrossHorizonBrokerPersistence {
+  code: string;
+  investor_group: BrokerDetailItem["investor_group"];
+  horizonsPresent: HorizonPeriod[];
+  latestAvgPrice: number;
+}
+
+export interface CrossHorizonSummary {
+  availableHorizons: HorizonPeriod[];
+  consistentAccumulators: CrossHorizonBrokerPersistence[];
+  costProgression: Partial<Record<HorizonPeriod, number>>;
+  gapProgression: Partial<Record<HorizonPeriod, number>>;
+  costTrendNote: string;
 }
 
 export interface QuadrantStockItem {
@@ -3412,8 +3440,194 @@ export function buildQuadrantFallbackDetail(
   return null;
 }
 
+export const HORIZON_ORDER: readonly HorizonPeriod[] = ["2D", "5D", "10D"];
+
 /**
- * On-demand ticker detail fetcher (Live API first when enabled, then static snapshot fallback, then honest null)
+ * Computes total net value across top 3 accumulators for a horizon entry.
+ */
+export function getHorizonTop3NetValue(detail: TickerBrokerDetail): number {
+  if (typeof detail.top_accumulators_net_value === "number") {
+    return detail.top_accumulators_net_value;
+  }
+  return detail.top_accumulators
+    .slice(0, 3)
+    .reduce((sum, item) => sum + (Number(item.net_value) || 0), 0);
+}
+
+/**
+ * Collects authentic local multi-horizon profiles without fabricating clones for fallback-only tickers.
+ */
+export function collectLocalMultiHorizonMap(
+  tickerCode: string,
+  activeHorizon: HorizonPeriod = "5D",
+  customQuadrantMaps?: Record<string, QuadrantMapDetail>
+): {
+  horizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>>;
+  active: TickerBrokerDetail | null;
+  source: string;
+} {
+  const code = tickerCode.toUpperCase().trim();
+  const staticMulti = TICKER_HORIZON_DETAILS_MAP[code];
+  if (staticMulti && Object.keys(staticMulti).length > 0) {
+    const horizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>> = {};
+    for (const h of HORIZON_ORDER) {
+      if (staticMulti[h]) {
+        horizons[h] = staticMulti[h];
+      }
+    }
+    const active = horizons[activeHorizon] || horizons["5D"] || horizons["2D"] || horizons["10D"] || null;
+    return { horizons, active, source: "snapshot-fallback" };
+  }
+
+  const direct = getTickerDetailByHorizon(code, activeHorizon);
+  if (direct) {
+    return {
+      horizons: { [activeHorizon]: direct },
+      active: direct,
+      source: "snapshot-fallback",
+    };
+  }
+
+  const quadrantFallback = buildQuadrantFallbackDetail(code, activeHorizon, customQuadrantMaps);
+  if (quadrantFallback) {
+    return {
+      horizons: { [activeHorizon]: quadrantFallback },
+      active: quadrantFallback,
+      source: "quadrant-fallback",
+    };
+  }
+
+  return { horizons: {}, active: null, source: "none" };
+}
+
+/**
+ * Summarizes broker consistency and bandar cost progression across 2D, 5D, and 10D horizons.
+ */
+export function summarizeCrossHorizonOverlap(
+  horizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>>
+): CrossHorizonSummary {
+  const availableHorizons = HORIZON_ORDER.filter((h) => Boolean(horizons[h]));
+  const brokerMap = new Map<string, CrossHorizonBrokerPersistence>();
+  const costProgression: Partial<Record<HorizonPeriod, number>> = {};
+  const gapProgression: Partial<Record<HorizonPeriod, number>> = {};
+
+  for (const h of HORIZON_ORDER) {
+    const entry = horizons[h];
+    if (!entry) continue;
+    costProgression[h] = entry.bandar_avg_cost;
+    gapProgression[h] = entry.bandar_cost_gap_pct;
+
+    for (const acc of entry.top_accumulators.slice(0, 3)) {
+      const existing = brokerMap.get(acc.code);
+      if (existing) {
+        if (!existing.horizonsPresent.includes(h)) {
+          existing.horizonsPresent.push(h);
+        }
+        if (h === "2D" || !existing.latestAvgPrice) {
+          existing.latestAvgPrice = acc.avg_price;
+        }
+      } else {
+        brokerMap.set(acc.code, {
+          code: acc.code,
+          investor_group: acc.investor_group,
+          horizonsPresent: [h],
+          latestAvgPrice: acc.avg_price,
+        });
+      }
+    }
+  }
+
+  const consistentAccumulators = Array.from(brokerMap.values())
+    .filter((b) => b.horizonsPresent.length >= 2)
+    .sort((a, b) => b.horizonsPresent.length - a.horizonsPresent.length || a.code.localeCompare(b.code));
+
+  const cost2D = costProgression["2D"];
+  const cost10D = costProgression["10D"];
+  let costTrendNote = "Bandingkan modal antar-horizon untuk melihat apakah akumulasi baru menaikkan atau mempertahankan area serapan.";
+  if (typeof cost2D === "number" && typeof cost10D === "number" && cost10D > 0) {
+    const deltaPct = ((cost2D - cost10D) / cost10D) * 100;
+    if (deltaPct >= 1) {
+      costTrendNote = `Modal 2D lebih tinggi +${deltaPct.toFixed(1)}% vs basis 10D (bandar bersedia average up di atas basis lama).`;
+    } else if (deltaPct <= -1) {
+      costTrendNote = `Modal 2D ${deltaPct.toFixed(1)}% di bawah basis 10D (serapan baru terjadi pada harga pullback/diskon).`;
+    } else {
+      costTrendNote = "Modal bandar 2D s/d 10D sangat rapat (konsolidasi harga beli konsorsium tetap terjaga).";
+    }
+  }
+
+  return {
+    availableHorizons,
+    consistentAccumulators,
+    costProgression,
+    gapProgression,
+    costTrendNote,
+  };
+}
+
+/**
+ * Fetches 2D, 5D, and 10D broker flow details together in one request so switching focus is instant.
+ */
+export async function fetchTickerMultiHorizon(
+  tickerCode: string,
+  activeHorizon: HorizonPeriod = "5D",
+  preferLive: boolean = true,
+  customQuadrantMaps?: Record<string, QuadrantMapDetail>,
+  forceRefresh: boolean = false
+): Promise<TickerMultiHorizonResult | null> {
+  const code = tickerCode.toUpperCase().trim();
+
+  if (preferLive) {
+    try {
+      const qs = new URLSearchParams({
+        ticker: code,
+        horizon: activeHorizon,
+        live: "true",
+      });
+      if (forceRefresh) qs.set("refresh", "true");
+      const res = await fetch(`/api/broker-flow?${qs.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.success && json?.data) {
+          const active = json.data as TickerBrokerDetail;
+          const rawHorizons =
+            json.horizons && typeof json.horizons === "object"
+              ? (json.horizons as Partial<Record<HorizonPeriod, TickerBrokerDetail>>)
+              : { [activeHorizon]: active };
+          const horizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>> = {};
+          for (const h of HORIZON_ORDER) {
+            if (rawHorizons[h]) horizons[h] = rawHorizons[h];
+          }
+          if (!horizons[activeHorizon]) {
+            horizons[activeHorizon] = active;
+          }
+          return {
+            ticker: active.ticker || code,
+            activeHorizon,
+            active: horizons[activeHorizon] || active,
+            horizons,
+            source: String(json.source || "max-mcp-live"),
+          };
+        }
+      }
+    } catch {
+      // network or API offline fallback (e.g. non-browser test runtime)
+    }
+  }
+
+  const local = collectLocalMultiHorizonMap(code, activeHorizon, customQuadrantMaps);
+  if (!local.active) return null;
+
+  return {
+    ticker: local.active.ticker || code,
+    activeHorizon,
+    active: local.active,
+    horizons: local.horizons,
+    source: local.source,
+  };
+}
+
+/**
+ * On-demand single-horizon ticker detail fetcher backed by fetchTickerMultiHorizon.
  * NEVER synthesizes fake financial data or hallucinations.
  */
 export async function fetchTickerDetail(
@@ -3423,41 +3637,14 @@ export async function fetchTickerDetail(
   customQuadrantMaps?: Record<string, QuadrantMapDetail>,
   forceRefresh: boolean = false
 ): Promise<TickerBrokerDetail | null> {
-  const code = tickerCode.toUpperCase().trim();
-
-  if (preferLive) {
-    try {
-      const qs = new URLSearchParams({
-        ticker: code,
-        horizon,
-        live: "true",
-      });
-      if (forceRefresh) qs.set("refresh", "true");
-      const res = await fetch(`/api/broker-flow?${qs.toString()}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data) {
-          return json.data as TickerBrokerDetail;
-        }
-      }
-    } catch {
-      // network or API offline fallback (e.g. non-browser test runtime)
-    }
-  }
-
-  const direct = getTickerDetailByHorizon(code, horizon);
-  if (direct) {
-    return direct;
-  }
-
-  // Transparent fallback from quadrant or daily insights if available
-  const quadrantFallback = buildQuadrantFallbackDetail(code, horizon, customQuadrantMaps);
-  if (quadrantFallback) {
-    return quadrantFallback;
-  }
-
-  // Honest null: never fabricate data
-  return null;
+  const result = await fetchTickerMultiHorizon(
+    tickerCode,
+    horizon,
+    preferLive,
+    customQuadrantMaps,
+    forceRefresh
+  );
+  return result?.active ?? null;
 }
 
 /**

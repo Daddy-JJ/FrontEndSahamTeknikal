@@ -15,8 +15,8 @@ import {
   DEFAULT_TOP_BROKERS,
   DEFAULT_SECTOR_FLOWS,
   QUADRANT_MAPS,
-  fetchTickerDetail,
-  getTickerDetailByHorizon,
+  collectLocalMultiHorizonMap,
+  fetchTickerMultiHorizon,
   getDailyInsight,
   formatRupiah,
   formatNumber,
@@ -29,14 +29,23 @@ import {
   type TickerBrokerDetail,
 } from "@/lib/broker-flow";
 import { formatShortDateID, type DataFreshnessMeta } from "@/lib/live-broker-flow";
+import { MultiHorizonTable } from "@/components/multi-horizon-table";
 import "./broker-flow.css";
 
 export default function BrokerFlowPage() {
   const [selectedTickerCode, setSelectedTickerCode] = useState<string>("MBMA");
   const [activeHorizon, setActiveHorizon] = useState<HorizonPeriod>("5D");
-  const [selectedTicker, setSelectedTicker] = useState<TickerBrokerDetail | null>(() =>
-    getTickerDetailByHorizon("MBMA", "5D")
-  );
+  const [detailFocusHorizon, setDetailFocusHorizon] = useState<HorizonPeriod>("5D");
+  const [selectedTickerHorizons, setSelectedTickerHorizons] = useState<
+    Partial<Record<HorizonPeriod, TickerBrokerDetail>>
+  >(() => collectLocalMultiHorizonMap("MBMA", "5D").horizons);
+  const selectedTicker =
+    selectedTickerHorizons[detailFocusHorizon] ||
+    selectedTickerHorizons["5D"] ||
+    selectedTickerHorizons["2D"] ||
+    selectedTickerHorizons["10D"] ||
+    null;
+
   const [marketSummary, setMarketSummary] = useState<MarketSummary>(DEFAULT_MARKET_SUMMARY);
   const [topAccumulations, setTopAccumulations] = useState<AccumulationItem[]>(
     DEFAULT_TOP_ACCUMULATIONS
@@ -52,6 +61,7 @@ export default function BrokerFlowPage() {
   );
   const [freshness, setFreshness] = useState<DataFreshnessMeta | null>(null);
   const [isSyncingLive, setIsSyncingLive] = useState<boolean>(true);
+  const [isTickerLoading, setIsTickerLoading] = useState<boolean>(false);
   const [activeFilterQuadrant, setActiveFilterQuadrant] = useState<string | null>(null);
   const [activeQuadrantModal, setActiveQuadrantModal] = useState<string | null>(null);
   const [modalSearch, setModalSearch] = useState("");
@@ -102,10 +112,10 @@ export default function BrokerFlowPage() {
             ? topAcc[0].ticker
             : "MBMA";
 
-        const detail = await fetchTickerDetail(defaultTicker, "5D", true, nextMaps);
-        if (!cancelled && detail) {
+        const multi = await fetchTickerMultiHorizon(defaultTicker, "5D", true, nextMaps);
+        if (!cancelled && multi) {
           setSelectedTickerCode(defaultTicker);
-          setSelectedTicker(detail);
+          setSelectedTickerHorizons(multi.horizons);
         }
       } catch {
         // Keep initial SSR fallback on network failure
@@ -134,21 +144,30 @@ export default function BrokerFlowPage() {
     return undefined;
   };
 
+  /**
+   * 0ms instant horizon switch for the ticker comparison table, Trade Plan & Chart line.
+   */
+  const handleDetailFocusHorizonChange = (h: HorizonPeriod) => {
+    setDetailFocusHorizon(h);
+  };
+
+  /**
+   * Switches market-wide Daily Radar horizon; syncs ticker focus instantaneously if cached in state.
+   */
   const handleHorizonChange = async (newHorizon: HorizonPeriod) => {
     setActiveHorizon(newHorizon);
+    setDetailFocusHorizon(newHorizon);
     setIsSyncingLive(true);
     try {
-      const [nextMaps, detail] = await Promise.all([
-        loadLiveMarket(newHorizon, false).catch(() => undefined),
-        selectedTickerCode
-          ? fetchTickerDetail(selectedTickerCode, newHorizon, true, quadrantMaps)
-          : Promise.resolve(null),
-      ]);
-      if (detail) {
-        setSelectedTicker(detail);
-      } else if (nextMaps && selectedTickerCode) {
-        const refreshed = await fetchTickerDetail(selectedTickerCode, newHorizon, true, nextMaps);
-        if (refreshed) setSelectedTicker(refreshed);
+      const nextMaps = await loadLiveMarket(newHorizon, false).catch(() => undefined);
+      if (selectedTickerCode && !selectedTickerHorizons[newHorizon]) {
+        const refreshed = await fetchTickerMultiHorizon(
+          selectedTickerCode,
+          newHorizon,
+          true,
+          nextMaps || quadrantMaps
+        );
+        if (refreshed) setSelectedTickerHorizons(refreshed.horizons);
       }
     } finally {
       setIsSyncingLive(false);
@@ -158,7 +177,7 @@ export default function BrokerFlowPage() {
   const handleTriggerOnDemand = async (tickerToFetch: string) => {
     const upper = tickerToFetch.toUpperCase().trim();
     setIsOnDemandLoading(true);
-    setSearchStatus(`⚡ Menghubungkan ke Max MCP... Menarik data aliran dana & menghitung multi-horizon 2D/5D/10D untuk ${upper}...`);
+    setSearchStatus(`⚡ Menghubungkan ke Max MCP... Menarik data 2D, 5D, 10D sekaligus untuk ${upper}...`);
 
     try {
       const resp = await fetch("/api/broker-flow/on-demand", {
@@ -169,18 +188,18 @@ export default function BrokerFlowPage() {
       const data = await resp.json();
 
       if (data.success && data.horizons) {
-        const targetDetail = data.horizons[activeHorizon] || data.detail;
-        if (targetDetail) {
+        const horizonsMap = data.horizons as Partial<Record<HorizonPeriod, TickerBrokerDetail>>;
+        if (horizonsMap["2D"] || horizonsMap["5D"] || horizonsMap["10D"]) {
           setSelectedTickerCode(upper);
-          setSelectedTicker(targetDetail);
+          setSelectedTickerHorizons(horizonsMap);
           setOnDemandTarget(null);
-          setSearchStatus(`✅ Berhasil! Analisis on-demand [${activeHorizon}] untuk ${upper} siap.`);
+          setSearchStatus(`✅ Berhasil! Tabel multi-horizon 2D/5D/10D untuk ${upper} siap.`);
           setTimeout(() => {
             const el = document.getElementById("ticker-insight-section");
             if (el) el.scrollIntoView({ behavior: "smooth" });
           }, 50);
         } else {
-          setSearchStatus(`Data ditarik tapi detail ${activeHorizon} tidak ditemukan.`);
+          setSearchStatus(`Data ditarik tapi detail horizon tidak ditemukan.`);
         }
       } else {
         setSearchStatus(`❌ Gagal on-demand: ${data.error || "Data emiten tidak ditemukan di Bursa."}`);
@@ -200,21 +219,26 @@ export default function BrokerFlowPage() {
     if (activeQuadrantModal) {
       setActiveQuadrantModal(null);
     }
-    setSearchStatus(`Memuat analisis live untuk ${code}...`);
+    setIsTickerLoading(true);
+    setSearchStatus(`Memuat tabel 2D / 5D / 10D sekaligus untuk ${code}...`);
 
     setTimeout(() => {
       const el = document.getElementById("ticker-insight-section");
       if (el) el.scrollIntoView({ behavior: "smooth" });
     }, 50);
 
-    const detail = await fetchTickerDetail(code, activeHorizon, true, quadrantMaps);
-    if (detail) {
-      setSelectedTicker(detail);
-      setOnDemandTarget(null);
-      setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
-    } else {
-      setOnDemandTarget(code);
-      setSearchStatus(`Data untuk ${code} belum tersedia di snapshot atau feed.`);
+    try {
+      const multi = await fetchTickerMultiHorizon(code, detailFocusHorizon, true, quadrantMaps);
+      if (multi) {
+        setSelectedTickerHorizons(multi.horizons);
+        setOnDemandTarget(null);
+        setSearchStatus(`Menampilkan komparasi 2D / 5D / 10D untuk ${multi.ticker}`);
+      } else {
+        setOnDemandTarget(code);
+        setSearchStatus(`Data untuk ${code} belum tersedia di snapshot atau feed.`);
+      }
+    } finally {
+      setIsTickerLoading(false);
     }
   };
 
@@ -223,17 +247,18 @@ export default function BrokerFlowPage() {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
-    setSearchStatus("Mencari data emiten live dari Max MCP...");
+    setIsTickerLoading(true);
+    setSearchStatus("Menarik data 2D, 5D, dan 10D sekaligus dari Max MCP...");
 
     try {
       const upper = searchQuery.toUpperCase().trim();
       hasUserSelectedTickerRef.current = true;
-      const detail = await fetchTickerDetail(upper, activeHorizon, true, quadrantMaps);
-      if (detail) {
+      const multi = await fetchTickerMultiHorizon(upper, detailFocusHorizon, true, quadrantMaps);
+      if (multi) {
         setSelectedTickerCode(upper);
-        setSelectedTicker(detail);
+        setSelectedTickerHorizons(multi.horizons);
         setOnDemandTarget(null);
-        setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
+        setSearchStatus(`Menampilkan komparasi 2D / 5D / 10D untuk ${multi.ticker}`);
         setTimeout(() => {
           const el = document.getElementById("ticker-insight-section");
           if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -246,23 +271,25 @@ export default function BrokerFlowPage() {
       setSearchStatus(`Gagal memuat data untuk ${searchQuery.toUpperCase()}.`);
     } finally {
       setIsSearching(false);
+      setIsTickerLoading(false);
     }
   };
 
   const handleManualSync = async () => {
     setIsSyncingLive(true);
+    setIsTickerLoading(true);
     setSyncStatus("Menghubungkan ke Max MCP & menyegarkan snapshot bursa...");
     try {
       const nextMaps = await loadLiveMarket(activeHorizon, true);
       if (selectedTickerCode) {
-        const refreshedDetail = await fetchTickerDetail(
+        const refreshedMulti = await fetchTickerMultiHorizon(
           selectedTickerCode,
-          activeHorizon,
+          detailFocusHorizon,
           true,
           nextMaps || quadrantMaps,
           true
         );
-        if (refreshedDetail) setSelectedTicker(refreshedDetail);
+        if (refreshedMulti) setSelectedTickerHorizons(refreshedMulti.horizons);
       }
       setSyncStatus(
         `✅ Sinkronisasi live sukses (${formatShortDateID(marketSummary.date)})`
@@ -271,6 +298,7 @@ export default function BrokerFlowPage() {
       setSyncStatus("⚠️ Gagal menarik update terbaru dari Max MCP; mempertahankan data aktif.");
     } finally {
       setIsSyncingLive(false);
+      setIsTickerLoading(false);
       setTimeout(() => setSyncStatus(null), 5000);
     }
   };
@@ -952,10 +980,9 @@ export default function BrokerFlowPage() {
           </div>
         </section>
 
-        {/* SECTION 4: TICKER DEEP DIVE INSIGHT (WHO, WHAT, HOW MUCH, AT WHAT PRICE, WHY) */}
+        {/* SECTION 4: TICKER DEEP DIVE INSIGHT (MULTI-HORIZON 2D/5D/10D + TRADE PLAN + INLINE CHART) */}
         {selectedTicker && (
           <section id="ticker-insight-section" className="bf-insight-card">
-            
             {/* Ticker Header */}
             <div className="bf-insight-top">
               <div className="bf-insight-ticker-group">
@@ -970,7 +997,7 @@ export default function BrokerFlowPage() {
                   {selectedTicker.change_percent.toFixed(1)}%
                 </span>
                 <span className="bf-insight-period-tag">
-                  {selectedTicker.horizon_label || (activeHorizon === "2D" ? "2 Hari (20-23 Nov)" : activeHorizon === "5D" ? "5 Hari (17-23 Nov)" : "10 Hari (10-23 Nov)")}
+                  Fokus Plan: {detailFocusHorizon} ({selectedTicker.date_range || selectedTicker.horizon_label})
                 </span>
               </div>
 
@@ -992,7 +1019,7 @@ export default function BrokerFlowPage() {
                     borderColor: isChartOpen ? "#38bdf8" : undefined,
                     color: isChartOpen ? "#38bdf8" : undefined,
                   }}
-                  title={isChartOpen ? `Tutup grafik teknikal interaktif` : `Buka grafik teknikal interaktif untuk ${selectedTicker.ticker}`}
+                  title={isChartOpen ? "Tutup grafik teknikal interaktif" : `Buka grafik teknikal interaktif untuk ${selectedTicker.ticker}`}
                 >
                   {isChartOpen ? "📉 Tutup Chart" : "📈 Buka Chart Teknikal"}
                 </button>
@@ -1000,9 +1027,9 @@ export default function BrokerFlowPage() {
                 <button
                   type="button"
                   className="bf-btn-secondary bf-btn-refresh-ondemand"
-                  disabled={isOnDemandLoading}
+                  disabled={isOnDemandLoading || isTickerLoading}
                   onClick={() => handleTriggerOnDemand(selectedTicker.ticker)}
-                  title={`Tarik data on-demand terbaru dari Max MCP untuk ${selectedTicker.ticker}`}
+                  title={`Tarik data 2D, 5D, dan 10D terbaru langsung dari Max MCP untuk ${selectedTicker.ticker}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1011,41 +1038,33 @@ export default function BrokerFlowPage() {
                     fontSize: "12px",
                     fontWeight: 700,
                     borderRadius: "6px",
-                    cursor: isOnDemandLoading ? "not-allowed" : "pointer",
+                    cursor: isOnDemandLoading || isTickerLoading ? "not-allowed" : "pointer",
                   }}
                 >
-                  {isOnDemandLoading && selectedTickerCode === selectedTicker.ticker ? (
-                    <span className="bf-pulse-loader">⏳ Syncing...</span>
+                  {(isOnDemandLoading || isTickerLoading) && selectedTickerCode === selectedTicker.ticker ? (
+                    <span className="bf-pulse-loader">⏳ Syncing 2D/5D/10D...</span>
                   ) : (
                     <>⚡ Refresh On-Demand</>
                   )}
                 </button>
 
-                <div className="bf-horizon-selector bf-insight-horizon-nav">
-                  <button
-                    type="button"
-                    className={`bf-horizon-btn ${activeHorizon === "2D" ? "active" : ""}`}
-                    onClick={() => handleHorizonChange("2D")}
-                    title="Analisis 2 Hari Bursa: Inisiasi momentum 48 jam terakhir"
-                  >
-                    2D
-                  </button>
-                  <button
-                    type="button"
-                    className={`bf-horizon-btn ${activeHorizon === "5D" ? "active" : ""}`}
-                    onClick={() => handleHorizonChange("5D")}
-                    title="Analisis 5 Hari Bursa: Konsistensi akumulasi 1 pekan"
-                  >
-                    5D
-                  </button>
-                  <button
-                    type="button"
-                    className={`bf-horizon-btn ${activeHorizon === "10D" ? "active" : ""}`}
-                    onClick={() => handleHorizonChange("10D")}
-                    title="Analisis 10 Hari Bursa: Fondasi modal 2 pekan"
-                  >
-                    10D
-                  </button>
+                <div
+                  className="bf-horizon-selector bf-insight-horizon-nav"
+                  role="group"
+                  aria-label={`Pilih horizon fokus Trade Plan dan Chart ${selectedTicker.ticker} tanpa loading`}
+                >
+                  {(["2D", "5D", "10D"] as HorizonPeriod[]).map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      className={`bf-horizon-btn ${detailFocusHorizon === h ? "active" : ""}`}
+                      aria-pressed={detailFocusHorizon === h}
+                      onClick={() => handleDetailFocusHorizonChange(h)}
+                      title={`Pindah fokus Trade Plan & Modal Chart ke horizon ${h} (instan tanpa loading)`}
+                    >
+                      {h}
+                    </button>
+                  ))}
                 </div>
 
                 <span
@@ -1064,11 +1083,11 @@ export default function BrokerFlowPage() {
               </div>
             </div>
 
-            {/* Fallback Safeguard Notification: Disclose honestly if a multi-horizon dataset is not yet compiled */}
+            {/* Fallback Safeguard Notification */}
             {selectedTicker.is_horizon_fallback && (
               <div
                 style={{
-                  margin: "0 0 16px 0",
+                  margin: "0",
                   padding: "10px 14px",
                   background: "rgba(245, 158, 11, 0.12)",
                   border: "1px solid rgba(245, 158, 11, 0.35)",
@@ -1082,98 +1101,96 @@ export default function BrokerFlowPage() {
               >
                 <span>⚠️</span>
                 <span>
-                  <strong>Informasi Multi-Horizon:</strong> {selectedTicker.horizon_fallback_reason || `Snapshot multi-horizon (${activeHorizon}) belum tersedia untuk ${selectedTicker.ticker}. Data di bawah merupakan snapshot 1-Hari EOD.`}
+                  <strong>Informasi Multi-Horizon:</strong>{" "}
+                  {selectedTicker.horizon_fallback_reason ||
+                    `Snapshot lengkap 2D/5D/10D belum tersedia di fallback lokal untuk ${selectedTicker.ticker}. Tekan ⚡ Refresh On-Demand untuk menarik data live.`}
                 </span>
               </div>
             )}
 
-            {/* Quantitative Footprints Grid */}
-            <div className="bf-stats-grid">
-              <div className="bf-stat-box">
-                <div className="label">NET VALUE ({activeHorizon})</div>
-                <div
-                  className={`val ${
-                    selectedTicker.net_value >= 0 ? "pos" : "neg"
-                  }`}
-                >
-                  {formatRupiah(selectedTicker.net_value)}
-                </div>
-              </div>
+            {/* Simultaneous 2D • 5D • 10D Comparison Table */}
+            <MultiHorizonTable
+              ticker={selectedTicker.ticker}
+              closePrice={selectedTicker.close}
+              horizons={selectedTickerHorizons}
+              focusedHorizon={detailFocusHorizon}
+              onSelectFocusHorizon={handleDetailFocusHorizonChange}
+              onRefreshTicker={() => handleTriggerOnDemand(selectedTicker.ticker)}
+              isLoading={isTickerLoading || isOnDemandLoading}
+            />
 
-              <div className="bf-stat-box">
-                <div className="label">NET VOLUME ({activeHorizon})</div>
-                <div className="val" style={{ color: "var(--ink)" }}>
-                  {formatNumber(selectedTicker.net_volume_lots)} Lot
+            {/* Bottom Grid: Focused Horizon Counterparty Summary + Actionable Trade Plan */}
+            <div className="bf-mh-bottom-grid">
+              <div className="bf-mh-focus-summary-card">
+                <div className="bf-plan-title" style={{ color: "#6bd5ed" }}>
+                  DISTRIBUTOR &amp; RINGKASAN COUNTERPARTY ({detailFocusHorizon})
                 </div>
-              </div>
 
-              <div className="bf-stat-box">
-                <div className="label">HARGA MODAL BANDAR ({activeHorizon})</div>
-                <div className="val amber">
-                  Rp {formatNumber(selectedTicker.bandar_avg_cost)}
-                </div>
-              </div>
-
-              <div className="bf-stat-box">
-                <div className="label">JARAK KE MODAL (PnL BANDAR)</div>
-                <div
-                  className={`val ${
-                    selectedTicker.bandar_cost_gap_pct >= 0 ? "pos" : "neg"
-                  }`}
-                >
-                  {selectedTicker.bandar_cost_gap_pct >= 0 ? "+" : ""}
-                  {selectedTicker.bandar_cost_gap_pct.toFixed(2)}%
-                </div>
-              </div>
-            </div>
-
-            {/* Main Insight & Breakdown Layout */}
-            <div className="bf-insight-bottom-grid">
-              
-              {/* Left: Who & Why */}
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink)", fontFamily: "ui-monospace, monospace" }}>
-                  SIAPA AKUMULATOR &amp; DISTRIBUTOR UTAMA (WHO):
-                </div>
-                
-                <div className="bf-broker-list">
-                  {selectedTicker.top_accumulators.map((acc) => (
-                    <div key={acc.code} className="bf-broker-item">
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span className="sky" style={{ fontWeight: 700 }}>{acc.code}</span>
-                        <span className="muted" style={{ fontSize: "11px" }}>{acc.name}</span>
-                        <span className="bf-broker-tag">{acc.investor_group}</span>
+                <div className="bf-broker-list" style={{ marginTop: "4px" }}>
+                  {selectedTicker.top_distributors.length > 0 ? (
+                    selectedTicker.top_distributors.map((dist) => (
+                      <div key={dist.code} className="bf-broker-item">
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ color: "var(--red)", fontWeight: 700 }}>{dist.code}</span>
+                          <span className="muted" style={{ fontSize: "11px" }}>{dist.name}</span>
+                          <span className="bf-broker-tag">{dist.investor_group}</span>
+                        </div>
+                        <div>
+                          <span className="neg" style={{ fontWeight: 700 }}>
+                            {formatRupiah(dist.net_value)}
+                          </span>
+                          <span className="muted" style={{ marginLeft: "8px", fontSize: "11px" }}>
+                            @ Rp {formatNumber(dist.avg_price)}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="pos" style={{ fontWeight: 700 }}>
-                          {formatRupiah(acc.net_value)}
-                        </span>
-                        <span className="muted" style={{ marginLeft: "8px", fontSize: "11px" }}>
-                          @ Rp {formatNumber(acc.avg_price)}
-                        </span>
-                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: "11.5px", color: "var(--muted)" }}>
+                      Tidak ada distributor dominan pada periode fokus {detailFocusHorizon}.
                     </div>
-                  ))}
+                  )}
                 </div>
 
-                <div style={{ fontSize: "11px", color: "var(--muted)", fontStyle: "italic", marginTop: "8px", fontFamily: "ui-monospace, monospace" }}>
+                <div className="bf-mh-focus-stats">
+                  <div className="bf-stat-box">
+                    <div className="label">NET VOLUME ({detailFocusHorizon})</div>
+                    <div className="val" style={{ color: "var(--ink)", fontSize: "13.5px" }}>
+                      {formatNumber(selectedTicker.net_volume_lots)} Lot
+                    </div>
+                  </div>
+                  <div className="bf-stat-box">
+                    <div className="label">KONSENTRASI</div>
+                    <div className="val" style={{ color: "#6bd5ed", fontSize: "13.5px" }}>
+                      {selectedTicker.concentration_pct.toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="bf-stat-box">
+                    <div className="label">MODAL CHARTS ({detailFocusHorizon})</div>
+                    <div className="val amber" style={{ fontSize: "13.5px" }}>
+                      Rp {formatNumber(selectedTicker.bandar_avg_cost)}
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--muted)",
+                    fontStyle: "italic",
+                    fontFamily: "ui-monospace, monospace",
+                  }}
+                >
                   Lawan Transaksi: {selectedTicker.counterparty_note}
                 </div>
-
-                {/* Insight Kenapa (Why) */}
-                <div className="bf-why-banner">
-                  <div className="bf-why-title">
-                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#6bd5ed", display: "inline-block" }}></span>
-                    INSIGHT KENAPA (THE &quot;WHY&quot; FACTOR):
-                  </div>
-                  <div style={{ color: "var(--ink)" }}>{selectedTicker.why_insight}</div>
-                </div>
               </div>
 
-              {/* Right: Actionable Trade Plan */}
+              {/* Right: Actionable Trade Plan (Synchronized instantaneously with detailFocusHorizon) */}
               <div className="bf-plan-card">
                 <div>
-                  <div className="bf-plan-title">ACTIONABLE TRADE PLAN</div>
+                  <div className="bf-plan-title">
+                    ACTIONABLE TRADE PLAN (HORIZON {detailFocusHorizon})
+                  </div>
 
                   <div style={{ marginTop: "12px" }}>
                     <div className="bf-plan-item">
@@ -1217,7 +1234,6 @@ export default function BrokerFlowPage() {
                   {selectedTicker.trade_plan.note}
                 </div>
               </div>
-
             </div>
 
             {/* Embedded Inline Chart (Lightweight Charts: Volume, Supertrend, MACD, Modal Bandar) */}
@@ -1230,7 +1246,6 @@ export default function BrokerFlowPage() {
                 />
               </div>
             )}
-
           </section>
         )}
 

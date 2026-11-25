@@ -32,6 +32,13 @@ function parseHorizon(raw: string | null): HorizonPeriod {
   return "5D";
 }
 
+function pickActiveDetail(
+  horizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>>,
+  preferred: HorizonPeriod
+): TickerBrokerDetail | undefined {
+  return horizons[preferred] || horizons["5D"] || horizons["2D"] || horizons["10D"];
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const ticker = searchParams.get("ticker");
@@ -44,17 +51,19 @@ export async function GET(request: NextRequest) {
   if (ticker) {
     const upper = ticker.toUpperCase().trim();
 
-    // 0. Live Max MCP lookup (with 5-min TTL cache unless forceRefresh=true)
+    // 0. Live Max MCP lookup (returns all 3 horizons at once with 5-min TTL cache)
     if (preferLive || onDemand) {
       try {
         const liveHorizons = await fetchOnDemandTickerHorizons(upper, forceRefresh);
         TICKER_HORIZON_DETAILS_MAP[upper] = liveHorizons;
-        if (liveHorizons[horizon]) {
-          TICKER_DETAILS_MAP[upper] = liveHorizons[horizon];
+        const activeLive = pickActiveDetail(liveHorizons, horizon);
+        if (activeLive) {
+          TICKER_DETAILS_MAP[upper] = activeLive;
           return NextResponse.json({
             success: true,
             source: "max-mcp-live",
-            data: liveHorizons[horizon],
+            data: activeLive,
+            horizons: liveHorizons,
           });
         }
       } catch (err: unknown) {
@@ -66,33 +75,41 @@ export async function GET(request: NextRequest) {
     // 1. Dynamic lookup from daily snapshot bundle
     const snapshotBundle = snapshotData as Record<string, unknown> | null;
     const tickerHorizons = snapshotBundle?.ticker_horizons as
-      | Record<string, Record<string, TickerBrokerDetail>>
+      | Record<string, Partial<Record<HorizonPeriod, TickerBrokerDetail>>>
       | undefined;
     const snapshotHorizons = tickerHorizons?.[upper];
     if (snapshotHorizons) {
-      const targetDetail =
-        snapshotHorizons[horizon] ||
-        snapshotHorizons["5D"] ||
-        snapshotHorizons["2D"] ||
-        snapshotHorizons["10D"];
+      const targetDetail = pickActiveDetail(snapshotHorizons, horizon);
       if (targetDetail) {
         return NextResponse.json({
           success: true,
           source: "snapshot-fallback",
           data: targetDetail,
+          horizons: snapshotHorizons,
         });
       }
     }
 
     // 2. Static in-memory map lookup
-    const inMemoryDetail =
-      (horizon && TICKER_HORIZON_DETAILS_MAP[upper]?.[horizon]) ||
-      TICKER_DETAILS_MAP[upper];
+    const staticMulti = TICKER_HORIZON_DETAILS_MAP[upper];
+    if (staticMulti && Object.keys(staticMulti).length > 0) {
+      const targetStatic = pickActiveDetail(staticMulti, horizon);
+      if (targetStatic) {
+        return NextResponse.json({
+          success: true,
+          source: "snapshot-fallback",
+          data: targetStatic,
+          horizons: staticMulti,
+        });
+      }
+    }
+    const inMemoryDetail = TICKER_DETAILS_MAP[upper];
     if (inMemoryDetail) {
       return NextResponse.json({
         success: true,
         source: "snapshot-fallback",
         data: inMemoryDetail,
+        horizons: { [horizon]: inMemoryDetail },
       });
     }
 
@@ -109,14 +126,24 @@ export async function GET(request: NextRequest) {
           .maybeSingle();
 
         if (dbRow) {
-          const matched =
-            horizon === "2D"
-              ? dbRow.horizon_2d
-              : horizon === "10D"
-              ? dbRow.horizon_10d
-              : dbRow.horizon_5d;
-          if (matched && Object.keys(matched).length > 0) {
-            return NextResponse.json({ success: true, source: "supabase", data: matched });
+          const dbHorizons: Partial<Record<HorizonPeriod, TickerBrokerDetail>> = {};
+          if (dbRow.horizon_2d && Object.keys(dbRow.horizon_2d).length > 0) {
+            dbHorizons["2D"] = dbRow.horizon_2d as TickerBrokerDetail;
+          }
+          if (dbRow.horizon_5d && Object.keys(dbRow.horizon_5d).length > 0) {
+            dbHorizons["5D"] = dbRow.horizon_5d as TickerBrokerDetail;
+          }
+          if (dbRow.horizon_10d && Object.keys(dbRow.horizon_10d).length > 0) {
+            dbHorizons["10D"] = dbRow.horizon_10d as TickerBrokerDetail;
+          }
+          const matched = pickActiveDetail(dbHorizons, horizon);
+          if (matched) {
+            return NextResponse.json({
+              success: true,
+              source: "supabase",
+              data: matched,
+              horizons: dbHorizons,
+            });
           }
         }
       } catch {
@@ -131,6 +158,7 @@ export async function GET(request: NextRequest) {
         success: true,
         source: "quadrant-fallback",
         data: fallbackDetail,
+        horizons: { [horizon]: fallbackDetail },
       });
     }
 
