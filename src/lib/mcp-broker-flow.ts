@@ -5,6 +5,24 @@ import type {
   HorizonPeriod,
   TradePlan,
 } from "./broker-flow";
+import {
+  computeHorizonWindow,
+  formatDateRangeID,
+  synthesizeLiveMarketOverview,
+  type LiveMarketOverviewPayload,
+  type McpBrokerHistoryRow,
+  type McpRankingRecord,
+} from "./live-broker-flow.ts";
+
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const LIVE_MARKET_CACHE = new Map<
+  HorizonPeriod,
+  { expiresAt: number; payload: LiveMarketOverviewPayload }
+>();
+const LIVE_TICKER_CACHE = new Map<
+  string,
+  { expiresAt: number; horizons: Record<HorizonPeriod, TickerBrokerDetail> }
+>();
 
 const DEFAULT_MCP_URL =
   process.env.MAX_TRADE_MCP_URL || "https://eod.maxlong.my.id/mcp";
@@ -210,9 +228,14 @@ function synthesizeTradePlan(
  * Fetch and synthesize multi-horizon bandarmology detail on-demand from Max MCP.
  */
 export async function fetchOnDemandTickerHorizons(
-  ticker: string
+  ticker: string,
+  forceRefresh: boolean = false
 ): Promise<Record<HorizonPeriod, TickerBrokerDetail>> {
   const upper = ticker.toUpperCase().trim();
+  const cachedEntry = LIVE_TICKER_CACHE.get(upper);
+  if (!forceRefresh && cachedEntry && cachedEntry.expiresAt > Date.now()) {
+    return cachedEntry.horizons;
+  }
 
   // 1. Fetch EOD history to obtain latest price & trading session dates
   const eodData = await callMaxTradeMcp("get_eod_history", {
@@ -236,24 +259,48 @@ export async function fetchOnDemandTickerHorizons(
   const date5D = records[Math.min(4, records.length - 1)].date;
   const date10D = records[Math.min(9, records.length - 1)].date;
 
-  // 2. Fetch brokers & signals for 2D, 5D, 10D in parallel
-  const [b2d, b5d, b10d, s2d, s5d, s10d] = await Promise.all([
+  // 2. Fetch top buyers, top sellers & signals for 2D, 5D, 10D in parallel
+  const [b2d, b5d, b10d, sel2d, sel5d, sel10d, s2d, s5d, s10d] = await Promise.all([
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date2D,
       endDate: endDate,
+      sort: "net_value_desc",
       limit: 5,
     }),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date5D,
       endDate: endDate,
+      sort: "net_value_desc",
       limit: 5,
     }),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date10D,
       endDate: endDate,
+      sort: "net_value_desc",
+      limit: 5,
+    }),
+    callMaxTradeMcp("get_broksum_ticker_brokers", {
+      ticker: upper,
+      startDate: date2D,
+      endDate: endDate,
+      sort: "net_value_asc",
+      limit: 5,
+    }),
+    callMaxTradeMcp("get_broksum_ticker_brokers", {
+      ticker: upper,
+      startDate: date5D,
+      endDate: endDate,
+      sort: "net_value_asc",
+      limit: 5,
+    }),
+    callMaxTradeMcp("get_broksum_ticker_brokers", {
+      ticker: upper,
+      startDate: date10D,
+      endDate: endDate,
+      sort: "net_value_asc",
       limit: 5,
     }),
     callMaxTradeMcp("get_broksum_signal", {
@@ -277,28 +324,32 @@ export async function fetchOnDemandTickerHorizons(
     period: HorizonPeriod;
     label: string;
     range: string;
-    brokersResp: any;
+    buyersResp: any;
+    sellersResp: any;
     signalResp: any;
   }> = [
     {
       period: "2D",
-      label: `2 Hari Bursa (${date2D} s/d ${endDate})`,
-      range: `${date2D} - ${endDate}`,
-      brokersResp: b2d,
+      label: `2 Hari (${formatDateRangeID(date2D, endDate)})`,
+      range: formatDateRangeID(date2D, endDate),
+      buyersResp: b2d,
+      sellersResp: sel2d,
       signalResp: s2d,
     },
     {
       period: "5D",
-      label: `5 Hari Bursa (${date5D} s/d ${endDate})`,
-      range: `${date5D} - ${endDate}`,
-      brokersResp: b5d,
+      label: `5 Hari (${formatDateRangeID(date5D, endDate)})`,
+      range: formatDateRangeID(date5D, endDate),
+      buyersResp: b5d,
+      sellersResp: sel5d,
       signalResp: s5d,
     },
     {
       period: "10D",
-      label: `10 Hari Bursa (${date10D} s/d ${endDate})`,
-      range: `${date10D} - ${endDate}`,
-      brokersResp: b10d,
+      label: `10 Hari (${formatDateRangeID(date10D, endDate)})`,
+      range: formatDateRangeID(date10D, endDate),
+      buyersResp: b10d,
+      sellersResp: sel10d,
       signalResp: s10d,
     },
   ];
@@ -306,12 +357,12 @@ export async function fetchOnDemandTickerHorizons(
   const result: Partial<Record<HorizonPeriod, TickerBrokerDetail>> = {};
 
   for (const cfg of horizonsConfig) {
-    const rawBrokers = (cfg.brokersResp?.records as Array<Record<string, unknown>>) || [];
+    const rawBuyers = (cfg.buyersResp?.records as Array<Record<string, unknown>>) || [];
+    const rawSellers = (cfg.sellersResp?.records as Array<Record<string, unknown>>) || [];
     const rawSignal = cfg.signalResp;
 
-    // Filter top buyers & sellers
-    const buyers = rawBrokers.filter((r) => r.netSide === "BUY");
-    const sellers = rawBrokers.filter((r) => r.netSide === "SELL");
+    const buyers = rawBuyers.filter((r) => r.netSide === "BUY");
+    const sellers = rawSellers.filter((r) => r.netSide === "SELL");
 
     const topAccumulators: BrokerDetailItem[] = buyers.slice(0, 3).map((b) => ({
       code: String(b.code || "INST"),
@@ -351,9 +402,9 @@ export async function fetchOnDemandTickerHorizons(
     const topBuyerCode = topAccumulators[0]?.code || "Smart Money";
     const topSellerCode = topDistributors[0]?.code || "Ritel";
 
-    const whyInsight = `Analisis on-demand horizon ${cfg.period} untuk ${upper}. Aliran smart money mencatat net ${netValue >= 0 ? "+" : ""}${(netValue / 1e9).toFixed(1)}B dipimpin broker ${topBuyerCode} pada estimasi harga modal Rp ${bandarCost.toLocaleString("id-ID")}. Jarak harga saat ini terhadap modal bandar adalah ${bandarGapPct >= 0 ? "+" : ""}${bandarGapPct}%.`;
+    const whyInsight = `Analisis live horizon ${cfg.period} (${cfg.range}) untuk ${upper}. Aliran broker utama mencatat net ${netValue >= 0 ? "+" : ""}${(netValue / 1e9).toFixed(1)}B dipimpin ${topBuyerCode} pada estimasi modal Rp ${bandarCost.toLocaleString("id-ID")}. Jarak harga saat ini ke modal bandar ${bandarGapPct >= 0 ? "+" : ""}${bandarGapPct}%.`;
 
-    const counterpartyNote = `Serapan akumulasi oleh ${topBuyerCode} terhadap pelepasan posisi ${topSellerCode}.`;
+    const counterpartyNote = `Serapan oleh ${topBuyerCode} terhadap pelepasan posisi ${topSellerCode}.`;
 
     result[cfg.period] = {
       ticker: upper,
@@ -379,5 +430,192 @@ export async function fetchOnDemandTickerHorizons(
     };
   }
 
-  return result as Record<HorizonPeriod, TickerBrokerDetail>;
+  const finalHorizons = result as Record<HorizonPeriod, TickerBrokerDetail>;
+  LIVE_TICKER_CACHE.set(upper, {
+    expiresAt: Date.now() + CACHE_TTL_MS,
+    horizons: finalHorizons,
+  });
+
+  return finalHorizons;
+}
+
+/**
+ * Fetch live market-wide overview, daily radar, rankings, quadrants & retail footprints from Max MCP.
+ */
+export async function fetchLiveMarketOverview(
+  horizon: HorizonPeriod = "5D",
+  forceRefresh: boolean = false
+): Promise<LiveMarketOverviewPayload> {
+  if (forceRefresh) {
+    LIVE_MARKET_CACHE.clear();
+    LIVE_TICKER_CACHE.clear();
+  }
+
+  const cached = LIVE_MARKET_CACHE.get(horizon);
+  if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
+    return cached.payload;
+  }
+
+  const startLookback = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const availResp = await callMaxTradeMcp("get_broksum_availability", {
+    startDate: startLookback,
+  });
+
+  const availDates: string[] = Array.isArray(availResp?.dates)
+    ? availResp.dates.map((d: any) => String(d.date)).filter(Boolean)
+    : [];
+
+  if (availDates.length === 0) {
+    throw new Error("Max MCP belum mengembalikan daftar tanggal bursa yang tersedia.");
+  }
+
+  const { startDate, endDate } = computeHorizonWindow(availDates, horizon);
+
+  const [
+    snapshotResp,
+    quadrantResp,
+    accRankingResp,
+    foreignSellResp,
+    xlBuy,
+    xlSell,
+    xcBuy,
+    xcSell,
+    ypBuy,
+    ypSell,
+  ] = await Promise.all([
+    callMaxTradeMcp("get_market_snapshot", {
+      date: endDate,
+      limit: 100,
+      orderBy: "value_desc",
+    }).catch(() => null),
+    callMaxTradeMcp("get_broksum_market_quadrant", {
+      date: endDate,
+      flow: "smart",
+      limit: 100,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broksum_market_ranking", {
+      date: endDate,
+      side: "accumulation",
+      topN: 5,
+      limit: 25,
+    }),
+    callMaxTradeMcp("get_broksum_market_ranking", {
+      date: endDate,
+      side: "net_foreign_sell",
+      topN: 5,
+      limit: 15,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broker_history", {
+      broker: "XL",
+      startDate,
+      endDate,
+      sort: "net_value_desc",
+      limit: 20,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broker_history", {
+      broker: "XL",
+      startDate,
+      endDate,
+      sort: "net_value_asc",
+      limit: 15,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broker_history", {
+      broker: "XC",
+      startDate,
+      endDate,
+      sort: "net_value_desc",
+      limit: 20,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broker_history", {
+      broker: "XC",
+      startDate,
+      endDate,
+      sort: "net_value_asc",
+      limit: 15,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broker_history", {
+      broker: "YP",
+      startDate,
+      endDate,
+      sort: "net_value_desc",
+      limit: 20,
+    }).catch(() => null),
+    callMaxTradeMcp("get_broker_history", {
+      broker: "YP",
+      startDate,
+      endDate,
+      sort: "net_value_asc",
+      limit: 15,
+    }).catch(() => null),
+  ]);
+
+  const mergeBrokerRows = (a: any, b: any): McpBrokerHistoryRow[] => [
+    ...((a?.records as McpBrokerHistoryRow[]) || []),
+    ...((b?.records as McpBrokerHistoryRow[]) || []),
+  ];
+
+  // Pick up to 5 top featured candidates (3 acc + 2 dist) to enrich with multi-day broker breakdown
+  const accList: McpRankingRecord[] = (accRankingResp?.records || []).filter(
+    (r: McpRankingRecord) => {
+      const topBuy = Number(r.topBuyerNetValueTopN) || 0;
+      const topSell = Number(r.topSellerNetValueTopN) || 0;
+      const score = Number(r.bandarSignal?.score) || 0;
+      const smartNet = (Number(r.foreignNetValue) || 0) + (Number(r.governmentNetValue) || 0);
+      return topBuy >= topSell && score > 0 && smartNet >= 0;
+    }
+  );
+  const distList: McpRankingRecord[] = (foreignSellResp?.records || []).slice(0, 3);
+  const featureTickers = Array.from(
+    new Set([
+      ...accList.slice(0, 3).map((r) => String(r.ticker || "")),
+      ...distList.slice(0, 2).map((r) => String(r.ticker || "")),
+    ].filter(Boolean))
+  ).slice(0, 5);
+
+  const enrichedDetails: Record<string, TickerBrokerDetail> = {};
+  if (featureTickers.length > 0) {
+    try {
+      const enrichPromise = Promise.allSettled(
+        featureTickers.map(async (t) => {
+          const horizons = await fetchOnDemandTickerHorizons(t, false);
+          return { ticker: t, detail: horizons[horizon] };
+        })
+      );
+      const timeoutGuard = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
+      const settled = await Promise.race([enrichPromise, timeoutGuard]);
+      if (Array.isArray(settled)) {
+        for (const item of settled) {
+          if (item.status === "fulfilled" && item.value.detail) {
+            enrichedDetails[item.value.ticker] = item.value.detail;
+          }
+        }
+      }
+    } catch {
+      // Enrichment is best-effort; core market ranking stays intact
+    }
+  }
+
+  const payload = synthesizeLiveMarketOverview({
+    horizon,
+    availDates,
+    snapshotResp,
+    quadrantResp,
+    accRankingResp,
+    foreignSellResp,
+    retailHistories: {
+      XL: mergeBrokerRows(xlBuy, xlSell),
+      XC: mergeBrokerRows(xcBuy, xcSell),
+      YP: mergeBrokerRows(ypBuy, ypSell),
+    },
+    enrichedDetails,
+  });
+
+  LIVE_MARKET_CACHE.set(horizon, {
+    expiresAt: Date.now() + CACHE_TTL_MS,
+    payload,
+  });
+
+  return payload;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { JournalShell } from "@/components/journal-shell";
 
@@ -20,9 +20,15 @@ import {
   getDailyInsight,
   formatRupiah,
   formatNumber,
-  type TickerBrokerDetail,
+  type AccumulationItem,
+  type DailyInsightCardData,
+  type DistributionItem,
   type HorizonPeriod,
+  type MarketSummary,
+  type QuadrantMapDetail,
+  type TickerBrokerDetail,
 } from "@/lib/broker-flow";
+import { formatShortDateID, type DataFreshnessMeta } from "@/lib/live-broker-flow";
 import "./broker-flow.css";
 
 export default function BrokerFlowPage() {
@@ -31,6 +37,21 @@ export default function BrokerFlowPage() {
   const [selectedTicker, setSelectedTicker] = useState<TickerBrokerDetail | null>(() =>
     getTickerDetailByHorizon("MBMA", "5D")
   );
+  const [marketSummary, setMarketSummary] = useState<MarketSummary>(DEFAULT_MARKET_SUMMARY);
+  const [topAccumulations, setTopAccumulations] = useState<AccumulationItem[]>(
+    DEFAULT_TOP_ACCUMULATIONS
+  );
+  const [topDistributions, setTopDistributions] = useState<DistributionItem[]>(
+    DEFAULT_TOP_DISTRIBUTIONS
+  );
+  const [quadrantMaps, setQuadrantMaps] = useState<Record<string, QuadrantMapDetail>>(
+    QUADRANT_MAPS
+  );
+  const [dailyInsight, setDailyInsight] = useState<DailyInsightCardData>(() =>
+    getDailyInsight("5D")
+  );
+  const [freshness, setFreshness] = useState<DataFreshnessMeta | null>(null);
+  const [isSyncingLive, setIsSyncingLive] = useState<boolean>(true);
   const [activeFilterQuadrant, setActiveFilterQuadrant] = useState<string | null>(null);
   const [activeQuadrantModal, setActiveQuadrantModal] = useState<string | null>(null);
   const [modalSearch, setModalSearch] = useState("");
@@ -41,14 +62,96 @@ export default function BrokerFlowPage() {
   const [isOnDemandLoading, setIsOnDemandLoading] = useState(false);
   const [onDemandTarget, setOnDemandTarget] = useState<string | null>(null);
   const [isChartOpen, setIsChartOpen] = useState(false);
+  const hasUserSelectedTickerRef = useRef(false);
+
+  const applyMarketOverviewPayload = (payloadData: Record<string, unknown>) => {
+    if (payloadData.market_summary) {
+      setMarketSummary(payloadData.market_summary as MarketSummary);
+    }
+    if (Array.isArray(payloadData.top_accumulations)) {
+      setTopAccumulations(payloadData.top_accumulations as AccumulationItem[]);
+    }
+    if (Array.isArray(payloadData.top_distributions)) {
+      setTopDistributions(payloadData.top_distributions as DistributionItem[]);
+    }
+    if (payloadData.quadrant_maps) {
+      setQuadrantMaps(payloadData.quadrant_maps as Record<string, QuadrantMapDetail>);
+    }
+    if (payloadData.daily_insight) {
+      setDailyInsight(payloadData.daily_insight as DailyInsightCardData);
+    }
+    if (payloadData.data_freshness) {
+      setFreshness(payloadData.data_freshness as DataFreshnessMeta);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/broker-flow?horizon=5D&live=true");
+        if (!res.ok) return;
+        const json = await res.json();
+        if (cancelled || !json?.success || !json?.data) return;
+
+        applyMarketOverviewPayload(json.data as Record<string, unknown>);
+        const topAcc = json.data.top_accumulations as AccumulationItem[] | undefined;
+        const nextMaps = json.data.quadrant_maps as Record<string, QuadrantMapDetail> | undefined;
+        const defaultTicker =
+          !hasUserSelectedTickerRef.current && topAcc && topAcc.length > 0
+            ? topAcc[0].ticker
+            : "MBMA";
+
+        const detail = await fetchTickerDetail(defaultTicker, "5D", true, nextMaps);
+        if (!cancelled && detail) {
+          setSelectedTickerCode(defaultTicker);
+          setSelectedTicker(detail);
+        }
+      } catch {
+        // Keep initial SSR fallback on network failure
+      } finally {
+        if (!cancelled) setIsSyncingLive(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const loadLiveMarket = async (
+    horizon: HorizonPeriod,
+    forceRefresh: boolean = false
+  ): Promise<Record<string, QuadrantMapDetail> | undefined> => {
+    const qs = new URLSearchParams({ horizon, live: "true" });
+    if (forceRefresh) qs.set("refresh", "true");
+    const res = await fetch(`/api/broker-flow?${qs.toString()}`);
+    if (!res.ok) return undefined;
+    const json = await res.json();
+    if (json?.success && json?.data) {
+      applyMarketOverviewPayload(json.data as Record<string, unknown>);
+      return json.data.quadrant_maps as Record<string, QuadrantMapDetail> | undefined;
+    }
+    return undefined;
+  };
 
   const handleHorizonChange = async (newHorizon: HorizonPeriod) => {
     setActiveHorizon(newHorizon);
-    if (selectedTickerCode) {
-      const detail = await fetchTickerDetail(selectedTickerCode, newHorizon);
+    setIsSyncingLive(true);
+    try {
+      const [nextMaps, detail] = await Promise.all([
+        loadLiveMarket(newHorizon, false).catch(() => undefined),
+        selectedTickerCode
+          ? fetchTickerDetail(selectedTickerCode, newHorizon, true, quadrantMaps)
+          : Promise.resolve(null),
+      ]);
       if (detail) {
         setSelectedTicker(detail);
+      } else if (nextMaps && selectedTickerCode) {
+        const refreshed = await fetchTickerDetail(selectedTickerCode, newHorizon, true, nextMaps);
+        if (refreshed) setSelectedTicker(refreshed);
       }
+    } finally {
+      setIsSyncingLive(false);
     }
   };
 
@@ -92,25 +195,26 @@ export default function BrokerFlowPage() {
 
   const handleTickerClick = async (tickerCode: string) => {
     const code = tickerCode.toUpperCase().trim();
+    hasUserSelectedTickerRef.current = true;
     setSelectedTickerCode(code);
     if (activeQuadrantModal) {
       setActiveQuadrantModal(null);
     }
-    setSearchStatus(`Memuat analisis untuk ${code}...`);
+    setSearchStatus(`Memuat analisis live untuk ${code}...`);
 
     setTimeout(() => {
       const el = document.getElementById("ticker-insight-section");
       if (el) el.scrollIntoView({ behavior: "smooth" });
     }, 50);
 
-    const detail = await fetchTickerDetail(code, activeHorizon);
+    const detail = await fetchTickerDetail(code, activeHorizon, true, quadrantMaps);
     if (detail) {
       setSelectedTicker(detail);
       setOnDemandTarget(null);
       setSearchStatus(`Menampilkan data analisis [${activeHorizon}] untuk ${detail.ticker}`);
     } else {
       setOnDemandTarget(code);
-      setSearchStatus(`Data untuk ${code} belum tersedia di snapshot lokal.`);
+      setSearchStatus(`Data untuk ${code} belum tersedia di snapshot atau feed.`);
     }
   };
 
@@ -119,11 +223,12 @@ export default function BrokerFlowPage() {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
-    setSearchStatus("Mencari data emiten...");
+    setSearchStatus("Mencari data emiten live dari Max MCP...");
 
     try {
       const upper = searchQuery.toUpperCase().trim();
-      const detail = await fetchTickerDetail(upper, activeHorizon);
+      hasUserSelectedTickerRef.current = true;
+      const detail = await fetchTickerDetail(upper, activeHorizon, true, quadrantMaps);
       if (detail) {
         setSelectedTickerCode(upper);
         setSelectedTicker(detail);
@@ -144,24 +249,41 @@ export default function BrokerFlowPage() {
     }
   };
 
-  const handleManualSync = () => {
-    setSyncStatus("Menghubungkan ke Supabase Edge Function...");
-    setTimeout(() => {
-      setSyncStatus("Sinkronisasi EOD Broksum Sukses (Snapshot 23 Nov 2026 Aktif)");
-      setTimeout(() => setSyncStatus(null), 4000);
-    }, 800);
+  const handleManualSync = async () => {
+    setIsSyncingLive(true);
+    setSyncStatus("Menghubungkan ke Max MCP & menyegarkan snapshot bursa...");
+    try {
+      const nextMaps = await loadLiveMarket(activeHorizon, true);
+      if (selectedTickerCode) {
+        const refreshedDetail = await fetchTickerDetail(
+          selectedTickerCode,
+          activeHorizon,
+          true,
+          nextMaps || quadrantMaps,
+          true
+        );
+        if (refreshedDetail) setSelectedTicker(refreshedDetail);
+      }
+      setSyncStatus(
+        `✅ Sinkronisasi live sukses (${formatShortDateID(marketSummary.date)})`
+      );
+    } catch {
+      setSyncStatus("⚠️ Gagal menarik update terbaru dari Max MCP; mempertahankan data aktif.");
+    } finally {
+      setIsSyncingLive(false);
+      setTimeout(() => setSyncStatus(null), 5000);
+    }
   };
 
-  // Active Daily Insight data by horizon
-  const dailyInsight = getDailyInsight(activeHorizon);
-
   // Active quadrant data for modal
-  const activeModalData = activeQuadrantModal ? QUADRANT_MAPS[activeQuadrantModal] : null;
+  const activeModalData = activeQuadrantModal ? quadrantMaps[activeQuadrantModal] : null;
   const filteredModalStocks = activeModalData
     ? activeModalData.stocks.filter((s) =>
         s.ticker.toLowerCase().includes(modalSearch.toLowerCase())
       )
     : [];
+
+  const activeDateBadge = formatShortDateID(freshness?.latest_date || marketSummary.date);
 
   return (
     <JournalShell mode="live" variant="terminal" activePage="broker-flow">
@@ -176,6 +298,27 @@ export default function BrokerFlowPage() {
             <h1 className="bf-title">
               Smart Money Flow &amp; Bandarmology Intelligence
             </h1>
+            <div className="bf-freshness-row">
+              <span
+                className={`bf-freshness-pill ${
+                  freshness?.source === "snapshot-fallback" ? "fallback" : "live"
+                }`}
+              >
+                {freshness?.source === "snapshot-fallback"
+                  ? `🟡 SNAPSHOT: ${activeDateBadge}`
+                  : `🟢 LIVE EOD: ${activeDateBadge}`}
+              </span>
+              {freshness && !freshness.is_today_published && (
+                <span className="bf-freshness-pill notice">
+                  ℹ️ {freshness.message}
+                </span>
+              )}
+              {isSyncingLive && (
+                <span className="bf-freshness-pill notice">
+                  ⏳ Memuat data live Max MCP...
+                </span>
+              )}
+            </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -183,11 +326,13 @@ export default function BrokerFlowPage() {
             <button
               type="button"
               onClick={handleManualSync}
+              disabled={isSyncingLive}
               className="bf-btn-sync"
-              title="Manual Trigger Sync Broksum EOD via Supabase Edge Function"
+              style={{ opacity: isSyncingLive ? 0.7 : 1, cursor: isSyncingLive ? "wait" : "pointer" }}
+              title="Tarik ulang data EOD & Broksum live langsung dari Max MCP"
             >
-              <span>↻</span>
-              <span>SYNC BROKSUM</span>
+              <span>{isSyncingLive ? "⏳" : "↻"}</span>
+              <span>{isSyncingLive ? "SYNCING..." : "SYNC BROKSUM"}</span>
             </button>
 
             {/* Search Form */}
@@ -511,11 +656,11 @@ export default function BrokerFlowPage() {
                 className={`bf-quad-card bull-acc ${
                   activeFilterQuadrant === "markup_akumulasi" ? "active" : ""
                 }`}
-                title="Buka daftar 111 saham Markup + Akumulasi"
+                title={`Buka daftar ${marketSummary.quadrant_counts.markup_akumulasi} saham Markup + Akumulasi`}
               >
                 <div className="bf-quad-label">BULL ACCUMULATION</div>
                 <div className="bf-quad-count">
-                  {DEFAULT_MARKET_SUMMARY.quadrant_counts.markup_akumulasi}
+                  {marketSummary.quadrant_counts.markup_akumulasi}
                 </div>
                 <div className="bf-quad-sub">Markup + Akumulasi ↗</div>
               </button>
@@ -531,11 +676,11 @@ export default function BrokerFlowPage() {
                 className={`bf-quad-card bull-dist ${
                   activeFilterQuadrant === "markup_distribusi" ? "active" : ""
                 }`}
-                title="Buka daftar 86 saham Markup + Distribusi (Trap)"
+                title={`Buka daftar ${marketSummary.quadrant_counts.markup_distribusi} saham Markup + Distribusi (Trap)`}
               >
                 <div className="bf-quad-label">BULL DISTRIBUTION</div>
                 <div className="bf-quad-count">
-                  {DEFAULT_MARKET_SUMMARY.quadrant_counts.markup_distribusi}
+                  {marketSummary.quadrant_counts.markup_distribusi}
                 </div>
                 <div className="bf-quad-sub">Markup + Distribusi (Trap) ↗</div>
               </button>
@@ -551,11 +696,11 @@ export default function BrokerFlowPage() {
                 className={`bf-quad-card bear-acc ${
                   activeFilterQuadrant === "markdown_akumulasi" ? "active" : ""
                 }`}
-                title="Buka daftar 142 saham Markdown + Serapan"
+                title={`Buka daftar ${marketSummary.quadrant_counts.markdown_akumulasi} saham Markdown + Serapan`}
               >
                 <div className="bf-quad-label">BEAR ACCUMULATION</div>
                 <div className="bf-quad-count">
-                  {DEFAULT_MARKET_SUMMARY.quadrant_counts.markdown_akumulasi}
+                  {marketSummary.quadrant_counts.markdown_akumulasi}
                 </div>
                 <div className="bf-quad-sub">Markdown + Serapan ↗</div>
               </button>
@@ -571,11 +716,11 @@ export default function BrokerFlowPage() {
                 className={`bf-quad-card bear-dist ${
                   activeFilterQuadrant === "markdown_distribusi" ? "active" : ""
                 }`}
-                title="Buka daftar 287 saham Markdown + Distribusi"
+                title={`Buka daftar ${marketSummary.quadrant_counts.markdown_distribusi} saham Markdown + Distribusi`}
               >
                 <div className="bf-quad-label">BEAR DISTRIBUTION</div>
                 <div className="bf-quad-count">
-                  {DEFAULT_MARKET_SUMMARY.quadrant_counts.markdown_distribusi}
+                  {marketSummary.quadrant_counts.markdown_distribusi}
                 </div>
                 <div className="bf-quad-sub">Markdown + Distribusi ↗</div>
               </button>
@@ -588,13 +733,13 @@ export default function BrokerFlowPage() {
               <div className="bf-panel-title">SMART MONEY FLOW SUMMARY</div>
               <div
                 className={`bf-net-val ${
-                  DEFAULT_MARKET_SUMMARY.smart_money_net >= 0 ? "pos" : "neg"
+                  marketSummary.smart_money_net >= 0 ? "pos" : "neg"
                 }`}
               >
-                {formatRupiah(DEFAULT_MARKET_SUMMARY.smart_money_net)}
+                {formatRupiah(marketSummary.smart_money_net)}
               </div>
               <p className="bf-panel-hint">
-                {DEFAULT_MARKET_SUMMARY.smart_money_net >= 0
+                {marketSummary.smart_money_net >= 0
                   ? "Smart Money Net Inflow"
                   : "Smart Money Net Outflow"}
               </p>
@@ -603,11 +748,11 @@ export default function BrokerFlowPage() {
             <div className="bf-summary-meta">
               <div className="bf-meta-row">
                 <span>Total Omzet Bursa:</span>
-                <strong>{formatRupiah(DEFAULT_MARKET_SUMMARY.total_turnover)}</strong>
+                <strong>{formatRupiah(marketSummary.total_turnover)}</strong>
               </div>
               <div className="bf-meta-row">
                 <span>Saham Terpantau:</span>
-                <strong>{DEFAULT_MARKET_SUMMARY.total_classified} saham</strong>
+                <strong>{marketSummary.total_classified} saham</strong>
               </div>
             </div>
           </div>
@@ -623,7 +768,7 @@ export default function BrokerFlowPage() {
                 <span>▲</span>
                 <span>TOP ACCUMULATION (TOP 5 BROKER)</span>
               </div>
-              <span className="bf-panel-hint">88 stocks</span>
+              <span className="bf-panel-hint">Top {topAccumulations.length} likuid • {activeDateBadge}</span>
             </div>
 
             <div className="bf-table-scroll">
@@ -633,13 +778,13 @@ export default function BrokerFlowPage() {
                     <th>TICKER</th>
                     <th className="num">PRICE</th>
                     <th className="num">CHG%</th>
-                    <th>TOP 5 BUYERS</th>
+                    <th>TOP BUYERS</th>
                     <th className="num">SUM BUY</th>
                     <th className="num">SMART MONEY</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {DEFAULT_TOP_ACCUMULATIONS.map((item) => {
+                  {topAccumulations.map((item) => {
                     const isSelected = selectedTicker?.ticker === item.ticker;
                     return (
                       <tr
@@ -650,10 +795,15 @@ export default function BrokerFlowPage() {
                       >
                         <td className="ticker-link pos">{item.ticker}</td>
                         <td className="num">{formatNumber(item.close)}</td>
-                        <td className="num pos">+{item.change_percent.toFixed(1)}%</td>
+                        <td className={`num ${item.change_percent >= 0 ? "pos" : "neg"}`}>
+                          {item.change_percent >= 0 ? "+" : ""}
+                          {item.change_percent.toFixed(1)}%
+                        </td>
                         <td className="muted">{item.top_buyers}</td>
                         <td className="num pos">{formatRupiah(item.sum_buy)}</td>
-                        <td className="num pos">{formatRupiah(item.smart_money_net)}</td>
+                        <td className={`num ${item.smart_money_net >= 0 ? "pos" : "neg"}`}>
+                          {formatRupiah(item.smart_money_net)}
+                        </td>
                       </tr>
                     );
                   })}
@@ -669,7 +819,7 @@ export default function BrokerFlowPage() {
                 <span>▼</span>
                 <span>TOP DISTRIBUTION (TOP 5 BROKER)</span>
               </div>
-              <span className="bf-panel-hint">112 stocks</span>
+              <span className="bf-panel-hint">Top {topDistributions.length} distribusi • {activeDateBadge}</span>
             </div>
 
             <div className="bf-table-scroll">
@@ -679,13 +829,13 @@ export default function BrokerFlowPage() {
                     <th>TICKER</th>
                     <th className="num">PRICE</th>
                     <th className="num">CHG%</th>
-                    <th>TOP 5 SELLERS</th>
+                    <th>TOP SELLERS</th>
                     <th className="num">SUM SELL</th>
                     <th className="num">SMART MONEY</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {DEFAULT_TOP_DISTRIBUTIONS.map((item) => {
+                  {topDistributions.map((item) => {
                     const isSelected = selectedTicker?.ticker === item.ticker;
                     return (
                       <tr
@@ -696,7 +846,10 @@ export default function BrokerFlowPage() {
                       >
                         <td className="ticker-link neg">{item.ticker}</td>
                         <td className="num">{formatNumber(item.close)}</td>
-                        <td className="num neg">{item.change_percent.toFixed(1)}%</td>
+                        <td className={`num ${item.change_percent >= 0 ? "pos" : "neg"}`}>
+                          {item.change_percent >= 0 ? "+" : ""}
+                          {item.change_percent.toFixed(1)}%
+                        </td>
                         <td className="muted">{item.top_sellers}</td>
                         <td className="num neg">{formatRupiah(item.sum_sell)}</td>
                         <td
@@ -722,7 +875,7 @@ export default function BrokerFlowPage() {
           <div className="bf-table-card">
             <div className="bf-table-header">
               <span className="bf-table-title neutral">SECTOR SMART MONEY FLOW</span>
-              <span className="bf-panel-hint">by sector</span>
+              <span className="bf-panel-hint">Referensi Snapshot 20 Nov</span>
             </div>
 
             <div className="bf-table-scroll">
@@ -760,7 +913,7 @@ export default function BrokerFlowPage() {
           <div className="bf-table-card">
             <div className="bf-table-header">
               <span className="bf-table-title neutral">TOP BROKER RANKING</span>
-              <span className="bf-panel-hint">200 stocks</span>
+              <span className="bf-panel-hint">Referensi Snapshot 20 Nov</span>
             </div>
 
             <div className="bf-table-scroll">

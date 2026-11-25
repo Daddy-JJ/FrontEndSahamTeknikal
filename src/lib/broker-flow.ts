@@ -3278,12 +3278,14 @@ export function getTickerDetailByHorizon(
  */
 export function buildQuadrantFallbackDetail(
   tickerCode: string,
-  horizon: HorizonPeriod = "5D"
+  horizon: HorizonPeriod = "5D",
+  customQuadrantMaps?: Record<string, QuadrantMapDetail>
 ): TickerBrokerDetail | null {
   const code = tickerCode.toUpperCase().trim();
+  const sourceQuadrants = customQuadrantMaps || QUADRANT_MAPS;
 
   // 1. Search across QUADRANT_MAPS
-  for (const [qKey, qMap] of Object.entries(QUADRANT_MAPS)) {
+  for (const [qKey, qMap] of Object.entries(sourceQuadrants)) {
     const stock = qMap.stocks.find((s) => s.ticker === code);
     if (stock) {
       const isPositive = stock.smart_money_net >= 0;
@@ -3411,33 +3413,45 @@ export function buildQuadrantFallbackDetail(
 }
 
 /**
- * On-demand ticker detail fetcher (Memory first with horizon awareness, then API, then honest null)
+ * On-demand ticker detail fetcher (Live API first when enabled, then static snapshot fallback, then honest null)
  * NEVER synthesizes fake financial data or hallucinations.
  */
 export async function fetchTickerDetail(
   tickerCode: string,
-  horizon: HorizonPeriod = "5D"
+  horizon: HorizonPeriod = "5D",
+  preferLive: boolean = true,
+  customQuadrantMaps?: Record<string, QuadrantMapDetail>,
+  forceRefresh: boolean = false
 ): Promise<TickerBrokerDetail | null> {
   const code = tickerCode.toUpperCase().trim();
+
+  if (preferLive) {
+    try {
+      const qs = new URLSearchParams({
+        ticker: code,
+        horizon,
+        live: "true",
+      });
+      if (forceRefresh) qs.set("refresh", "true");
+      const res = await fetch(`/api/broker-flow?${qs.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          return json.data as TickerBrokerDetail;
+        }
+      }
+    } catch {
+      // network or API offline fallback (e.g. non-browser test runtime)
+    }
+  }
+
   const direct = getTickerDetailByHorizon(code, horizon);
   if (direct) {
     return direct;
   }
 
-  try {
-    const res = await fetch(`/api/broker-flow?ticker=${encodeURIComponent(code)}&horizon=${encodeURIComponent(horizon)}`);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.data) {
-        return json.data as TickerBrokerDetail;
-      }
-    }
-  } catch {
-    // network or API offline fallback
-  }
-
   // Transparent fallback from quadrant or daily insights if available
-  const quadrantFallback = buildQuadrantFallbackDetail(code, horizon);
+  const quadrantFallback = buildQuadrantFallbackDetail(code, horizon, customQuadrantMaps);
   if (quadrantFallback) {
     return quadrantFallback;
   }
