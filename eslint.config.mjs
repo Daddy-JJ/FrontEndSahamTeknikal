@@ -3,6 +3,7 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 export default defineConfig([
-  ...nextVitals, ...nextTs,
-  globalIgnores([".next/**", ".next-password-smoke/**", ".next-journal-smoke/**", ".next-workspace-smoke/**", ".next-scanner-smoke/**", ".next-chart-smoke/**", ".npm-chart-cache/**", ".next-release-check/**", "next-env.d.ts", "playwright-report/**", "test-results/**"]),
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores([".next/**", "next-env.d.ts"]),
 ]);

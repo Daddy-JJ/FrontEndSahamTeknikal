@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "./reporting-ui.css";
-import "./password-auth.css";
 
 export const metadata: Metadata = {
-  title: "Ruang Sinyal · IDX Night Scanner",
-  description: "Workspace riset EOD, empat setup teknikal, dan jurnal yang dapat diaudit.",
+  title: "Broker Flow & Bandarmology · SahamTeknikal",
+  description: "Smart Money Flow & Bandarmology Intelligence untuk pasar saham IDX.",
   robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="id" data-scroll-behavior="smooth"><body>{children}</body></html>;
+  return (
+    <html lang="id" data-scroll-behavior="smooth">
+      <body>{children}</body>
+    </html>
+  );
 }

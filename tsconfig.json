@@ -34,23 +34,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    ".next-journal-smoke/types/**/*.ts",
-    ".next-journal-smoke/dev/types/**/*.ts",
-    ".next-workspace-smoke/types/**/*.ts",
-    ".next-workspace-smoke/dev/types/**/*.ts",
-    ".next-scanner-smoke/types/**/*.ts",
-    ".next-scanner-smoke/dev/types/**/*.ts",
-    ".next-release-check/types/**/*.ts",
-    ".next-release-check/dev/types/**/*.ts",
-    ".next-chart-smoke/types/**/*.ts",
-    ".next-chart-smoke/dev/types/**/*.ts",
-    ".next-chart-smoke/webpack/types/**/*.ts",
-    ".next-chart-smoke/webpack/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    ".next-*-smoke/**",
-    "test-results/**"
+    "node_modules"
   ]
 }
