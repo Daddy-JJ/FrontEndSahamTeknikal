@@ -66,7 +66,13 @@ export interface BrokerDetailItem {
 }
 
 export interface TradePlan {
-  action: "BUY ON PULLBACK" | "BUY ON BREAKOUT" | "SWING BUY / ACCUMULATE" | "AVOID / SELL ON STRENGTH" | "HARD AVOID";
+  action:
+    | "BUY ON PULLBACK"
+    | "BUY ON PULLBACK / BREAKOUT"
+    | "BUY ON BREAKOUT"
+    | "SWING BUY / ACCUMULATE"
+    | "AVOID / SELL ON STRENGTH"
+    | "HARD AVOID";
   entry_zone: string;
   stop_loss: string;
   target_price: string;
@@ -199,6 +205,7 @@ export interface DailyInsightCardData {
 }
 
 export function formatRupiah(value: number): string {
+  if (!Number.isFinite(value)) return "-";
   const abs = Math.abs(value);
   const sign = value > 0 ? "+" : value < 0 ? "-" : "";
   if (abs >= 1_000_000_000_000) {
@@ -214,6 +221,7 @@ export function formatRupiah(value: number): string {
 }
 
 export function formatNumber(value: number): string {
+  if (!Number.isFinite(value)) return "-";
   return value.toLocaleString("id-ID");
 }
 
@@ -3572,7 +3580,8 @@ export async function fetchTickerMultiHorizon(
   activeHorizon: HorizonPeriod = "5D",
   preferLive: boolean = true,
   customQuadrantMaps?: Record<string, QuadrantMapDetail>,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
+  signal?: AbortSignal
 ): Promise<TickerMultiHorizonResult | null> {
   const code = tickerCode.toUpperCase().trim();
 
@@ -3584,7 +3593,7 @@ export async function fetchTickerMultiHorizon(
         live: "true",
       });
       if (forceRefresh) qs.set("refresh", "true");
-      const res = await fetch(`/api/broker-flow?${qs.toString()}`);
+      const res = await fetch(`/api/broker-flow?${qs.toString()}`, { signal });
       if (res.ok) {
         const json = await res.json();
         if (json?.success && json?.data) {

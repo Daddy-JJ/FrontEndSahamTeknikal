@@ -15,19 +15,61 @@ import {
 } from "./live-broker-flow.ts";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const REFRESH_COOLDOWN_MS = 60 * 1000;
 const LIVE_MARKET_CACHE = new Map<
   HorizonPeriod,
-  { expiresAt: number; payload: LiveMarketOverviewPayload }
+  { expiresAt: number; fetchedAt: number; payload: LiveMarketOverviewPayload }
 >();
 const LIVE_TICKER_CACHE = new Map<
   string,
-  { expiresAt: number; horizons: Record<HorizonPeriod, TickerBrokerDetail> }
+  { expiresAt: number; fetchedAt: number; horizons: Record<HorizonPeriod, TickerBrokerDetail> }
 >();
 
-const DEFAULT_MCP_URL =
-  process.env.MAX_TRADE_MCP_URL || "https://eod.maxlong.my.id/mcp";
-const DEFAULT_MCP_TOKEN =
-  process.env.MAX_TRADE_MCP_TOKEN || "YeU65tY4n40eBTsC_CFSrFYnaCHL1YEmuwE72sE4hSk";
+function getMcpConfig(): { url: string; token: string } {
+  const token = process.env.MAX_TRADE_MCP_TOKEN?.trim();
+  if (!token) {
+    throw new Error("MAX_TRADE_MCP_TOKEN belum dikonfigurasi di environment server.");
+  }
+  return {
+    url: process.env.MAX_TRADE_MCP_URL || "https://eod.maxlong.my.id/mcp",
+    token,
+  };
+}
+
+function parseMcpResponseBody(text: string, contentType: string | null): any {
+  const isSse =
+    contentType?.includes("text/event-stream") ||
+    text.startsWith("event:") ||
+    text.startsWith("data:");
+
+  if (isSse) {
+    for (const rawLine of text.split("\n")) {
+      const line = rawLine.trim();
+      if (!line.startsWith("data:")) continue;
+      const jsonStr = line.slice(5).trim();
+      if (!jsonStr || jsonStr === "[DONE]") continue;
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.error) {
+        throw new Error(`MCP Error ${parsed.error.code}: ${parsed.error.message}`);
+      }
+      const content = parsed.result?.content;
+      if (content && content[0]?.type === "text") {
+        return JSON.parse(content[0].text);
+      }
+      return parsed.result;
+    }
+  }
+
+  const data = JSON.parse(text);
+  if (data.error) {
+    throw new Error(`MCP Error ${data.error.code}: ${data.error.message}`);
+  }
+  const content = data.result?.content;
+  if (content && content[0]?.type === "text") {
+    return JSON.parse(content[0].text);
+  }
+  return data.result;
+}
 
 /**
  * Call Max Trade MCP server via JSON-RPC over HTTP.
@@ -36,16 +78,26 @@ const DEFAULT_MCP_TOKEN =
 export async function callMaxTradeMcp(
   toolName: string,
   args: Record<string, any>,
-  timeoutMs: number = 20000
+  timeoutMs: number = 20000,
+  externalSignal?: AbortSignal
 ): Promise<any> {
+  const { url, token } = getMcpConfig();
   const controller = new AbortController();
+  const onExternalAbort = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      controller.abort();
+    } else {
+      externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+    }
+  }
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(DEFAULT_MCP_URL, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${DEFAULT_MCP_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json, text/event-stream",
       },
@@ -67,33 +119,12 @@ export async function callMaxTradeMcp(
     }
 
     const text = await response.text();
-
-    // Check SSE format (starts with event: or contains data:)
-    if (text.startsWith("event:") || text.includes("data:")) {
-      for (const line of text.split("\n")) {
-        if (line.startsWith("data:")) {
-          const jsonStr = line.slice(5).trim();
-          const parsed = JSON.parse(jsonStr);
-          const content = parsed.result?.content;
-          if (content && content[0]?.type === "text") {
-            return JSON.parse(content[0].text);
-          }
-          return parsed.result;
-        }
-      }
-    }
-
-    const data = JSON.parse(text);
-    if (data.error) {
-      throw new Error(`MCP Error ${data.error.code}: ${data.error.message}`);
-    }
-    const content = data.result?.content;
-    if (content && content[0]?.type === "text") {
-      return JSON.parse(content[0].text);
-    }
-    return data.result;
+    return parseMcpResponseBody(text, response.headers.get("content-type"));
   } finally {
     clearTimeout(timer);
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", onExternalAbort);
+    }
   }
 }
 
@@ -287,8 +318,17 @@ export function synthesizeTickerHorizonDetail(
     bandarCost > 0 ? Math.round(((closePrice - bandarCost) / bandarCost) * 10000) / 100 : 0;
 
   const top3Sum = topAccumulators.reduce((sum, item) => sum + item.net_value, 0);
+  const top3SellAbs = topDistributors.reduce((sum, item) => sum + Math.abs(item.net_value), 0);
+  const top3Balance = top3Sum - top3SellAbs;
   const foreignNet = Number(signalResp?.summary?.foreignNetValue) || 0;
-  const netValue = topAccumulators[0]?.net_value || foreignNet || 0;
+  const rawSignalScore =
+    typeof signalResp?.score === "number" ? Number(signalResp.score) : undefined;
+
+  // Use net top-broker flow (buy minus sell) instead of top-1 buyer only so heavy distribution is never misclassified.
+  let netValue = top3Balance !== 0 ? top3Balance : foreignNet;
+  if (typeof rawSignalScore === "number" && rawSignalScore <= -10 && foreignNet < 0) {
+    netValue = Math.min(netValue, foreignNet);
+  }
   const netVolumeLots =
     Number(buyers[0]?.netVolume) ||
     (closePrice > 0 ? Math.round(Math.abs(netValue) / (closePrice * 100)) : 0);
@@ -300,8 +340,7 @@ export function synthesizeTickerHorizonDetail(
   const topSellerCode = topDistributors[0]?.code || "Ritel";
   const phaseName =
     period === "2D" ? "Inisiasi 48j" : period === "5D" ? "Persistensi 5D" : "Fondasi 10D";
-  const signalScore =
-    typeof signalResp?.score === "number" ? Number(signalResp.score) : undefined;
+  const signalScore = rawSignalScore;
   const signalLabel = signalResp?.label ? String(signalResp.label) : undefined;
   const consistencyPct =
     typeof signalResp?.evidence?.accumulationConsistencyPct === "number"
@@ -356,25 +395,39 @@ export function synthesizeTickerHorizonDetail(
   };
 }
 
+export function clearMcpCachesForTest(): void {
+  LIVE_MARKET_CACHE.clear();
+  LIVE_TICKER_CACHE.clear();
+}
+
 /**
  * Fetch and synthesize multi-horizon bandarmology detail on-demand from Max MCP.
  */
 export async function fetchOnDemandTickerHorizons(
   ticker: string,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
+  signal?: AbortSignal
 ): Promise<Record<HorizonPeriod, TickerBrokerDetail>> {
   const upper = ticker.toUpperCase().trim();
+  const now = Date.now();
   const cachedEntry = LIVE_TICKER_CACHE.get(upper);
-  if (!forceRefresh && cachedEntry && cachedEntry.expiresAt > Date.now()) {
-    return cachedEntry.horizons;
+  if (cachedEntry && cachedEntry.expiresAt > now) {
+    if (!forceRefresh || now - cachedEntry.fetchedAt < REFRESH_COOLDOWN_MS) {
+      return cachedEntry.horizons;
+    }
   }
 
   // 1. Fetch EOD history to obtain latest price & trading session dates
-  const eodData = await callMaxTradeMcp("get_eod_history", {
-    ticker: upper,
-    limit: 15,
-    order: "desc",
-  });
+  const eodData = await callMaxTradeMcp(
+    "get_eod_history",
+    {
+      ticker: upper,
+      limit: 15,
+      order: "desc",
+    },
+    20000,
+    signal
+  );
 
   const records = eodData?.records || [];
   if (records.length === 0) {
@@ -399,57 +452,57 @@ export async function fetchOnDemandTickerHorizons(
       endDate: endDate,
       sort: "net_value_desc",
       limit: 5,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date5D,
       endDate: endDate,
       sort: "net_value_desc",
       limit: 5,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date10D,
       endDate: endDate,
       sort: "net_value_desc",
       limit: 5,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date2D,
       endDate: endDate,
       sort: "net_value_asc",
       limit: 5,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date5D,
       endDate: endDate,
       sort: "net_value_asc",
       limit: 5,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_ticker_brokers", {
       ticker: upper,
       startDate: date10D,
       endDate: endDate,
       sort: "net_value_asc",
       limit: 5,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_signal", {
       ticker: upper,
       startDate: date2D,
       endDate: endDate,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_signal", {
       ticker: upper,
       startDate: date5D,
       endDate: endDate,
-    }),
+    }, 20000, signal),
     callMaxTradeMcp("get_broksum_signal", {
       ticker: upper,
       startDate: date10D,
       endDate: endDate,
-    }),
+    }, 20000, signal),
   ]);
 
   const horizonsConfig: Array<{
@@ -503,8 +556,10 @@ export async function fetchOnDemandTickerHorizons(
   }
 
   const finalHorizons = result as Record<HorizonPeriod, TickerBrokerDetail>;
+  const savedAt = Date.now();
   LIVE_TICKER_CACHE.set(upper, {
-    expiresAt: Date.now() + CACHE_TTL_MS,
+    expiresAt: savedAt + CACHE_TTL_MS,
+    fetchedAt: savedAt,
     horizons: finalHorizons,
   });
 
@@ -518,14 +573,15 @@ export async function fetchLiveMarketOverview(
   horizon: HorizonPeriod = "5D",
   forceRefresh: boolean = false
 ): Promise<LiveMarketOverviewPayload> {
-  if (forceRefresh) {
-    LIVE_MARKET_CACHE.clear();
-    LIVE_TICKER_CACHE.clear();
-  }
-
+  const now = Date.now();
   const cached = LIVE_MARKET_CACHE.get(horizon);
-  if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
-    return cached.payload;
+  if (cached && cached.expiresAt > now) {
+    if (!forceRefresh || now - cached.fetchedAt < REFRESH_COOLDOWN_MS) {
+      return cached.payload;
+    }
+  }
+  if (forceRefresh) {
+    LIVE_MARKET_CACHE.delete(horizon);
   }
 
   const startLookback = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000)
@@ -648,24 +704,24 @@ export async function fetchLiveMarketOverview(
 
   const enrichedDetails: Record<string, TickerBrokerDetail> = {};
   if (featureTickers.length > 0) {
+    const enrichController = new AbortController();
+    const enrichTimer = setTimeout(() => enrichController.abort(), 6000);
     try {
-      const enrichPromise = Promise.allSettled(
+      const settled = await Promise.allSettled(
         featureTickers.map(async (t) => {
-          const horizons = await fetchOnDemandTickerHorizons(t, false);
+          const horizons = await fetchOnDemandTickerHorizons(t, false, enrichController.signal);
           return { ticker: t, detail: horizons[horizon] };
         })
       );
-      const timeoutGuard = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
-      const settled = await Promise.race([enrichPromise, timeoutGuard]);
-      if (Array.isArray(settled)) {
-        for (const item of settled) {
-          if (item.status === "fulfilled" && item.value.detail) {
-            enrichedDetails[item.value.ticker] = item.value.detail;
-          }
+      for (const item of settled) {
+        if (item.status === "fulfilled" && item.value.detail) {
+          enrichedDetails[item.value.ticker] = item.value.detail;
         }
       }
     } catch {
       // Enrichment is best-effort; core market ranking stays intact
+    } finally {
+      clearTimeout(enrichTimer);
     }
   }
 
@@ -684,8 +740,10 @@ export async function fetchLiveMarketOverview(
     enrichedDetails,
   });
 
+  const savedAt = Date.now();
   LIVE_MARKET_CACHE.set(horizon, {
-    expiresAt: Date.now() + CACHE_TTL_MS,
+    expiresAt: savedAt + CACHE_TTL_MS,
+    fetchedAt: savedAt,
     payload,
   });
 

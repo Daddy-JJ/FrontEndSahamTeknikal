@@ -233,41 +233,23 @@ export default function BrokerFlowInlineChart({
         );
       }
 
-      // --- PANE 0: Supertrend Series ---
+      // --- PANE 0: Supertrend Series (single series with per-point color avoids diagonal cross-lines) ---
       if (showSupertrend && chartData.supertrend.length > 0) {
-        // Build segmented lines to render green during uptrend and red during downtrend
-        const stUptrend = chart.addSeries(LineSeries, {
-          color: "#10b981",
+        const supertrendSeries = chart.addSeries(LineSeries, {
           lineWidth: 2,
           lineStyle: LineStyle.Solid,
           lastValueVisible: true,
           priceLineVisible: false,
-          title: "ST Bullish",
+          title: "Supertrend",
         }, 0);
 
-        const stDowntrend = chart.addSeries(LineSeries, {
-          color: "#ef4444",
-          lineWidth: 2,
-          lineStyle: LineStyle.Solid,
-          lastValueVisible: true,
-          priceLineVisible: false,
-          title: "ST Bearish",
-        }, 0);
-
-        // Separate points by trend direction
-        const upPoints: { time: Time; value: number }[] = [];
-        const downPoints: { time: Time; value: number }[] = [];
-
-        chartData.supertrend.forEach((pt) => {
-          if (pt.direction === "up") {
-            upPoints.push({ time: pt.time as Time, value: pt.value });
-          } else {
-            downPoints.push({ time: pt.time as Time, value: pt.value });
-          }
-        });
-
-        stUptrend.setData(upPoints);
-        stDowntrend.setData(downPoints);
+        supertrendSeries.setData(
+          chartData.supertrend.map((pt) => ({
+            time: pt.time as Time,
+            value: pt.value,
+            color: pt.color,
+          }))
+        );
       }
 
       let currentPaneIndex = 1;

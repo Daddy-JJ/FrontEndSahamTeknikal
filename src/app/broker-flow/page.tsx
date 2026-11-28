@@ -73,6 +73,26 @@ export default function BrokerFlowPage() {
   const [onDemandTarget, setOnDemandTarget] = useState<string | null>(null);
   const [isChartOpen, setIsChartOpen] = useState(false);
   const hasUserSelectedTickerRef = useRef(false);
+  const marketAbortRef = useRef<AbortController | null>(null);
+  const tickerAbortRef = useRef<AbortController | null>(null);
+  const marketReqIdRef = useRef(0);
+  const tickerReqIdRef = useRef(0);
+
+  const closeQuadrantModal = () => {
+    setActiveQuadrantModal(null);
+    setActiveFilterQuadrant(null);
+  };
+
+  useEffect(() => {
+    if (!activeQuadrantModal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeQuadrantModal();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeQuadrantModal]);
 
   const applyMarketOverviewPayload = (payloadData: Record<string, unknown>) => {
     if (payloadData.market_summary) {
@@ -96,13 +116,20 @@ export default function BrokerFlowPage() {
   };
 
   useEffect(() => {
-    let cancelled = false;
+    const reqId = ++marketReqIdRef.current;
+    const controller = new AbortController();
+    marketAbortRef.current = controller;
+
     (async () => {
       try {
-        const res = await fetch("/api/broker-flow?horizon=5D&live=true");
+        const res = await fetch("/api/broker-flow?horizon=5D&live=true", {
+          signal: controller.signal,
+        });
         if (!res.ok) return;
         const json = await res.json();
-        if (cancelled || !json?.success || !json?.data) return;
+        if (controller.signal.aborted || reqId !== marketReqIdRef.current || !json?.success || !json?.data) {
+          return;
+        }
 
         applyMarketOverviewPayload(json.data as Record<string, unknown>);
         const topAcc = json.data.top_accumulations as AccumulationItem[] | undefined;
@@ -112,29 +139,47 @@ export default function BrokerFlowPage() {
             ? topAcc[0].ticker
             : "MBMA";
 
-        const multi = await fetchTickerMultiHorizon(defaultTicker, "5D", true, nextMaps);
-        if (!cancelled && multi) {
+        if (hasUserSelectedTickerRef.current) return;
+        const tReqId = ++tickerReqIdRef.current;
+        const multi = await fetchTickerMultiHorizon(
+          defaultTicker,
+          "5D",
+          true,
+          nextMaps,
+          false,
+          controller.signal
+        );
+        if (
+          !controller.signal.aborted &&
+          !hasUserSelectedTickerRef.current &&
+          tReqId === tickerReqIdRef.current &&
+          multi
+        ) {
           setSelectedTickerCode(defaultTicker);
           setSelectedTickerHorizons(multi.horizons);
         }
       } catch {
-        // Keep initial SSR fallback on network failure
+        // Keep initial SSR fallback on network failure or abort
       } finally {
-        if (!cancelled) setIsSyncingLive(false);
+        if (!controller.signal.aborted && reqId === marketReqIdRef.current) {
+          setIsSyncingLive(false);
+        }
       }
     })();
+
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, []);
 
   const loadLiveMarket = async (
     horizon: HorizonPeriod,
-    forceRefresh: boolean = false
+    forceRefresh: boolean = false,
+    signal?: AbortSignal
   ): Promise<Record<string, QuadrantMapDetail> | undefined> => {
     const qs = new URLSearchParams({ horizon, live: "true" });
     if (forceRefresh) qs.set("refresh", "true");
-    const res = await fetch(`/api/broker-flow?${qs.toString()}`);
+    const res = await fetch(`/api/broker-flow?${qs.toString()}`, { signal });
     if (!res.ok) return undefined;
     const json = await res.json();
     if (json?.success && json?.data) {
@@ -158,24 +203,44 @@ export default function BrokerFlowPage() {
     setActiveHorizon(newHorizon);
     setDetailFocusHorizon(newHorizon);
     setIsSyncingLive(true);
+
+    marketAbortRef.current?.abort();
+    const controller = new AbortController();
+    marketAbortRef.current = controller;
+    const reqId = ++marketReqIdRef.current;
+
     try {
-      const nextMaps = await loadLiveMarket(newHorizon, false).catch(() => undefined);
+      const nextMaps = await loadLiveMarket(newHorizon, false, controller.signal).catch(() => undefined);
+      if (controller.signal.aborted || reqId !== marketReqIdRef.current) return;
+
       if (selectedTickerCode && !selectedTickerHorizons[newHorizon]) {
+        const tReqId = ++tickerReqIdRef.current;
         const refreshed = await fetchTickerMultiHorizon(
           selectedTickerCode,
           newHorizon,
           true,
-          nextMaps || quadrantMaps
+          nextMaps || quadrantMaps,
+          false,
+          controller.signal
         );
-        if (refreshed) setSelectedTickerHorizons(refreshed.horizons);
+        if (!controller.signal.aborted && tReqId === tickerReqIdRef.current && refreshed) {
+          setSelectedTickerHorizons(refreshed.horizons);
+        }
       }
     } finally {
-      setIsSyncingLive(false);
+      if (!controller.signal.aborted && reqId === marketReqIdRef.current) {
+        setIsSyncingLive(false);
+      }
     }
   };
 
   const handleTriggerOnDemand = async (tickerToFetch: string) => {
     const upper = tickerToFetch.toUpperCase().trim();
+    tickerAbortRef.current?.abort();
+    const controller = new AbortController();
+    tickerAbortRef.current = controller;
+    const reqId = ++tickerReqIdRef.current;
+
     setIsOnDemandLoading(true);
     setSearchStatus(`⚡ Menghubungkan ke Max MCP... Menarik data 2D, 5D, 10D sekaligus untuk ${upper}...`);
 
@@ -184,8 +249,10 @@ export default function BrokerFlowPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticker: upper }),
+        signal: controller.signal,
       });
       const data = await resp.json();
+      if (controller.signal.aborted || reqId !== tickerReqIdRef.current) return;
 
       if (data.success && data.horizons) {
         const horizonsMap = data.horizons as Partial<Record<HorizonPeriod, TickerBrokerDetail>>;
@@ -205,19 +272,27 @@ export default function BrokerFlowPage() {
         setSearchStatus(`❌ Gagal on-demand: ${data.error || "Data emiten tidak ditemukan di Bursa."}`);
       }
     } catch (err: unknown) {
+      if (controller.signal.aborted || reqId !== tickerReqIdRef.current) return;
       const msg = err instanceof Error ? err.message : "Koneksi terputus.";
       setSearchStatus(`❌ Gagal on-demand: ${msg}`);
     } finally {
-      setIsOnDemandLoading(false);
+      if (!controller.signal.aborted && reqId === tickerReqIdRef.current) {
+        setIsOnDemandLoading(false);
+      }
     }
   };
 
   const handleTickerClick = async (tickerCode: string) => {
     const code = tickerCode.toUpperCase().trim();
     hasUserSelectedTickerRef.current = true;
+    tickerAbortRef.current?.abort();
+    const controller = new AbortController();
+    tickerAbortRef.current = controller;
+    const reqId = ++tickerReqIdRef.current;
+
     setSelectedTickerCode(code);
     if (activeQuadrantModal) {
-      setActiveQuadrantModal(null);
+      closeQuadrantModal();
     }
     setIsTickerLoading(true);
     setSearchStatus(`Memuat tabel 2D / 5D / 10D sekaligus untuk ${code}...`);
@@ -228,7 +303,15 @@ export default function BrokerFlowPage() {
     }, 50);
 
     try {
-      const multi = await fetchTickerMultiHorizon(code, detailFocusHorizon, true, quadrantMaps);
+      const multi = await fetchTickerMultiHorizon(
+        code,
+        detailFocusHorizon,
+        true,
+        quadrantMaps,
+        false,
+        controller.signal
+      );
+      if (controller.signal.aborted || reqId !== tickerReqIdRef.current) return;
       if (multi) {
         setSelectedTickerHorizons(multi.horizons);
         setOnDemandTarget(null);
@@ -238,13 +321,20 @@ export default function BrokerFlowPage() {
         setSearchStatus(`Data untuk ${code} belum tersedia di snapshot atau feed.`);
       }
     } finally {
-      setIsTickerLoading(false);
+      if (!controller.signal.aborted && reqId === tickerReqIdRef.current) {
+        setIsTickerLoading(false);
+      }
     }
   };
 
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
+
+    tickerAbortRef.current?.abort();
+    const controller = new AbortController();
+    tickerAbortRef.current = controller;
+    const reqId = ++tickerReqIdRef.current;
 
     setIsSearching(true);
     setIsTickerLoading(true);
@@ -253,7 +343,15 @@ export default function BrokerFlowPage() {
     try {
       const upper = searchQuery.toUpperCase().trim();
       hasUserSelectedTickerRef.current = true;
-      const multi = await fetchTickerMultiHorizon(upper, detailFocusHorizon, true, quadrantMaps);
+      const multi = await fetchTickerMultiHorizon(
+        upper,
+        detailFocusHorizon,
+        true,
+        quadrantMaps,
+        false,
+        controller.signal
+      );
+      if (controller.signal.aborted || reqId !== tickerReqIdRef.current) return;
       if (multi) {
         setSelectedTickerCode(upper);
         setSelectedTickerHorizons(multi.horizons);
@@ -268,38 +366,54 @@ export default function BrokerFlowPage() {
         setSearchStatus(`Data untuk ${upper} belum tersedia di snapshot lokal.`);
       }
     } catch {
+      if (controller.signal.aborted || reqId !== tickerReqIdRef.current) return;
       setSearchStatus(`Gagal memuat data untuk ${searchQuery.toUpperCase()}.`);
     } finally {
-      setIsSearching(false);
-      setIsTickerLoading(false);
+      if (!controller.signal.aborted && reqId === tickerReqIdRef.current) {
+        setIsSearching(false);
+        setIsTickerLoading(false);
+      }
     }
   };
 
   const handleManualSync = async () => {
+    marketAbortRef.current?.abort();
+    const controller = new AbortController();
+    marketAbortRef.current = controller;
+    const reqId = ++marketReqIdRef.current;
+
     setIsSyncingLive(true);
     setIsTickerLoading(true);
     setSyncStatus("Menghubungkan ke Max MCP & menyegarkan snapshot bursa...");
     try {
-      const nextMaps = await loadLiveMarket(activeHorizon, true);
+      const nextMaps = await loadLiveMarket(activeHorizon, true, controller.signal);
+      if (controller.signal.aborted || reqId !== marketReqIdRef.current) return;
       if (selectedTickerCode) {
+        const tReqId = ++tickerReqIdRef.current;
         const refreshedMulti = await fetchTickerMultiHorizon(
           selectedTickerCode,
           detailFocusHorizon,
           true,
           nextMaps || quadrantMaps,
-          true
+          true,
+          controller.signal
         );
-        if (refreshedMulti) setSelectedTickerHorizons(refreshedMulti.horizons);
+        if (!controller.signal.aborted && tReqId === tickerReqIdRef.current && refreshedMulti) {
+          setSelectedTickerHorizons(refreshedMulti.horizons);
+        }
       }
       setSyncStatus(
         `✅ Sinkronisasi live sukses (${formatShortDateID(marketSummary.date)})`
       );
     } catch {
+      if (controller.signal.aborted || reqId !== marketReqIdRef.current) return;
       setSyncStatus("⚠️ Gagal menarik update terbaru dari Max MCP; mempertahankan data aktif.");
     } finally {
-      setIsSyncingLive(false);
-      setIsTickerLoading(false);
-      setTimeout(() => setSyncStatus(null), 5000);
+      if (!controller.signal.aborted && reqId === marketReqIdRef.current) {
+        setIsSyncingLive(false);
+        setIsTickerLoading(false);
+        setTimeout(() => setSyncStatus(null), 5000);
+      }
     }
   };
 
@@ -334,6 +448,8 @@ export default function BrokerFlowPage() {
               >
                 {freshness?.source === "snapshot-fallback"
                   ? `🟡 SNAPSHOT: ${activeDateBadge}`
+                  : freshness?.source === "supabase"
+                  ? `🟢 SUPABASE EOD: ${activeDateBadge}`
                   : `🟢 LIVE EOD: ${activeDateBadge}`}
               </span>
               {freshness && !freshness.is_today_published && (
@@ -896,14 +1012,15 @@ export default function BrokerFlowPage() {
           </div>
         </section>
 
-        {/* SECTION 3: SECTOR FLOW & BROKER RANKING */}
+        {/* SECTION 3: SECTOR FLOW & BROKER RANKING (Only shown on offline snapshot fallback; hidden in live mode) */}
+        {!isSyncingLive && freshness?.source === "snapshot-fallback" && (
         <section className="bf-grid-2col">
           
           {/* Sector Smart Money Flow */}
           <div className="bf-table-card">
             <div className="bf-table-header">
               <span className="bf-table-title neutral">SECTOR SMART MONEY FLOW</span>
-              <span className="bf-panel-hint">Referensi Snapshot 20 Nov</span>
+              <span className="bf-panel-hint">Referensi Snapshot Statis 20 Nov</span>
             </div>
 
             <div className="bf-table-scroll">
@@ -941,7 +1058,7 @@ export default function BrokerFlowPage() {
           <div className="bf-table-card">
             <div className="bf-table-header">
               <span className="bf-table-title neutral">TOP BROKER RANKING</span>
-              <span className="bf-panel-hint">Referensi Snapshot 20 Nov</span>
+              <span className="bf-panel-hint">Referensi Snapshot Statis 20 Nov</span>
             </div>
 
             <div className="bf-table-scroll">
@@ -979,6 +1096,7 @@ export default function BrokerFlowPage() {
             </div>
           </div>
         </section>
+        )}
 
         {/* SECTION 4: TICKER DEEP DIVE INSIGHT (MULTI-HORIZON 2D/5D/10D + TRADE PLAN + INLINE CHART) */}
         {selectedTicker && (
@@ -1254,10 +1372,15 @@ export default function BrokerFlowPage() {
           <div
             className="bf-modal-backdrop"
             onClick={(e) => {
-              if (e.target === e.currentTarget) setActiveQuadrantModal(null);
+              if (e.target === e.currentTarget) closeQuadrantModal();
             }}
           >
-            <div className="bf-modal-container">
+            <div
+              className="bf-modal-container"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="bf-quadrant-modal-title"
+            >
               
               <div className="bf-modal-header">
                 <div className="bf-modal-title-wrap">
@@ -1274,13 +1397,14 @@ export default function BrokerFlowPage() {
                   >
                     {activeModalData.stocks_count} SAHAM
                   </span>
-                  <div className="bf-modal-title">{activeModalData.name}</div>
+                  <div id="bf-quadrant-modal-title" className="bf-modal-title">{activeModalData.name}</div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setActiveQuadrantModal(null)}
+                  onClick={closeQuadrantModal}
                   className="bf-modal-close"
                   title="Tutup (Esc)"
+                  aria-label="Tutup modal kuadran"
                 >
                   ✕
                 </button>

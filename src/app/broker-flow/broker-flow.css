@@ -2,6 +2,7 @@
 /* Scoped under .scanner-terminal-shell */
 
 .bf-page-container {
+  --cyan: #6bd5ed;
   max-width: 1360px;
   margin: 0 auto;
   padding: 16px 20px 48px;

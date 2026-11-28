@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { callMaxTradeMcp } from "@/lib/mcp-broker-flow";
+import { normalizeTicker } from "@/lib/broker-flow-service";
 import {
   computeSupertrend,
   computeMACD,
@@ -22,12 +23,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const upper = rawTicker.toUpperCase().trim();
-    if (upper.length < 3 || upper.length > 8) {
+    const upper = normalizeTicker(rawTicker);
+    if (!upper) {
       return NextResponse.json(
         {
           success: false,
-          error: `Format ticker '${upper}' tidak valid.`,
+          error: `Format ticker '${rawTicker.toUpperCase().trim()}' tidak valid.`,
         },
         { status: 400 }
       );

@@ -91,7 +91,7 @@ export interface DataFreshnessMeta {
   latest_date: string;
   today_wib: string;
   is_today_published: boolean;
-  source: "max-mcp-live" | "snapshot-fallback";
+  source: "max-mcp-live" | "supabase" | "snapshot-fallback";
   synced_at: string;
   message: string;
 }
